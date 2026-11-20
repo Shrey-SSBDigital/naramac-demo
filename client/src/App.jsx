@@ -1,80 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar';
-import Navbar from './components/Navbar';
+import { EnterpriseProvider, useEnterprise } from './context/EnterpriseContext';
+import EnterpriseNavbar from './components/navigation/EnterpriseNavbar';
+import EnterpriseSidebar from './components/navigation/EnterpriseSidebar';
+import Toast from './components/common/Toast';
+
+// 17 Main Enterprise Modules
+import DashboardModule from './components/modules/DashboardModule';
+import FarmerModule from './components/modules/FarmerModule';
+import PlantationModule from './components/modules/PlantationModule';
+import InoculationModule from './components/modules/InoculationModule';
+import HarvestModule from './components/modules/HarvestModule';
+import PermitModule from './components/modules/PermitModule';
+import MovementModule from './components/modules/MovementModule';
+import AggregationModule from './components/modules/AggregationModule';
+import ProcessingModule from './components/modules/ProcessingModule';
+import LaboratoryModule from './components/modules/LaboratoryModule';
+import InventoryModule from './components/modules/InventoryModule';
+import FinishedProductModule from './components/modules/FinishedProductModule';
+import ExportModule from './components/modules/ExportModule';
+import ShipmentModule from './components/modules/ShipmentModule';
+import DomesticSalesModule from './components/modules/DomesticSalesModule';
+import TraceabilityModule from './components/modules/TraceabilityModule';
+import AuditReportsModule from './components/modules/AuditReportsModule';
+
+// Interactive Guided Flow & GIS Studios
 import LiveWorkflowView from './components/LiveWorkflowView';
-import StakeholderDetailView from './components/StakeholderDetailView';
 import FieldGeoTaggingStudio from './components/FieldGeoTaggingStudio';
-import TraceabilityChainView from './components/TraceabilityChainView';
-import QRVerificationPortal from './components/QRVerificationPortal';
-import { STAKEHOLDERS_DATA } from './data/mockData';
 
-// 14 Ordered Real-World Operational Workflow Stages
-const WORKFLOW_STAGES = [
-  { stepNumber: 1, title: "Farmer Portal Registration", actor: "Registered Farmer", idCode: "FRM App" },
-  { stepNumber: 2, title: "Field Inspection & Geo-pinning", actor: "NERAMAC Field Agent", idCode: "FRM" },
-  { stepNumber: 3, title: "Plantation Boundary & Age Rule Survey", actor: "NERAMAC Field Agent", idCode: "PLT / PLG / TRE" },
-  { stepNumber: 4, title: "Menu Inoculation & SHA-256 Photo", actor: "NERAMAC Field Agent", idCode: "INO" },
-  { stepNumber: 5, title: "Grower Harvest Application", actor: "Registered Farmer", idCode: "HAU App" },
-  { stepNumber: 6, title: "DFO Sanction & Maker-Checker", actor: "DFO & NERAMAC", idCode: "HAU / PMT" },
-  { stepNumber: 7, title: "Harvest Felling & Scale Weighment", actor: "NERAMAC Field Agent", idCode: "HBT" },
-  { stepNumber: 8, title: "Movement & Gate Variance (≤ 1.5%)", actor: "Aggregation Depot", idCode: "MOV" },
-  { stepNumber: 9, title: "Depot Consignment Pooling", actor: "Aggregation Depot", idCode: "AGG" },
-  { stepNumber: 10, title: "CPC Hydro-Distillation & Mass Balance", actor: "CPC Distillation Unit", idCode: "DST" },
-  { stepNumber: 11, title: "NABL GC-MS Purity & CITES Release", actor: "Quality Lab Officer", idCode: "LAB" },
-  { stepNumber: 12, title: "Packaging & Tamper-Evident QR", actor: "Packaging & Serialization", idCode: "PCK" },
-  { stepNumber: 13, title: "Export Consignment & CITES Dispatch", actor: "Exporter & Logistics", idCode: "EBT / ELT" },
-  { stepNumber: 14, title: "Buyer Smartphone QR Verification", actor: "International Buyer", idCode: "QR Scan" }
-];
+function AppContent() {
+  const { toasts } = useEnterprise();
 
-export default function App() {
-  // 'FLOW' | 'GEO_STUDIO' | 'TRACEABILITY' | 'QR_PORTAL' | 'ROLES'
-  const [viewMode, setViewMode] = useState('FLOW'); 
+  // Active module navigation
+  const [activeModule, setActiveModule] = useState('DASHBOARD');
+  const [traceSearchQuery, setTraceSearchQuery] = useState('PCK-NER-2026-001');
+
+  // Legacy 14-Step flow state
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([1]);
-  const [selectedRoleId, setSelectedRoleId] = useState('FARMER');
-  const [chainData, setChainData] = useState(null);
-
-  // Shared live data across workflow
   const [workflowData, setWorkflowData] = useState({
     farmer: {
-      fullName: "Bhaben Saikia",
-      fatherName: "Late Hemanta Saikia",
-      cluster: "Golaghat, Assam",
-      village: "Dhekial Gaon, Mouza Dhekial",
-      dagNumber: "Dag 182, Patta 44",
+      fullName: 'Bhaben Saikia',
+      fatherName: 'Late Hemanta Saikia',
+      cluster: 'Golaghat, Assam',
+      village: 'Dhekial Gaon, Mouza Dhekial',
+      dagNumber: 'Dag 182, Patta 44',
       estimatedTrees: 1420
     }
   });
 
-  // Check URL pathname for direct QR verification scan
+  // Check URL pathname for direct QR scan link (e.g. /verify/PCK-NER-2026-001)
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/verify')) {
-      setViewMode('QR_PORTAL');
+      const parts = window.location.pathname.split('/verify/');
+      if (parts[1]) {
+        setTraceSearchQuery(parts[1]);
+      }
+      setActiveModule('TRACEABILITY');
     }
   }, []);
 
-  // Fetch initial state & chain data from server
-  useEffect(() => {
-    fetch('/api/live-workflow/state')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.workflow) {
-          setWorkflowData(data.workflow.data);
-          setCurrentStep(data.workflow.activeStep);
-          setCompletedSteps(data.workflow.completedSteps);
-        }
-      })
-      .catch(() => {});
-
-    fetch('/api/traceability/chain')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.chain) {
-          setChainData(data.chain);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const handleOpenTraceSearch = (query) => {
+    setTraceSearchQuery(query);
+    setActiveModule('TRACEABILITY');
+  };
 
   const handleUpdateStepData = (section, data) => {
     setWorkflowData(prev => ({
@@ -92,115 +80,158 @@ export default function App() {
       setCompletedSteps(prev => [...prev, completedStepNum]);
     }
     setCurrentStep(nextStep);
-
-    // Sync with backend API
-    fetch('/api/live-workflow/advance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stepNumber: completedStepNum, stepData: workflowData })
-    }).catch(() => {});
   };
 
   const handleResetWorkflow = () => {
     setCurrentStep(1);
     setCompletedSteps([1]);
-    fetch('/api/live-workflow/reset', { method: 'POST' }).catch(() => {});
   };
 
   const handleLoadAllSteps = () => {
     setCurrentStep(14);
     setCompletedSteps([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
-    fetch('/api/live-workflow/load-sample', { method: 'POST' }).catch(() => {});
-  };
-
-  const activeStakeholder = STAKEHOLDERS_DATA.find(s => s.id === selectedRoleId) || STAKEHOLDERS_DATA[0];
-
-  // Helper for Top Navbar title
-  const getActiveViewTitle = () => {
-    switch (viewMode) {
-      case 'FLOW':
-        return `Workflow Stage ${currentStep}: ${WORKFLOW_STAGES[currentStep - 1]?.title}`;
-      case 'GEO_STUDIO':
-        return 'Field Studio: POLOGEN (<7 yr) & Point Geo-Tagging (≥7 yr)';
-      case 'TRACEABILITY':
-        return 'Traceability: 15 Authoritative Digital Identifiers Graph';
-      case 'ROLES':
-        return `Stakeholder Role: ${activeStakeholder?.roleName}`;
-      case 'QR_PORTAL':
-        return 'Verification: DPDP Act 2023 QR Provenance Portal';
-      default:
-        return 'NERAMAC Agarwood Traceability System';
-    }
   };
 
   return (
     <div className="flex h-screen bg-slate-100 text-slate-900 font-sans antialiased overflow-hidden selection:bg-emerald-600 selection:text-white">
-      {/* 1. Left Sidebar Navigation */}
-      <Sidebar
-        workflowSteps={WORKFLOW_STAGES}
-        currentStep={currentStep}
-        completedSteps={completedSteps}
-        onSelectStep={(step) => {
-          setCurrentStep(step);
-          setViewMode('FLOW');
-        }}
-        viewMode={viewMode}
-        onToggleViewMode={(mode) => setViewMode(mode)}
-        stakeholders={STAKEHOLDERS_DATA}
-        selectedRoleId={selectedRoleId}
-        onSelectRole={(roleId) => {
-          setSelectedRoleId(roleId);
-          setViewMode('ROLES');
-        }}
+      {/* 1. Enterprise Sidebar Navigation */}
+      <EnterpriseSidebar
+        activeModule={activeModule}
+        onSelectModule={(mod) => setActiveModule(mod)}
+        onOpenLegacyFlow={() => setActiveModule('FLOW')}
+        onOpenLegacyGeoStudio={() => setActiveModule('GEO_STUDIO')}
       />
 
-      {/* 2. Main Content View Area */}
+      {/* 2. Main Work Area */}
       <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-slate-50">
-        <Navbar activeRoleName={getActiveViewTitle()} />
+        <EnterpriseNavbar
+          activeModule={activeModule}
+          onSelectModule={(mod) => setActiveModule(mod)}
+          onOpenTraceSearch={handleOpenTraceSearch}
+        />
 
-        <main className={`p-5 md:p-6 w-full mx-auto pb-20 ${viewMode === 'GEO_STUDIO' ? 'max-w-[1440px]' : 'max-w-5xl'}`}>
-          {viewMode === 'FLOW' && (
-            <LiveWorkflowView
-              currentStep={currentStep}
-              onSelectStep={(step) => setCurrentStep(step)}
-              workflowData={workflowData}
-              onUpdateStepData={handleUpdateStepData}
-              onAdvanceStep={handleAdvanceStep}
-              completedSteps={completedSteps}
-              onResetWorkflow={handleResetWorkflow}
-              onLoadAllSteps={handleLoadAllSteps}
-              onOpenGeoStudio={() => setViewMode('GEO_STUDIO')}
-            />
+        <main className={`p-5 md:p-6 w-full mx-auto pb-24 ${
+          activeModule === 'GEO_STUDIO' || activeModule === 'PLANTATIONS' ? 'max-w-[1500px]' : 'max-w-6xl'
+        }`}>
+          {/* Module 1: Dashboard */}
+          {activeModule === 'DASHBOARD' && (
+            <DashboardModule onNavigateModule={(mod) => setActiveModule(mod)} />
           )}
 
-          {viewMode === 'GEO_STUDIO' && (
-            <FieldGeoTaggingStudio
-              onAdvanceStep={(step) => {
-                handleAdvanceStep(step);
-                setViewMode('FLOW');
-              }}
-            />
+          {/* Module 2: Farmer Management */}
+          {activeModule === 'FARMERS' && <FarmerModule />}
+
+          {/* Module 3: Plantation & Trees GIS */}
+          {activeModule === 'PLANTATIONS' && <PlantationModule />}
+
+          {/* Module 4: Cultivation & Inoculation */}
+          {activeModule === 'INOCULATION' && <InoculationModule />}
+
+          {/* Module 5: Harvest Management */}
+          {activeModule === 'HARVEST' && <HarvestModule />}
+
+          {/* Module 6: Permits & DFO Orders */}
+          {activeModule === 'PERMITS' && <PermitModule />}
+
+          {/* Module 7: Material Movement & Gate Tolerance */}
+          {activeModule === 'MOVEMENT' && <MovementModule />}
+
+          {/* Module 8: Aggregation & Depot Pooling */}
+          {activeModule === 'AGGREGATION' && <AggregationModule />}
+
+          {/* Module 9: Processing & CPC Distillation */}
+          {activeModule === 'PROCESSING' && <ProcessingModule />}
+
+          {/* Module 10: Laboratory & NABL Quality */}
+          {activeModule === 'LABORATORY' && <LaboratoryModule />}
+
+          {/* Module 11: Inventory & Stock Ledger */}
+          {activeModule === 'INVENTORY' && <InventoryModule />}
+
+          {/* Module 12: Finished Products & Laser QR */}
+          {activeModule === 'FINISHED_PRODUCTS' && (
+            <FinishedProductModule onOpenTraceSearch={handleOpenTraceSearch} />
           )}
 
-          {viewMode === 'TRACEABILITY' && (
-            <TraceabilityChainView chainData={chainData} />
+          {/* Module 13: Export Batches */}
+          {activeModule === 'EXPORT' && <ExportModule />}
+
+          {/* Module 14: Shipment & Cargo Lots */}
+          {activeModule === 'SHIPMENT' && <ShipmentModule />}
+
+          {/* Module 15: Domestic Perfumery Sales */}
+          {activeModule === 'DOMESTIC_SALES' && <DomesticSalesModule />}
+
+          {/* Module 16: Traceability & QR Verification Engine */}
+          {activeModule === 'TRACEABILITY' && (
+            <TraceabilityModule initialSearchQuery={traceSearchQuery} />
           )}
 
-          {viewMode === 'ROLES' && (
-            <StakeholderDetailView
-              stakeholder={activeStakeholder}
-              allStakeholders={STAKEHOLDERS_DATA}
-              stepNumber={STAKEHOLDERS_DATA.findIndex(s => s.id === selectedRoleId) + 1}
-              totalSteps={STAKEHOLDERS_DATA.length}
-              onNavigateRole={(roleId) => setSelectedRoleId(roleId)}
-            />
+          {/* Module 17: Audit Trail & Compliance Reports */}
+          {activeModule === 'AUDIT_REPORTS' && <AuditReportsModule />}
+
+          {/* Interactive Guided Demonstrators */}
+          {activeModule === 'FLOW' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between bg-white p-3.5 rounded-xl border border-slate-200">
+                <span className="font-extrabold text-slate-800 text-xs">
+                  14-Step Operational Live Flow Wizard
+                </span>
+                <button
+                  onClick={() => setActiveModule('DASHBOARD')}
+                  className="px-3 py-1 bg-slate-800 text-white rounded-lg text-xs font-bold"
+                >
+                  Return to Dashboard
+                </button>
+              </div>
+              <LiveWorkflowView
+                currentStep={currentStep}
+                onSelectStep={(step) => setCurrentStep(step)}
+                workflowData={workflowData}
+                onUpdateStepData={handleUpdateStepData}
+                onAdvanceStep={handleAdvanceStep}
+                completedSteps={completedSteps}
+                onResetWorkflow={handleResetWorkflow}
+                onLoadAllSteps={handleLoadAllSteps}
+                onOpenGeoStudio={() => setActiveModule('GEO_STUDIO')}
+              />
+            </div>
           )}
 
-          {viewMode === 'QR_PORTAL' && (
-            <QRVerificationPortal chainData={chainData} />
+          {activeModule === 'GEO_STUDIO' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between bg-white p-3.5 rounded-xl border border-slate-200">
+                <span className="font-extrabold text-slate-800 text-xs">
+                  Field Geo-Tagging Studio (POLOGEN Walked Boundaries & Point Tagging)
+                </span>
+                <button
+                  onClick={() => setActiveModule('PLANTATIONS')}
+                  className="px-3 py-1 bg-slate-800 text-white rounded-lg text-xs font-bold"
+                >
+                  Back to Plantations
+                </button>
+              </div>
+              <FieldGeoTaggingStudio
+                onAdvanceStep={(step) => {
+                  handleAdvanceStep(step);
+                  setActiveModule('FLOW');
+                }}
+              />
+            </div>
           )}
         </main>
       </div>
+
+      {/* Global Action Toasts */}
+      <Toast toasts={toasts} />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <EnterpriseProvider>
+      <AppContent />
+    </EnterpriseProvider>
   );
 }
