@@ -22,6 +22,7 @@ export default function DashboardModule({ onNavigateModule }) {
   const {
     farmers,
     plantations,
+    pologens,
     trees,
     harvests,
     harvestBatches,
@@ -39,6 +40,7 @@ export default function DashboardModule({ onNavigateModule }) {
   const totalExportBottles = exportBatches.reduce((acc, e) => acc + (e.totalPackCount || 0), 0);
   const totalDomesticBottles = finishedProducts.filter(p => p.channel === 'DOMESTIC').length;
   const inStockBottles = finishedProducts.filter(p => p.status === 'IN_VAULT_STOCK').length;
+  const totalSaplings = (pologens || []).reduce((sum, p) => sum + (p.saplingCount || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -73,7 +75,7 @@ export default function DashboardModule({ onNavigateModule }) {
               className="bg-emerald-800/80 hover:bg-emerald-700/80 text-white font-bold px-3 py-1.5 rounded-xl border border-emerald-500/40 transition flex items-center gap-1.5"
             >
               <Trees className="w-3.5 h-3.5 text-emerald-300" />
-              <span>Explore Satellite Map (100 Trees)</span>
+              <span>Explore Satellite Map ({trees.length} Trees • {pologens?.length || 0} POLOGENs)</span>
             </button>
           </div>
         </div>
@@ -93,12 +95,12 @@ export default function DashboardModule({ onNavigateModule }) {
           badge="100% Geo-Verified"
         />
         <MetricCard
-          title="Tagged Mature Trees"
-          value={trees.length}
-          subvalue={`${plantations.length} Verified Plantations`}
+          title="Forestry Assets (Two-Tier)"
+          value={`${trees.length} Mature`}
+          subvalue={`${pologens?.length || 0} POLOGENs (${totalSaplings} Saplings)`}
           icon={Trees}
           color="teal"
-          trend="+100 Active"
+          trend="Farmer Attached"
         />
         <MetricCard
           title="Harvested Wood"

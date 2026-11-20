@@ -3,6 +3,7 @@ import {
   USER_ROLES,
   MOCK_FARMERS,
   MOCK_PLANTATIONS,
+  MOCK_POLOGENS,
   MOCK_TREES,
   MOCK_INOCULATIONS,
   MOCK_HARVESTS,
@@ -49,6 +50,7 @@ export function EnterpriseProvider({ children }) {
   // Main state with localStorage hydration
   const [farmers, setFarmers] = useState(MOCK_FARMERS);
   const [plantations, setPlantations] = useState(MOCK_PLANTATIONS);
+  const [pologens, setPologens] = useState(MOCK_POLOGENS);
   const [trees, setTrees] = useState(MOCK_TREES);
   const [inoculations, setInoculations] = useState(MOCK_INOCULATIONS);
   const [harvests, setHarvests] = useState(MOCK_HARVESTS);
@@ -73,6 +75,7 @@ export function EnterpriseProvider({ children }) {
         const parsed = JSON.parse(saved);
         if (parsed.farmers) setFarmers(parsed.farmers);
         if (parsed.plantations) setPlantations(parsed.plantations);
+        if (parsed.pologens) setPologens(parsed.pologens);
         if (parsed.trees) setTrees(parsed.trees);
         if (parsed.inoculations) setInoculations(parsed.inoculations);
         if (parsed.harvests) setHarvests(parsed.harvests);
@@ -100,6 +103,7 @@ export function EnterpriseProvider({ children }) {
       const current = {
         farmers,
         plantations,
+        pologens,
         trees,
         inoculations,
         harvests,
@@ -134,6 +138,7 @@ export function EnterpriseProvider({ children }) {
     localStorage.removeItem(STORAGE_KEY);
     setFarmers(MOCK_FARMERS);
     setPlantations(MOCK_PLANTATIONS);
+    setPologens(MOCK_POLOGENS);
     setTrees(MOCK_TREES);
     setInoculations(MOCK_INOCULATIONS);
     setHarvests(MOCK_HARVESTS);
@@ -191,24 +196,144 @@ export function EnterpriseProvider({ children }) {
     return newFarmer;
   };
 
-  // 2. Plantation & Tree Management
+  // 2. Plantation, POLOGEN & Tree Management (Strictly attached to Farmer)
+  const addPlantation = (plantationData) => {
+    const cluster = plantationData.cluster || 'Golaghat Cluster';
+    const isTripura = cluster.includes('Tripura');
+    const prefix = isTripura ? 'PLT-TR' : 'PLT-AS';
+    const id = `${prefix}-${String(plantations.length + 1).padStart(2, '0')}`;
+    const farmer = farmers.find(f => f.id === plantationData.farmerId);
+
+    const newPlantation = {
+      id,
+      farmerId: plantationData.farmerId,
+      farmerName: farmer ? farmer.name : 'Registered Farmer',
+      name: plantationData.name || `Plantation Parcel ${id}`,
+      cluster,
+      state: isTripura ? 'Tripura' : 'Assam',
+      district: plantationData.district || (isTripura ? 'North Tripura' : 'Golaghat'),
+      areaHectares: parseFloat(plantationData.areaHectares) || 1.25,
+      soilType: plantationData.soilType || 'Alluvial Loam',
+      elevationMeters: parseInt(plantationData.elevationMeters) || 96,
+      boundaryPolygon: plantationData.boundaryPolygon || [
+        [26.5204, 93.9782],
+        [26.5218, 93.9795],
+        [26.5212, 93.9815],
+        [26.5195, 93.9808],
+        [26.5204, 93.9782]
+      ],
+      totalTrees: (parseInt(plantationData.matureTrees) || 0) + (parseInt(plantationData.youngTrees) || 0),
+      matureTrees: parseInt(plantationData.matureTrees) || 0,
+      youngTrees: parseInt(plantationData.youngTrees) || 0,
+      geoVerified: true,
+      inspectionDate: new Date().toISOString().split('T')[0]
+    };
+
+    const updated = [newPlantation, ...plantations];
+    setPlantations(updated);
+    persistState({ plantations: updated });
+    logAudit('CREATE_PLANTATION', 'Plantation Management', `Attached plantation ${newPlantation.name} (${id}) to Farmer ${newPlantation.farmerName} (${newPlantation.farmerId})`, id);
+    addToast(`Plantation ${id} attached to Farmer ${newPlantation.farmerName}`);
+    return newPlantation;
+  };
+
+  const addPologen = (pologenData) => {
+    const id = `PLG-2026-${String(pologens.length + 1).padStart(3, '0')}`;
+    const farmer = farmers.find(f => f.id === pologenData.farmerId);
+    const plantation = plantations.find(p => p.id === pologenData.plantationId);
+
+    const saplingCount = parseInt(pologenData.saplingCount) || 120;
+    const newPologen = {
+      id,
+      farmerId: pologenData.farmerId,
+      farmerName: farmer ? farmer.name : (plantation?.farmerName || 'Registered Farmer'),
+      plantationId: pologenData.plantationId,
+      plantationName: plantation ? plantation.name : 'Primary Plantation',
+      name: pologenData.name || `Sapling Block ${id}`,
+      cluster: plantation?.cluster || farmer?.cluster || 'Golaghat Cluster',
+      plantingYear: parseInt(pologenData.plantingYear) || (new Date().getFullYear() - 3),
+      ageYears: parseFloat(pologenData.ageYears) || 3.5,
+      saplingCount,
+      boundaryPolygon: pologenData.boundaryPolygon || [
+        [26.5205, 93.9784],
+        [26.5213, 93.9790],
+        [26.5210, 93.9802],
+        [26.5201, 93.9798],
+        [26.5205, 93.9784]
+      ],
+      areaSquareMeters: parseInt(pologenData.areaSquareMeters) || 5200,
+      perimeterMeters: parseInt(pologenData.perimeterMeters) || 310,
+      walkedVerticesCount: 5,
+      species: 'Aquilaria malaccensis',
+      fieldAgent: pologenData.fieldAgent || 'NERAMAC Field Officer',
+      walkedDate: new Date().toISOString().split('T')[0],
+      status: 'WALKED_VERIFIED'
+    };
+
+    const updatedPologens = [newPologen, ...pologens];
+    setPologens(updatedPologens);
+
+    // Update plantation young trees count
+    const updatedPlantations = plantations.map(p => {
+      if (p.id === newPologen.plantationId) {
+        const newYoung = (p.youngTrees || 0) + saplingCount;
+        return {
+          ...p,
+          youngTrees: newYoung,
+          totalTrees: (p.matureTrees || 0) + newYoung
+        };
+      }
+      return p;
+    });
+    setPlantations(updatedPlantations);
+
+    persistState({ pologens: updatedPologens, plantations: updatedPlantations });
+    logAudit('CREATE_POLOGEN', 'Plantation & Forestry', `Walked sapling boundary polygon ${id} (${saplingCount} saplings, <7 yrs) attached to Farmer ${newPologen.farmerName}`, id);
+    addToast(`POLOGEN ${id} (${saplingCount} saplings) recorded under Farmer ${newPologen.farmerName}`);
+    return newPologen;
+  };
+
   const addTree = (treeData) => {
     const id = `TRE-AS-${String(trees.length + 1).padStart(3, '0')}`;
+    const plantation = plantations.find(p => p.id === treeData.plantationId);
+    const farmer = farmers.find(f => f.id === (treeData.farmerId || plantation?.farmerId));
+
     const newTree = {
       id,
+      farmerId: farmer?.id || plantation?.farmerId || 'FRM-AS-01',
+      farmerName: farmer?.name || plantation?.farmerName || 'Bhaben Saikia',
+      plantationId: treeData.plantationId,
+      plantationName: plantation ? plantation.name : 'Primary Plantation',
+      cluster: plantation?.cluster || 'Golaghat Cluster',
       species: 'Aquilaria malaccensis',
       citesAppendix: 'Appendix II',
       taggedDate: new Date().toISOString().split('T')[0],
       photoHash: `sha256:${Math.random().toString(16).slice(2)}${Date.now().toString(16)}`,
       qrTagCode: `TAG-AGY-${id}`,
       status: 'MATURE_GROWING',
+      inoculationStatus: 'NOT_INOCULATED',
       ...treeData
     };
     const updated = [newTree, ...trees];
     setTrees(updated);
-    persistState({ trees: updated });
-    logAudit('REGISTER_TREE', 'Plantation & Trees', `Geo-tagged mature tree ${id} in plantation ${newTree.plantationId}`, id);
-    addToast(`Tree ${id} registered and geo-pinned on satellite map`);
+
+    // Update plantation mature trees count
+    const updatedPlantations = plantations.map(p => {
+      if (p.id === newTree.plantationId) {
+        const newMature = (p.matureTrees || 0) + 1;
+        return {
+          ...p,
+          matureTrees: newMature,
+          totalTrees: newMature + (p.youngTrees || 0)
+        };
+      }
+      return p;
+    });
+    setPlantations(updatedPlantations);
+
+    persistState({ trees: updated, plantations: updatedPlantations });
+    logAudit('REGISTER_TREE', 'Plantation & Trees', `Geo-tagged mature tree ${id} (≥7 yrs) attached to Farmer ${newTree.farmerName} in ${newTree.plantationId}`, id);
+    addToast(`Tree ${id} pinned and attached to Farmer ${newTree.farmerName}`);
     return newTree;
   };
 
@@ -737,12 +862,14 @@ export function EnterpriseProvider({ children }) {
     const farmer = farmers.find(f => f.id.toUpperCase() === cleanQuery);
     if (farmer) {
       const farmerPlantations = plantations.filter(p => p.farmerId === farmer.id);
+      const farmerPologens = pologens.filter(p => p.farmerId === farmer.id);
       const farmerTrees = trees.filter(t => t.farmerId === farmer.id);
       const farmerBatches = harvestBatches.filter(b => b.farmerId === farmer.id);
       return {
         targetType: 'FARMER',
         farmer,
         plantations: farmerPlantations,
+        pologens: farmerPologens,
         trees: farmerTrees,
         harvestBatches: farmerBatches
       };
@@ -765,6 +892,7 @@ export function EnterpriseProvider({ children }) {
         // Data entities
         farmers,
         plantations,
+        pologens,
         trees,
         inoculations,
         harvests,
@@ -785,6 +913,8 @@ export function EnterpriseProvider({ children }) {
 
         // Actions
         addFarmer,
+        addPlantation,
+        addPologen,
         addTree,
         addInoculation,
         applyHarvest,

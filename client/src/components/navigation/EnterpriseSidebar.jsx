@@ -32,6 +32,7 @@ export default function EnterpriseSidebar({
   const {
     activeRole,
     farmers,
+    pologens,
     trees,
     harvests,
     movements,
@@ -54,7 +55,7 @@ export default function EnterpriseSidebar({
       group: 'Origin & Forestry',
       items: [
         { id: 'FARMERS', name: 'Farmer Management', icon: Users, badge: farmers.length },
-        { id: 'PLANTATIONS', name: 'Plantation & Trees (GIS)', icon: Trees, badge: trees.length },
+        { id: 'PLANTATIONS', name: 'Plantations, POLOGEN & Trees', icon: Trees, badge: (trees?.length || 0) + (pologens?.length || 0) },
         { id: 'INOCULATION', name: 'Cultivation & Inoculation', icon: Syringe, badge: null }
       ]
     },
