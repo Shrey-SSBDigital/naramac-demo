@@ -1,0 +1,25 @@
+{
+  "name": "neramac-agarwood-traceability-demo",
+  "version": "2.0.0",
+  "description": "NERAMAC Agarwood Supply Chain Traceability System (ASCTS) Full-Stack MERN Demonstration System",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "server": "node server/index.js",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "dev": "node server/index.js"
+  },
+  "keywords": [
+    "neramac",
+    "agarwood",
+    "traceability",
+    "mern",
+    "assam",
+    "tripura",
+    "cites",
+    "gi"
+  ],
+  "author": "Antigravity Engineering",
+  "license": "ISC"
+}

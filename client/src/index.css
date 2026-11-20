@@ -1,0 +1,296 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+
+  body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ========================================================
+   FULL WEBSITE COLOR SYSTEM: Modern Executive Portal
+   Transforms all dark surfaces to clean, bright, high-contrast
+   Government & Enterprise styling.
+   ======================================================== */
+
+/* App background */
+.bg-slate-950 {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Primary card containers */
+.bg-slate-900 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06) !important;
+}
+
+/* Secondary / inner section cards */
+.bg-slate-850 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+/* Tertiary cards & input containers */
+.bg-slate-800 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Borders */
+.border-slate-850,
+.border-slate-800,
+.border-slate-750,
+.border-slate-700 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Typography transformation */
+.text-white {
+  color: #0f172a !important;
+}
+
+.text-slate-100,
+.text-slate-200 {
+  color: #1e293b !important;
+}
+
+.text-slate-300 {
+  color: #334155 !important;
+}
+
+.text-slate-400 {
+  color: #64748b !important;
+}
+
+.text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Colored accent text */
+.text-emerald-400 {
+  color: #047857 !important;
+  font-weight: 700;
+}
+
+.text-teal-400,
+.text-teal-300 {
+  color: #0f766e !important;
+  font-weight: 700;
+}
+
+.text-amber-400,
+.text-amber-300 {
+  color: #b45309 !important;
+  font-weight: 700;
+}
+
+.text-blue-400,
+.text-blue-300 {
+  color: #1d4ed8 !important;
+  font-weight: 700;
+}
+
+.text-purple-400,
+.text-purple-300 {
+  color: #7e22ce !important;
+  font-weight: 700;
+}
+
+/* Form input fields */
+input,
+select,
+textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15) !important;
+  outline: none !important;
+}
+
+/* Badges */
+.bg-emerald-500\/20 {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+  border-color: #a7f3d0 !important;
+}
+
+.bg-amber-500\/20 {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+
+.bg-teal-500\/20 {
+  background-color: #ccfbf1 !important;
+  color: #115e59 !important;
+  border-color: #99f6e4 !important;
+}
+
+.bg-blue-500\/20 {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #bfdbfe !important;
+}
+
+.bg-purple-500\/20 {
+  background-color: #f3e8ff !important;
+  color: #6b21a8 !important;
+  border-color: #e9d5ff !important;
+}
+
+/* Sidebar specific styling: Clean off-white container with Assam Forest Green brand block */
+aside {
+  background-color: #ffffff !important;
+  border-right-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 2px 0 8px 0 rgb(0 0 0 / 0.03) !important;
+}
+
+/* Brand header inside sidebar stays rich forest green with white text */
+aside .brand-header {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #0f766e 100%) !important;
+  color: #ffffff !important;
+  border-radius: 12px;
+}
+
+aside .brand-header .text-white,
+aside .brand-header span,
+aside .brand-header p {
+  color: #ffffff !important;
+}
+
+aside .brand-header .text-emerald-400 {
+  color: #a7f3d0 !important;
+}
+
+/* Nav mode switchers in sidebar */
+aside .nav-mode-container {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Active buttons in sidebar and cards */
+.bg-emerald-600 {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+.bg-emerald-600:hover {
+  background-color: #047857 !important;
+}
+
+.bg-amber-600 {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+.bg-amber-600:hover {
+  background-color: #b45309 !important;
+}
+
+/* Active workflow step items */
+aside .step-item-active {
+  background: #ecfdf5 !important;
+  border-color: #059669 !important;
+  color: #064e3b !important;
+}
+
+aside .step-item-completed {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+aside .step-item-pending {
+  background-color: #f8fafc !important;
+  border-color: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* GIS Registry explicit high-contrast button & HUD utilities */
+.gis-btn-dark {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
+}
+.gis-btn-dark span,
+.gis-btn-dark svg {
+  color: #ffffff !important;
+}
+
+.gis-btn-emerald {
+  background-color: #047857 !important;
+  color: #ffffff !important;
+  border-color: #047857 !important;
+}
+.gis-btn-emerald:hover {
+  background-color: #065f46 !important;
+}
+.gis-btn-emerald span,
+.gis-btn-emerald svg {
+  color: #ffffff !important;
+}
+
+.gis-btn-amber {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+  border-color: #d97706 !important;
+}
+.gis-btn-amber:hover {
+  background-color: #b45309 !important;
+}
+.gis-btn-amber span,
+.gis-btn-amber svg {
+  color: #ffffff !important;
+}
+
+.gis-hud-dark {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+  color: #ffffff !important;
+  border-color: rgba(51, 65, 85, 0.9) !important;
+}
+.gis-hud-dark * {
+  color: inherit;
+}
+
+/* Precision crosshair cursor when drawing/measuring on GIS map */
+.gis-drawing-mode,
+.gis-drawing-mode .leaflet-container,
+.gis-drawing-mode .leaflet-grab,
+.gis-drawing-mode .leaflet-interactive {
+  cursor: crosshair !important;
+}
