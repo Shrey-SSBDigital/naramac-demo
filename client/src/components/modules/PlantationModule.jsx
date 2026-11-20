@@ -19,10 +19,11 @@ import {
   GitFork,
   ArrowRight,
   ShieldCheck,
-  Calendar
+  Calendar,
+  Camera
 } from 'lucide-react';
 
-export default function PlantationModule() {
+export default function PlantationModule({ onOpenGeoStudio }) {
   const {
     farmers,
     plantations,
@@ -465,7 +466,17 @@ export default function PlantationModule() {
         </div>
 
         {/* Global Module Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {onOpenGeoStudio && (
+            <button
+              onClick={onOpenGeoStudio}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
+              title="Launch Field GIS Studio for interactive map & AR camera photo capture"
+            >
+              <Camera className="w-4 h-4" />
+              <span>Field GIS Studio (AR Camera)</span>
+            </button>
+          )}
           <button
             onClick={() => setIsWalkPologenModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"

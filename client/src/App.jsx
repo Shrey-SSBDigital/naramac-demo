@@ -119,10 +119,14 @@ function AppContent() {
           )}
 
           {/* Module 2: Farmer Management */}
-          {activeModule === 'FARMERS' && <FarmerModule />}
+          {activeModule === 'FARMERS' && (
+            <FarmerModule onOpenGeoStudio={() => setActiveModule('GEO_STUDIO')} />
+          )}
 
           {/* Module 3: Plantation & Trees GIS */}
-          {activeModule === 'PLANTATIONS' && <PlantationModule />}
+          {activeModule === 'PLANTATIONS' && (
+            <PlantationModule onOpenGeoStudio={() => setActiveModule('GEO_STUDIO')} />
+          )}
 
           {/* Module 4: Cultivation & Inoculation */}
           {activeModule === 'INOCULATION' && <InoculationModule />}

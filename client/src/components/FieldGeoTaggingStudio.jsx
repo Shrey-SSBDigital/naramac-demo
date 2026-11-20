@@ -24,7 +24,15 @@ import {
   X,
   ShieldCheck,
   TreePine,
-  Sparkles
+  Sparkles,
+  Sprout,
+  Users,
+  Building,
+  Image as ImageIcon,
+  ZoomIn,
+  Video,
+  VideoOff,
+  ExternalLink
 } from 'lucide-react';
 import GoogleGisMapCanvas from './GoogleGisMapCanvas';
 import {
@@ -38,14 +46,20 @@ import {
   closeRing,
   buildRegistryGeoJSON
 } from '../utils/spatialUtils';
+import { useEnterprise } from '../context/EnterpriseContext';
+import {
+  generateSyntheticFieldPhoto,
+  stampWatermarkOnCanvas,
+  generateCryptoHash
+} from '../utils/photoCaptureUtils';
 
-// Default seed fallback in case API is temporarily unreachable
+// Default seed fallback
 const FALLBACK_REGISTRY = {
   plantations: [
     {
       id: 'PLT-AS-GLG-0001-X',
       name: 'Nahorjan Homestead Sachi Estate',
-      farmerId: 'FRM-GH-0104',
+      farmerId: 'FRM-AS-01',
       farmerName: 'Bhaben Saikia',
       cluster: 'GOLAGHAT',
       district: 'Golaghat, Assam',
@@ -55,8 +69,8 @@ const FALLBACK_REGISTRY = {
     {
       id: 'PLT-AS-GLG-0002-9',
       name: 'Dergaon North Sachi Block',
-      farmerId: 'FRM-GH-0118',
-      farmerName: 'Pranab Gogoi',
+      farmerId: 'FRM-AS-02',
+      farmerName: 'Pranab Bora',
       cluster: 'GOLAGHAT',
       district: 'Golaghat, Assam',
       dagPatta: 'Dag 214, Patta 61',
@@ -65,8 +79,8 @@ const FALLBACK_REGISTRY = {
     {
       id: 'PLT-TR-KDM-0003-C',
       name: 'Kadamtala Eastern Agar Garden',
-      farmerId: 'FRM-TR-0042',
-      farmerName: 'Ratan Debbarma',
+      farmerId: 'FRM-TR-01',
+      farmerName: 'Subhash Debnath',
       cluster: 'KADAMTALA',
       district: 'North Tripura, Tripura',
       dagPatta: 'Dag 94, Khatian 18',
@@ -75,8 +89,8 @@ const FALLBACK_REGISTRY = {
     {
       id: 'PLT-TR-KDM-0004-P',
       name: 'Churaibari Hill Slope Block',
-      farmerId: 'FRM-TR-0059',
-      farmerName: 'Manik Reang',
+      farmerId: 'FRM-TR-03',
+      farmerName: 'Lalrosanga Darlong',
       cluster: 'KADAMTALA',
       district: 'North Tripura, Tripura',
       dagPatta: 'Dag 112, Khatian 29',
@@ -88,6 +102,8 @@ const FALLBACK_REGISTRY = {
       id: 'PLG-AS-GLG-0001-M',
       version: 'v1',
       parentPlantationId: 'PLT-AS-GLG-0001-X',
+      farmerId: 'FRM-AS-01',
+      farmerName: 'Bhaben Saikia',
       name: 'Nahorjan Sapling Block A (2022)',
       cluster: 'GOLAGHAT',
       plantingYear: 2022,
@@ -99,6 +115,8 @@ const FALLBACK_REGISTRY = {
       id: 'PLG-AS-GLG-0001-N',
       version: 'v1',
       parentPlantationId: 'PLT-AS-GLG-0001-X',
+      farmerId: 'FRM-AS-01',
+      farmerName: 'Bhaben Saikia',
       name: 'Nahorjan Nursery Extension (2023)',
       cluster: 'GOLAGHAT',
       plantingYear: 2023,
@@ -110,6 +128,8 @@ const FALLBACK_REGISTRY = {
       id: 'PLG-AS-GLG-0002-K',
       version: 'v1',
       parentPlantationId: 'PLT-AS-GLG-0002-9',
+      farmerId: 'FRM-AS-02',
+      farmerName: 'Pranab Bora',
       name: 'Dergaon Young Block B (2021)',
       cluster: 'GOLAGHAT',
       plantingYear: 2021,
@@ -121,6 +141,8 @@ const FALLBACK_REGISTRY = {
       id: 'PLG-TR-KDM-0003-R',
       version: 'v1',
       parentPlantationId: 'PLT-TR-KDM-0003-C',
+      farmerId: 'FRM-TR-01',
+      farmerName: 'Subhash Debnath',
       name: 'Kadamtala Nursery Plot 1 (2022)',
       cluster: 'KADAMTALA',
       plantingYear: 2022,
@@ -132,6 +154,8 @@ const FALLBACK_REGISTRY = {
       id: 'PLG-TR-KDM-0004-S',
       version: 'v1',
       parentPlantationId: 'PLT-TR-KDM-0004-P',
+      farmerId: 'FRM-TR-03',
+      farmerName: 'Lalrosanga Darlong',
       name: 'Churaibari Slope Saplings (2023)',
       cluster: 'KADAMTALA',
       plantingYear: 2023,
@@ -144,6 +168,8 @@ const FALLBACK_REGISTRY = {
     {
       id: 'TRE-AS-GLG-0001-01',
       parentPlantationId: 'PLT-AS-GLG-0001-X',
+      farmerId: 'FRM-AS-01',
+      farmerName: 'Bhaben Saikia',
       cluster: 'GOLAGHAT',
       rfidTag: 'AS-GLG-TAG-8941',
       species: 'Aquilaria malaccensis Lam.',
@@ -160,6 +186,8 @@ const FALLBACK_REGISTRY = {
     {
       id: 'TRE-AS-GLG-0001-02',
       parentPlantationId: 'PLT-AS-GLG-0001-X',
+      farmerId: 'FRM-AS-01',
+      farmerName: 'Bhaben Saikia',
       cluster: 'GOLAGHAT',
       rfidTag: 'AS-GLG-TAG-8942',
       species: 'Aquilaria malaccensis Lam.',
@@ -176,6 +204,8 @@ const FALLBACK_REGISTRY = {
     {
       id: 'TRE-AS-GLG-0002-01',
       parentPlantationId: 'PLT-AS-GLG-0002-9',
+      farmerId: 'FRM-AS-02',
+      farmerName: 'Pranab Bora',
       cluster: 'GOLAGHAT',
       rfidTag: 'AS-GLG-TAG-9014',
       species: 'Aquilaria malaccensis Lam.',
@@ -192,6 +222,8 @@ const FALLBACK_REGISTRY = {
     {
       id: 'TRE-AS-GLG-0002-02',
       parentPlantationId: 'PLT-AS-GLG-0002-9',
+      farmerId: 'FRM-AS-02',
+      farmerName: 'Pranab Bora',
       cluster: 'GOLAGHAT',
       rfidTag: 'AS-GLG-TAG-9015',
       species: 'Aquilaria malaccensis Lam.',
@@ -208,6 +240,8 @@ const FALLBACK_REGISTRY = {
     {
       id: 'TRE-TR-KDM-0003-01',
       parentPlantationId: 'PLT-TR-KDM-0003-C',
+      farmerId: 'FRM-TR-01',
+      farmerName: 'Subhash Debnath',
       cluster: 'KADAMTALA',
       rfidTag: 'TR-KDM-TAG-4102',
       species: 'Aquilaria malaccensis Lam.',
@@ -224,6 +258,8 @@ const FALLBACK_REGISTRY = {
     {
       id: 'TRE-TR-KDM-0004-01',
       parentPlantationId: 'PLT-TR-KDM-0004-P',
+      farmerId: 'FRM-TR-03',
+      farmerName: 'Lalrosanga Darlong',
       cluster: 'KADAMTALA',
       rfidTag: 'TR-KDM-TAG-4188',
       species: 'Aquilaria malaccensis Lam.',
@@ -259,17 +295,155 @@ const CLUSTER_VIEWPORTS = {
 };
 
 export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
-  // Registry Data (synced with Express /api/gis/registry)
-  const [registry, setRegistry] = useState(FALLBACK_REGISTRY);
+  const {
+    farmers,
+    plantations: enterprisePlantations,
+    addPlantation: enterpriseAddPlantation,
+    pologens: enterprisePologens,
+    addPologen: enterpriseAddPologen,
+    trees: enterpriseTrees,
+    addTree: enterpriseAddTree
+  } = useEnterprise();
+
+  // Initialize GIS Registry synced with EnterpriseContext
+  const [registry, setRegistry] = useState(() => {
+    const entPlts = (enterprisePlantations || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      farmerId: p.farmerId,
+      farmerName: p.farmerName,
+      cluster: p.cluster.includes('Tripura') ? 'KADAMTALA' : 'GOLAGHAT',
+      district: `${p.district}, ${p.state}`,
+      dagPatta: `Dag ${p.id.slice(-2)}, Patta ${p.id.slice(-2)}`,
+      coordinates: [p.boundaryPolygon.map(([lat, lng]) => [lng, lat])]
+    }));
+
+    const entPlgs = (enterprisePologens || []).map(plg => ({
+      id: plg.id,
+      version: 'v1',
+      parentPlantationId: plg.plantationId,
+      farmerId: plg.farmerId,
+      farmerName: plg.farmerName,
+      name: plg.name,
+      cluster: plg.cluster.includes('Tripura') ? 'KADAMTALA' : 'GOLAGHAT',
+      plantingYear: plg.plantingYear,
+      ageYears: plg.ageYears,
+      saplingCount: plg.saplingCount,
+      coordinates: [plg.boundaryPolygon.map(([lat, lng]) => [lng, lat])]
+    }));
+
+    const entTrees = (enterpriseTrees || []).map(t => ({
+      id: t.id,
+      parentPlantationId: t.plantationId,
+      farmerId: t.farmerId,
+      farmerName: t.farmerName,
+      cluster: t.cluster.includes('Tripura') ? 'KADAMTALA' : 'GOLAGHAT',
+      rfidTag: t.qrTagCode || `AS-TAG-${t.id.slice(-4)}`,
+      species: t.species,
+      ageYears: t.ageYears,
+      gbhCm: t.girthCm,
+      heightM: t.heightMeters,
+      status: t.status === 'MATURE_GROWING' ? 'VERIFIED_HEALTHY' : (t.status === 'INOCULATED' ? 'INOCULATED' : 'HARVEST_AUTHORIZED'),
+      pinColor: t.status === 'HARVESTED' ? 'red' : (t.status === 'INOCULATED' ? 'slate' : 'green'),
+      elevation: '86.5 m MSL',
+      accuracyM: 1.1,
+      photoSha256: t.photoHash ? t.photoHash.replace('sha256:', '') : generateCryptoHash(),
+      coordinates: [t.gpsLongitude, t.gpsLatitude]
+    }));
+
+    const combinedPlts = [...entPlts];
+    FALLBACK_REGISTRY.plantations.forEach(fp => {
+      if (!combinedPlts.some(p => p.id === fp.id)) combinedPlts.push(fp);
+    });
+
+    const combinedPlgs = [...entPlgs];
+    FALLBACK_REGISTRY.pologens.forEach(fplg => {
+      if (!combinedPlgs.some(p => p.id === fplg.id)) combinedPlgs.push(fplg);
+    });
+
+    const combinedTrees = [...entTrees];
+    FALLBACK_REGISTRY.trees.forEach(ft => {
+      if (!combinedTrees.some(t => t.id === ft.id)) combinedTrees.push(ft);
+    });
+
+    return {
+      plantations: combinedPlts,
+      pologens: combinedPlgs,
+      trees: combinedTrees,
+      facilities: FALLBACK_REGISTRY.facilities,
+      corridors: FALLBACK_REGISTRY.corridors
+    };
+  });
+
+  // Ensure all existing trees & pologens have inspectable watermarked photos
+  useEffect(() => {
+    setRegistry(prev => {
+      let changed = false;
+      const updatedTrees = prev.trees.map(t => {
+        if (!t.photoUrl) {
+          changed = true;
+          const plt = prev.plantations.find(p => p.id === t.parentPlantationId);
+          return {
+            ...t,
+            photoUrl: generateSyntheticFieldPhoto({
+              kind: 'TREE',
+              entityId: t.id,
+              farmerName: t.farmerName || plt?.farmerName || 'Bhaben Saikia',
+              farmerId: t.farmerId || plt?.farmerId || 'FRM-AS-01',
+              plantationName: plt?.name || 'Nahorjan Sachi Estate',
+              plantationId: t.parentPlantationId,
+              rfidTag: t.rfidTag,
+              ageYears: t.ageYears,
+              gbhCm: t.gbhCm,
+              coordinates: t.coordinates,
+              photoSha256: t.photoSha256 || generateCryptoHash()
+            })
+          };
+        }
+        return t;
+      });
+
+      const updatedPologens = prev.pologens.map(plg => {
+        if (!plg.photoUrl) {
+          changed = true;
+          const plt = prev.plantations.find(p => p.id === plg.parentPlantationId);
+          const center = plg.coordinates?.[0]?.[0] || [93.9631, 26.5117];
+          return {
+            ...plg,
+            photoUrl: generateSyntheticFieldPhoto({
+              kind: 'POLOGEN',
+              entityId: plg.id,
+              farmerName: plg.farmerName || plt?.farmerName || 'Bhaben Saikia',
+              farmerId: plg.farmerId || plt?.farmerId || 'FRM-AS-01',
+              plantationName: plt?.name || 'Nahorjan Sachi Estate',
+              plantationId: plg.parentPlantationId,
+              saplingCount: plg.saplingCount,
+              plantingYear: plg.plantingYear,
+              coordinates: center,
+              photoSha256: generateCryptoHash()
+            })
+          };
+        }
+        return plg;
+      });
+
+      if (!changed) return prev;
+      return {
+        ...prev,
+        trees: updatedTrees,
+        pologens: updatedPologens
+      };
+    });
+  }, []);
 
   // Navigation, Map Type & Tool States
   const [activeCluster, setActiveCluster] = useState('GOLAGHAT');
   const [viewport, setViewport] = useState(CLUSTER_VIEWPORTS.GOLAGHAT);
-  const [mapType, setMapType] = useState('hybrid'); // 'hybrid' | 'satellite' | 'terrain' | 'roadmap'
-  const [activeTool, setActiveTool] = useState('INSPECT'); // 'INSPECT' | 'SELECT_AREA' | 'REGISTER_PLANTATION' | 'WALK_POLOGEN' | 'GEO_PIN_TREE' | 'DISTANCE'
+  const [mapType, setMapType] = useState('hybrid');
+  const [activeTool, setActiveTool] = useState('INSPECT');
   const [exactGpsView, setExactGpsView] = useState(true);
 
-  // Layer Visibility Checkboxes
+  // Layer Visibility
   const [layers, setLayers] = useState({
     plantations: true,
     pologens: true,
@@ -278,16 +452,18 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     corridors: true
   });
 
-  // Selection & Interactive Drawing State
+  // Selection & Drawing State
   const [selectedEntity, setSelectedEntity] = useState(null);
-  const [draftPoints, setDraftPoints] = useState([]); // Array of [lng, lat]
+  const [draftPoints, setDraftPoints] = useState([]);
   const [isWalkingSim, setIsWalkingSim] = useState(false);
   const walkTimerRef = useRef(null);
 
-  // Form Metadata for New Registrations
+  // Form Metadata for New Registrations (Attached directly to Farmer & Plantation)
   const [draftForm, setDraftForm] = useState({
+    farmerId: farmers[0]?.id || 'FRM-AS-01',
+    farmerName: farmers[0]?.name || 'Bhaben Saikia',
+    parentPlantationId: registry.plantations[0]?.id || 'PLT-AS-GLG-0001-X',
     name: '',
-    farmerName: 'Bhaben Saikia',
     dagPatta: 'Dag 235, Patta 72',
     plantingYear: 2023,
     saplingCount: 280,
@@ -298,11 +474,19 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     treeStatus: 'VERIFIED_HEALTHY'
   });
 
-  // AR Camera Modal & SHA-256 Hash
+  // Image Capture States
   const [showCameraModal, setShowCameraModal] = useState(false);
-  const [cameraHash, setCameraHash] = useState('7d4a2f8c5b9e1a3d6f0c8e2b4a7d9f1e3c5a7b9d0e2f4a6c8e0b2d4f6a8c0e2b');
+  const [cameraMode, setCameraMode] = useState('TREE'); // 'TREE' | 'POLOGEN'
+  const [cameraHash, setCameraHash] = useState(() => generateCryptoHash());
+  const [draftTreePhoto, setDraftTreePhoto] = useState(null);
+  const [draftPologenPhoto, setDraftPologenPhoto] = useState(null);
+  const [viewingPhoto, setViewingPhoto] = useState(null);
 
-  // Offline-First Simulation & Notification Banner
+  // Live device webcam stream state
+  const videoRef = useRef(null);
+  const [isWebcamActive, setIsWebcamActive] = useState(false);
+
+  // Offline Simulation
   const [isOffline, setIsOffline] = useState(false);
   const [offlineQueue, setOfflineQueue] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -313,22 +497,18 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     setTimeout(() => setBannerMsg(null), 5000);
   };
 
-  // Load initial GIS Registry from Express Backend
+  // Plantations available for selected farmer
+  const farmerPlantationsList = useMemo(() => {
+    const list = registry.plantations.filter(p => p.farmerId === draftForm.farmerId);
+    return list.length > 0 ? list : registry.plantations;
+  }, [registry.plantations, draftForm.farmerId]);
+
+  // Keep parentPlantationId aligned when farmer changes
   useEffect(() => {
-    fetch('/api/gis/registry')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((res) => {
-        if (res?.success && res?.data) {
-          setRegistry(res.data);
-        }
-      })
-      .catch(() => {
-        // Fallback already initialized
-      });
-    return () => {
-      if (walkTimerRef.current) clearInterval(walkTimerRef.current);
-    };
-  }, []);
+    if (farmerPlantationsList.length > 0 && !farmerPlantationsList.some(p => p.id === draftForm.parentPlantationId)) {
+      setDraftForm(prev => ({ ...prev, parentPlantationId: farmerPlantationsList[0].id }));
+    }
+  }, [draftForm.farmerId, farmerPlantationsList, draftForm.parentPlantationId]);
 
   // Switch Cluster
   const handleSelectCluster = (clusterKey) => {
@@ -336,14 +516,13 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     setViewport({ ...CLUSTER_VIEWPORTS[clusterKey] });
   };
 
-  // Switch GIS Tool (with smart zoom so Plantations are easy to click inside!)
+  // Switch GIS Tool
   const handleSelectTool = (tool) => {
     if (walkTimerRef.current) clearInterval(walkTimerRef.current);
     setIsWalkingSim(false);
     setActiveTool(tool);
     setDraftPoints([]);
 
-    // Smart auto-focus when entering Walk POLOGEN or Geo-Pin Tree so user clearly sees a Plantation polygon
     if (tool === 'WALK_POLOGEN' || tool === 'GEO_PIN_TREE') {
       const targetCluster = activeCluster === 'KADAMTALA' ? 'KADAMTALA' : 'GOLAGHAT';
       const targetPlt =
@@ -361,7 +540,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
   const handleSelectEntity = (entity) => {
     setSelectedEntity(entity);
     if (activeTool === 'SELECT_AREA') {
-      setDraftPoints([]); // Clear custom selection box when clicking an existing farm
+      setDraftPoints([]);
     }
     if (entity.type === 'TREE') {
       setViewport({ lat: entity.coordinates[1], lng: entity.coordinates[0], zoom: 17 });
@@ -377,19 +556,40 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     }
   };
 
-  // Map Click Handler for Interactive Tools
+  // Map Click Handler
   const handleMapClickPoint = (lngLat) => {
     if (activeTool === 'GEO_PIN_TREE') {
       setDraftPoints([lngLat]);
+      // Auto-detect containing plantation and sync farmer!
+      const parent = findContainingPlantation(lngLat, registry.plantations);
+      if (parent) {
+        setDraftForm(prev => ({
+          ...prev,
+          parentPlantationId: parent.id,
+          farmerId: parent.farmerId || prev.farmerId,
+          farmerName: parent.farmerName || prev.farmerName
+        }));
+      }
     } else if (['SELECT_AREA', 'REGISTER_PLANTATION', 'WALK_POLOGEN', 'DISTANCE'].includes(activeTool)) {
       if (activeTool === 'SELECT_AREA') {
         setSelectedEntity(null);
       }
       setDraftPoints((prev) => [...prev, lngLat]);
+
+      if (activeTool === 'WALK_POLOGEN' && draftPoints.length >= 2) {
+        const parent = findContainingPlantation(lngLat, registry.plantations);
+        if (parent) {
+          setDraftForm(prev => ({
+            ...prev,
+            parentPlantationId: parent.id,
+            farmerId: parent.farmerId || prev.farmerId,
+            farmerName: parent.farmerName || prev.farmerName
+          }));
+        }
+      }
     }
   };
 
-  // Dragging a vertex updates its coordinate live
   const handleUpdateDraftPoint = (idx, newLngLat) => {
     setDraftPoints((prev) => {
       const next = [...prev];
@@ -398,7 +598,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     });
   };
 
-  // 1-Click Sample Plantation Boundary (for quick demo in Register Plantation mode)
+  // 1-Click Sample Plantation Boundary
   const handleSamplePlantationPlot = () => {
     const sample =
       activeCluster === 'KADAMTALA'
@@ -419,7 +619,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     showToast('Sample plantation boundary plotted! Drag any corner vertex or click "Commit to Registry".', 'success');
   };
 
-  // Simulate Ground-Walked GPS Boundary for POLOGEN (<7 yrs) inside Golaghat / Kadamtala Plantation
+  // Simulate Ground-Walked GPS Boundary for POLOGEN (<7 yrs)
   const handleSimulatePologenWalk = () => {
     if (isWalkingSim) return;
     setIsWalkingSim(true);
@@ -459,15 +659,25 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     }, 450);
   };
 
-  // 1-Click Quick Mature Tree Pin inside current cluster's Plantation
+  // 1-Click Quick Mature Tree Pin inside Plantation
   const handleQuickPinTree = () => {
     const pt = activeCluster === 'KADAMTALA' ? [92.2055, 24.4631] : [93.9633, 26.5138];
     setDraftPoints([pt]);
     setViewport({ lat: pt[1], lng: pt[0], zoom: 17 });
-    showToast('Mature tree pin dropped inside parent plantation! Drag pin or click "Commit to Registry".', 'success');
+
+    const parent = findContainingPlantation(pt, registry.plantations);
+    if (parent) {
+      setDraftForm(prev => ({
+        ...prev,
+        parentPlantationId: parent.id,
+        farmerId: parent.farmerId || prev.farmerId,
+        farmerName: parent.farmerName || prev.farmerName
+      }));
+    }
+    showToast('Mature tree pin dropped inside parent plantation! Capture photo & click "Commit to Registry".', 'success');
   };
 
-  // Live Turf.js Spatial Analysis of Current Draft Geometry
+  // Live Turf.js Spatial Analysis
   const draftAnalysis = useMemo(() => {
     if (activeTool === 'DISTANCE') {
       return { kind: 'DISTANCE', ...computePathDistance(draftPoints) };
@@ -530,14 +740,14 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
       if (draftAnalysis?.measurements) {
         const m = draftAnalysis.measurements;
         const inPlt = draftAnalysis.containment?.contained ? `Inside ${draftAnalysis.containment.parentPlantation.id} ✓` : 'Outside Plantation ✗';
-        return `Walk POLOGEN: ${m.assamBigha.toFixed(3)} Bigha (${formatIndianNumber(m.areaSqM, 0)} m²) · ${inPlt}`;
+        return `Walk POLOGEN (<7y): ${m.assamBigha.toFixed(3)} Bigha (${formatIndianNumber(m.areaSqM, 0)} m²) · ${inPlt}`;
       }
       return `Walk POLOGEN (<7y): Click 3+ corners INSIDE a green Plantation, or click "Simulate GPS Walk" (${draftPoints.length}/3)`;
     }
     if (activeTool === 'GEO_PIN_TREE') {
       if (draftAnalysis?.kind === 'TREE') {
         return draftAnalysis.contained
-          ? `Tree Pin Ready inside ${draftAnalysis.parentPlantation.id} ✓ — Drag pin or click Commit`
+          ? `Tree Pin Ready inside ${draftAnalysis.parentPlantation.id} ✓ — Capture photo & click Commit`
           : 'Tree Pin is outside any Plantation — drag or click inside a green Plantation boundary';
       }
       return 'Geo-Pin Tree (≥7y): Click inside any green Plantation boundary on Google Maps to drop a Tree pin';
@@ -551,7 +761,113 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     return null;
   }, [activeTool, draftPoints, draftAnalysis]);
 
-  // Save Newly Surveyed Entity (Online API + Local Optimistic Update, or Offline SQLite Queue)
+  // Open Camera Modal
+  const handleOpenCamera = (mode) => {
+    setCameraMode(mode);
+    setCameraHash(generateCryptoHash());
+    setShowCameraModal(true);
+  };
+
+  // Toggle Live Webcam
+  const toggleWebcam = async () => {
+    if (isWebcamActive) {
+      if (videoRef.current && videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+        videoRef.current.srcObject = null;
+      }
+      setIsWebcamActive(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+          setIsWebcamActive(true);
+        }
+      } catch (err) {
+        showToast('Webcam not accessible or permission denied. Using high-precision AR simulation.', 'warning');
+        setIsWebcamActive(false);
+      }
+    }
+  };
+
+  // Snap and Watermark Photo
+  const handleSnapPhoto = () => {
+    const currentFarmer = farmers.find(f => f.id === draftForm.farmerId) || farmers[0];
+    const targetPlt = registry.plantations.find(p => p.id === (
+      draftAnalysis?.parentPlantation?.id ||
+      draftAnalysis?.containment?.parentPlantation?.id ||
+      draftForm.parentPlantationId
+    )) || registry.plantations[0];
+
+    const currentHash = generateCryptoHash();
+    let photoDataUrl;
+
+    if (isWebcamActive && videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 720;
+      canvas.height = 540;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoRef.current, 0, 0, 720, 540);
+      stampWatermarkOnCanvas(ctx, 720, 540, {
+        kind: cameraMode,
+        entityId: cameraMode === 'POLOGEN'
+          ? `PLG-${targetPlt.id.slice(4, 10)}-${String(registry.pologens.length + 1).padStart(3, '0')}`
+          : `TRE-${targetPlt.id.slice(4, 10)}-${String(registry.trees.length + 1).padStart(3, '0')}`,
+        farmerName: currentFarmer.name,
+        farmerId: currentFarmer.id,
+        plantationName: targetPlt.name,
+        plantationId: targetPlt.id,
+        rfidTag: draftForm.rfidTag,
+        ageYears: draftForm.ageYears,
+        gbhCm: draftForm.gbhCm,
+        saplingCount: draftForm.saplingCount,
+        plantingYear: draftForm.plantingYear,
+        coordinates: draftPoints[0] || [93.9782, 26.5204],
+        photoSha256: currentHash
+      });
+      photoDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+      if (videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+        videoRef.current.srcObject = null;
+      }
+      setIsWebcamActive(false);
+    } else {
+      photoDataUrl = generateSyntheticFieldPhoto({
+        kind: cameraMode,
+        entityId: cameraMode === 'POLOGEN'
+          ? `PLG-${targetPlt.id.slice(4, 10)}-${String(registry.pologens.length + 1).padStart(3, '0')}`
+          : `TRE-${targetPlt.id.slice(4, 10)}-${String(registry.trees.length + 1).padStart(3, '0')}`,
+        farmerName: currentFarmer.name,
+        farmerId: currentFarmer.id,
+        plantationName: targetPlt.name,
+        plantationId: targetPlt.id,
+        rfidTag: draftForm.rfidTag,
+        ageYears: draftForm.ageYears,
+        gbhCm: draftForm.gbhCm,
+        saplingCount: draftForm.saplingCount,
+        plantingYear: draftForm.plantingYear,
+        coordinates: draftPoints[0] || [93.9782, 26.5204],
+        photoSha256: currentHash
+      });
+    }
+
+    if (cameraMode === 'POLOGEN') {
+      setDraftPologenPhoto(photoDataUrl);
+      setCameraHash(currentHash);
+    } else {
+      setDraftTreePhoto(photoDataUrl);
+      setCameraHash(currentHash);
+    }
+
+    setShowCameraModal(false);
+    showToast(`✓ Field ${cameraMode === 'POLOGEN' ? 'POLOGEN sapling grove' : 'mature tree'} photo captured & stamped with SHA-256`, 'success');
+  };
+
+  // Save Draft (Commits to EnterpriseContext and local Spatial Registry)
   const handleSaveDraft = async () => {
     if (!draftAnalysis) return;
 
@@ -560,12 +876,27 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
         showToast(`Turf.js Overlap Blocked (${draftAnalysis.overlap.overlapPct}% overlap with existing plantation). Drag vertices to resolve.`, 'error');
         return;
       }
+
+      const currentFarmer = farmers.find(f => f.id === draftForm.farmerId) || farmers[0];
+      const closedPoints = closeRing(draftPoints);
+
+      // Enterprise Context Sync
+      enterpriseAddPlantation({
+        farmerId: currentFarmer.id,
+        farmerName: currentFarmer.name,
+        name: draftForm.name.trim() || `Surveyed Agarwood Holding (${activeCluster === 'KADAMTALA' ? 'Tripura' : 'Assam'})`,
+        cluster: activeCluster === 'KADAMTALA' ? 'Kadamtala Cluster' : 'Golaghat Cluster',
+        areaHectares: draftAnalysis.measurements.areaHa,
+        boundaryPolygon: closedPoints.map(([lng, lat]) => [lat, lng])
+      });
+
       const payload = {
         name: draftForm.name.trim() || `Surveyed Agarwood Holding (${activeCluster === 'KADAMTALA' ? 'Tripura' : 'Assam'})`,
-        farmerName: draftForm.farmerName,
+        farmerId: currentFarmer.id,
+        farmerName: currentFarmer.name,
         cluster: activeCluster === 'KADAMTALA' ? 'KADAMTALA' : 'GOLAGHAT',
         dagPatta: draftForm.dagPatta,
-        coordinates: [closeRing(draftPoints)]
+        coordinates: [closedPoints]
       };
       await commitRecord('PLANTATION', '/api/gis/plantations', payload);
     } else if (activeTool === 'WALK_POLOGEN') {
@@ -577,36 +908,115 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
         showToast(`Turf.js Overlap Blocked (${draftAnalysis.overlap.overlapPct}% overlap with sibling POLOGEN).`, 'error');
         return;
       }
+
+      const currentFarmer = farmers.find(f => f.id === draftForm.farmerId) || farmers[0];
+      const parentPlt = draftAnalysis.containment.parentPlantation;
+      const closedPoints = closeRing(draftPoints);
+
+      // Ensure photo is captured or auto-generate stamped photo
+      const photoToSave = draftPologenPhoto || generateSyntheticFieldPhoto({
+        kind: 'POLOGEN',
+        entityId: `PLG-${parentPlt.id.slice(4, 10)}-${String(registry.pologens.length + 1).padStart(3, '0')}`,
+        farmerName: currentFarmer.name,
+        farmerId: currentFarmer.id,
+        plantationName: parentPlt.name,
+        plantationId: parentPlt.id,
+        saplingCount: Number(draftForm.saplingCount) || 250,
+        plantingYear: Number(draftForm.plantingYear) || 2023,
+        coordinates: closedPoints[0],
+        photoSha256: cameraHash
+      });
+
+      // Enterprise Context Sync
+      enterpriseAddPologen({
+        farmerId: currentFarmer.id,
+        farmerName: currentFarmer.name,
+        plantationId: parentPlt.id,
+        plantationName: parentPlt.name,
+        name: draftForm.name.trim() || `${parentPlt.name} Sapling Block`,
+        plantingYear: Number(draftForm.plantingYear) || 2023,
+        ageYears: +(2026.5 - (Number(draftForm.plantingYear) || 2023)).toFixed(1),
+        saplingCount: Number(draftForm.saplingCount) || 250,
+        boundaryPolygon: closedPoints.map(([lng, lat]) => [lat, lng]),
+        areaSquareMeters: Math.round(draftAnalysis.measurements.areaSqM),
+        perimeterMeters: Math.round(draftAnalysis.measurements.perimeterM),
+        photoUrl: photoToSave,
+        photoSha256: cameraHash
+      });
+
       const payload = {
         name: draftForm.name.trim() || `Walked Sapling Block (${draftForm.plantingYear})`,
-        parentPlantationId: draftAnalysis.containment.parentPlantation.id,
-        cluster: draftAnalysis.containment.parentPlantation.cluster,
+        parentPlantationId: parentPlt.id,
+        farmerId: currentFarmer.id,
+        farmerName: currentFarmer.name,
+        cluster: parentPlt.cluster,
         plantingYear: Number(draftForm.plantingYear) || 2023,
         saplingCount: Number(draftForm.saplingCount) || 250,
-        coordinates: [closeRing(draftPoints)]
+        coordinates: [closedPoints],
+        photoUrl: photoToSave,
+        photoSha256: cameraHash
       };
       await commitRecord('POLOGEN', '/api/gis/pologens', payload);
+      setDraftPologenPhoto(null);
     } else if (activeTool === 'GEO_PIN_TREE') {
       if (!draftAnalysis.contained) {
         showToast('Turf.js Containment Rule: Mature Tree pin must be placed inside a registered green Plantation boundary!', 'error');
         return;
       }
+
+      const currentFarmer = farmers.find(f => f.id === draftForm.farmerId) || farmers[0];
+      const parentPlt = draftAnalysis.parentPlantation;
+
+      // Ensure photo is captured or auto-generate stamped photo
+      const photoToSave = draftTreePhoto || generateSyntheticFieldPhoto({
+        kind: 'TREE',
+        entityId: `TRE-${parentPlt.id.slice(4, 10)}-${String(registry.trees.length + 1).padStart(3, '0')}`,
+        farmerName: currentFarmer.name,
+        farmerId: currentFarmer.id,
+        plantationName: parentPlt.name,
+        plantationId: parentPlt.id,
+        rfidTag: draftForm.rfidTag,
+        ageYears: Number(draftForm.ageYears) || 10.5,
+        gbhCm: Number(draftForm.gbhCm) || 62.0,
+        coordinates: draftPoints[0],
+        photoSha256: cameraHash
+      });
+
+      // Enterprise Context Sync
+      enterpriseAddTree({
+        farmerId: currentFarmer.id,
+        farmerName: currentFarmer.name,
+        plantationId: parentPlt.id,
+        plantationName: parentPlt.name,
+        qrTagCode: draftForm.rfidTag,
+        ageYears: Number(draftForm.ageYears) || 10.5,
+        girthCm: Number(draftForm.gbhCm) || 62.0,
+        heightMeters: Number(draftForm.heightM) || 11.0,
+        gpsLatitude: draftPoints[0][1],
+        gpsLongitude: draftPoints[0][0],
+        photoHash: `sha256:${cameraHash}`,
+        photoUrl: photoToSave
+      });
+
       const payload = {
-        parentPlantationId: draftAnalysis.parentPlantation.id,
-        cluster: draftAnalysis.parentPlantation.cluster,
+        parentPlantationId: parentPlt.id,
+        farmerId: currentFarmer.id,
+        farmerName: currentFarmer.name,
+        cluster: parentPlt.cluster,
         rfidTag: draftForm.rfidTag,
         ageYears: Number(draftForm.ageYears) || 10.5,
         gbhCm: Number(draftForm.gbhCm) || 62.0,
         heightM: Number(draftForm.heightM) || 11.0,
         status: draftForm.treeStatus,
         photoSha256: cameraHash,
+        photoUrl: photoToSave,
         coordinates: draftPoints[0]
       };
       await commitRecord('TREE', '/api/gis/trees', payload);
+      setDraftTreePhoto(null);
     }
   };
 
-  // Helper to create local fallback object if Express API is offline
   const buildLocalRecord = (kind, payload) => {
     const clusterCode = payload.cluster === 'KADAMTALA' ? 'TR-KDM' : 'AS-GLG';
     if (kind === 'PLANTATION') {
@@ -614,7 +1024,6 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
       const suffix = String.fromCharCode(65 + (idx % 26));
       return {
         id: `PLT-${clusterCode}-${String(idx).padStart(4, '0')}-${suffix}`,
-        farmerId: `FRM-${clusterCode}-${100 + idx}`,
         district: payload.cluster === 'KADAMTALA' ? 'North Tripura, Tripura' : 'Golaghat, Assam',
         ...payload
       };
@@ -641,93 +1050,19 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
   };
 
   const commitRecord = async (kind, endpoint, payload) => {
-    if (isOffline) {
-      setOfflineQueue((prev) => [...prev, { kind, endpoint, payload, queuedAt: new Date().toISOString() }]);
-      setDraftPoints([]);
-      setActiveTool('INSPECT');
-      showToast(`Cached ${kind} offline in mobile SQLite queue (#AG-09). Sync when back online.`, 'warning');
-      return;
-    }
-
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json?.success && json?.data) {
-          setRegistry(json.data);
-          const created = json.plantation || json.pologen || json.tree;
-          if (created) setSelectedEntity({ type: kind, ...created });
-          setDraftPoints([]);
-          setActiveTool('INSPECT');
-          showToast(`${kind} ${created?.id || ''} committed to NERAMAC Spatial Registry with Turf.js verification!`, 'success');
-          return;
-        }
-      }
-      throw new Error('API_UNAVAILABLE');
-    } catch {
-      // Seamless local state update so demo always works even without backend running
-      const localItem = buildLocalRecord(kind, payload);
-      setRegistry((prev) => ({
-        ...prev,
-        plantations: kind === 'PLANTATION' ? [localItem, ...prev.plantations] : prev.plantations,
-        pologens: kind === 'POLOGEN' ? [localItem, ...prev.pologens] : prev.pologens,
-        trees: kind === 'TREE' ? [localItem, ...prev.trees] : prev.trees
-      }));
-      setSelectedEntity({ type: kind, ...localItem });
-      setDraftPoints([]);
-      setActiveTool('INSPECT');
-      showToast(`${kind} ${localItem.id} registered and validated with Turf.js!`, 'success');
-    }
+    const localItem = buildLocalRecord(kind, payload);
+    setRegistry((prev) => ({
+      ...prev,
+      plantations: kind === 'PLANTATION' ? [localItem, ...prev.plantations] : prev.plantations,
+      pologens: kind === 'POLOGEN' ? [localItem, ...prev.pologens] : prev.pologens,
+      trees: kind === 'TREE' ? [localItem, ...prev.trees] : prev.trees
+    }));
+    setSelectedEntity({ type: kind, ...localItem });
+    setDraftPoints([]);
+    setActiveTool('INSPECT');
+    showToast(`${kind} ${localItem.id} captured with stamped photo and committed to NERAMAC Spatial Registry!`, 'success');
   };
 
-  // Sync Offline SQLite Queue to Express Backend
-  const handleSyncOfflineQueue = async () => {
-    if (offlineQueue.length === 0 || isOffline) return;
-    setIsSyncing(true);
-    let syncedCount = 0;
-    let latestData = null;
-
-    for (const item of offlineQueue) {
-      try {
-        const res = await fetch(item.endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(item.payload)
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.success && json?.data) {
-            latestData = json.data;
-            syncedCount++;
-            continue;
-          }
-        }
-        throw new Error('local');
-      } catch {
-        const localItem = buildLocalRecord(item.kind, item.payload);
-        setRegistry((prev) => ({
-          ...prev,
-          plantations: item.kind === 'PLANTATION' ? [localItem, ...prev.plantations] : prev.plantations,
-          pologens: item.kind === 'POLOGEN' ? [localItem, ...prev.pologens] : prev.pologens,
-          trees: item.kind === 'TREE' ? [localItem, ...prev.trees] : prev.trees
-        }));
-        syncedCount++;
-      }
-    }
-
-    setTimeout(() => {
-      if (latestData) setRegistry(latestData);
-      setOfflineQueue([]);
-      setIsSyncing(false);
-      showToast(`Synchronized ${syncedCount} offline SQLite GIS record(s) to Central Ledger!`, 'success');
-    }, 600);
-  };
-
-  // Export RFC 7946 GeoJSON File
   const handleExportGeoJSON = () => {
     const geojson = buildRegistryGeoJSON(registry);
     const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/geo+json' });
@@ -742,7 +1077,6 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     showToast(`Exported ${geojson.features.length} spatial features to RFC 7946 GeoJSON.`, 'success');
   };
 
-  // Selected Entity Computed Measurements
   const selectedMeasurements = useMemo(() => {
     if (!selectedEntity || selectedEntity.type === 'TREE') return null;
     return computePolygonMeasurements(selectedEntity.coordinates);
@@ -755,13 +1089,16 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
   return (
     <div className="space-y-4">
       {/* 1. PAGE HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
         <div>
-          <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
-            GIS Plantation, POLOGEN &amp; Tree Registry
+          <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>Field GIS Studio</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+              Interactive Capture with Camera
+            </span>
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Ground-walked polygons, Turf.js overlap validation, boundary containment, and GeoJSON export
+            Capture POLOGEN sapling blocks (&lt;7 yrs) and mature trees (&ge;7 yrs) with Turf.js perimeter validation, live AR camera &amp; watermarked photo hashing.
           </p>
         </div>
 
@@ -776,7 +1113,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             }`}
           >
             {exactGpsView ? <Eye className="w-3.5 h-3.5 text-slate-600" /> : <EyeOff className="w-3.5 h-3.5 text-amber-700" />}
-            <span>{exactGpsView ? 'NERAMAC Exact GPS View' : 'DPDP Masked GPS View'}</span>
+            <span>{exactGpsView ? 'Exact GPS View' : 'DPDP Masked'}</span>
           </button>
 
           <button
@@ -817,7 +1154,6 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
 
       {/* 2. UNIFIED GIS TOOLBAR CARD */}
       <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs space-y-2.5">
-        {/* Row 1: Cluster Pills (Left) + GIS Tool Switcher (Right) */}
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Cluster Selector */}
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
@@ -850,9 +1186,9 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             {[
               { id: 'INSPECT', label: 'Inspect', icon: MousePointer2 },
               { id: 'SELECT_AREA', label: 'Select Area', icon: SquareDashed },
+              { id: 'WALK_POLOGEN', label: 'Walk POLOGEN (<7y)', icon: Footprints, highlight: true },
+              { id: 'GEO_PIN_TREE', label: 'Geo-Pin Tree (≥7y)', icon: MapPin, highlight: true },
               { id: 'REGISTER_PLANTATION', label: 'Register Plantation', icon: Tag },
-              { id: 'WALK_POLOGEN', label: 'Walk POLOGEN', icon: Footprints },
-              { id: 'GEO_PIN_TREE', label: 'Geo-Pin Tree', icon: MapPin },
               { id: 'DISTANCE', label: 'Distance', icon: Ruler }
             ].map((t) => {
               const Icon = t.icon;
@@ -865,6 +1201,8 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
                     isActive
                       ? 'gis-btn-dark shadow-2xs'
+                      : t.highlight
+                      ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
@@ -876,7 +1214,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
           </div>
         </div>
 
-        {/* Row 2: Google Map Type Tabs (Left) + Contextual Tool Actions & Offline Toggle (Right) */}
+        {/* Row 2: Google Map Type Tabs & Action Helpers */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-slate-100">
           <div className="flex items-center gap-1 text-xs">
             {[
@@ -900,8 +1238,50 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             ))}
           </div>
 
-          {/* Contextual Tool Action Helpers + Offline Network Simulator */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            {activeTool === 'WALK_POLOGEN' && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleSimulatePologenWalk}
+                  disabled={isWalkingSim}
+                  className="px-2.5 py-1 rounded-md gis-btn-emerald disabled:opacity-50 font-semibold flex items-center gap-1"
+                >
+                  <Footprints className="w-3 h-3" />
+                  <span>{isWalkingSim ? 'Walking Perimeter...' : 'Simulate GPS Walk'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleOpenCamera('POLOGEN')}
+                  className="px-2.5 py-1 rounded-md bg-teal-700 hover:bg-teal-800 text-white font-bold flex items-center gap-1"
+                >
+                  <Camera className="w-3 h-3" />
+                  <span>{draftPologenPhoto ? 'Retake Sapling Photo' : 'Capture Sapling Photo'}</span>
+                </button>
+              </>
+            )}
+
+            {activeTool === 'GEO_PIN_TREE' && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleQuickPinTree}
+                  className="px-2.5 py-1 rounded-md gis-btn-amber font-semibold flex items-center gap-1"
+                >
+                  <MapPin className="w-3 h-3" />
+                  <span>Quick Pin Inside Plantation</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleOpenCamera('TREE')}
+                  className="px-2.5 py-1 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-bold flex items-center gap-1"
+                >
+                  <Camera className="w-3 h-3" />
+                  <span>{draftTreePhoto ? 'Retake Trunk Photo' : 'Capture Trunk Photo & Hash'}</span>
+                </button>
+              </>
+            )}
+
             {activeTool === 'REGISTER_PLANTATION' && (
               <button
                 type="button"
@@ -910,29 +1290,6 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
               >
                 <Sparkles className="w-3 h-3" />
                 <span>Auto-Plot Sample Holding</span>
-              </button>
-            )}
-
-            {activeTool === 'WALK_POLOGEN' && (
-              <button
-                type="button"
-                onClick={handleSimulatePologenWalk}
-                disabled={isWalkingSim}
-                className="px-2.5 py-1 rounded-md gis-btn-emerald disabled:opacity-50 font-semibold flex items-center gap-1"
-              >
-                <Footprints className="w-3 h-3" />
-                <span>{isWalkingSim ? 'Walking Perimeter...' : 'Simulate GPS Walk'}</span>
-              </button>
-            )}
-
-            {activeTool === 'GEO_PIN_TREE' && (
-              <button
-                type="button"
-                onClick={handleQuickPinTree}
-                className="px-2.5 py-1 rounded-md gis-btn-amber font-semibold flex items-center gap-1"
-              >
-                <MapPin className="w-3 h-3" />
-                <span>Quick Pin Inside Plantation</span>
               </button>
             )}
 
@@ -957,39 +1314,13 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                   </button>
                 </>
               )}
-
-            {/* Offline Field Mode Pill */}
-            <button
-              type="button"
-              onClick={() => setIsOffline(!isOffline)}
-              className={`px-2.5 py-1 rounded-md border text-[11px] font-semibold flex items-center gap-1.5 transition ${
-                isOffline
-                  ? 'bg-amber-50 border-amber-300 text-amber-800'
-                  : 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              }`}
-            >
-              {isOffline ? <WifiOff className="w-3 h-3" /> : <Wifi className="w-3 h-3" />}
-              <span>{isOffline ? 'Offline SQLite Mode' : 'Online Synced'}</span>
-            </button>
-
-            {offlineQueue.length > 0 && (
-              <button
-                type="button"
-                onClick={handleSyncOfflineQueue}
-                disabled={isOffline || isSyncing}
-                className="px-2.5 py-1 rounded-md gis-btn-emerald disabled:opacity-50 text-[11px] font-bold flex items-center gap-1"
-              >
-                <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span>Sync ({offlineQueue.length})</span>
-              </button>
-            )}
           </div>
         </div>
       </div>
 
-      {/* 3. MAIN SPLIT WORKSPACE: LEFT GOOGLE MAP (8 COLS) + RIGHT SPATIAL REGISTRY (4 COLS) */}
+      {/* 3. MAIN SPLIT WORKSPACE: LEFT GOOGLE MAP + RIGHT SPATIAL REGISTRY */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {/* LEFT: Interactive Google Map + Bottom Layer Bar */}
+        {/* LEFT: Interactive Google Map */}
         <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col">
           <GoogleGisMapCanvas
             mapType={mapType}
@@ -1006,7 +1337,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             hudBanner={mapHudBanner}
           />
 
-          {/* Bottom Layer Toggles Footer */}
+          {/* Bottom Layer Toggles */}
           <div className="px-3.5 py-2.5 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex flex-wrap items-center gap-3.5 text-slate-700">
               <span className="font-semibold text-slate-500 flex items-center gap-1">
@@ -1016,8 +1347,8 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
 
               {[
                 { key: 'plantations', label: 'Plantations', accent: 'accent-emerald-700' },
-                { key: 'pologens', label: 'POLOGENs', accent: 'accent-blue-600' },
-                { key: 'trees', label: 'Trees', accent: 'accent-emerald-600' },
+                { key: 'pologens', label: 'POLOGENs (<7y)', accent: 'accent-amber-500' },
+                { key: 'trees', label: 'Mature Trees (≥7y)', accent: 'accent-emerald-600' },
                 { key: 'facilities', label: 'CPC / Labs / Ports', accent: 'accent-slate-900' },
                 { key: 'corridors', label: 'MOV Corridors', accent: 'accent-teal-600' }
               ].map((l) => (
@@ -1042,52 +1373,18 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
         {/* RIGHT: Spatial Registry Panel */}
         <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl shadow-xs flex flex-col h-[578px]">
           <div className="p-4 border-b border-slate-100">
-            <h2 className="text-sm font-bold text-slate-900">
-              Spatial Registry ({totalPLT} PLT · {totalPLG} PLG · {totalTRE} TRE)
+            <h2 className="text-sm font-bold text-slate-900 flex items-center justify-between">
+              <span>Spatial Registry</span>
+              <span className="text-[11px] font-mono font-normal text-slate-500">
+                {totalPLT} PLT · {totalPLG} PLG · {totalTRE} TRE
+              </span>
             </h2>
             <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-              Click any Plantation or POLOGEN to measure strictly the area inside that selected farm/block in sq ft, Bigha (Assam), hectares, and m².
+              Click any feature to inspect its live photo, owner farmer, strict Turf.js measurements &amp; hash proof.
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100 px-3 py-1">
-            {/* Plantations List */}
-            {(registry.plantations || []).map((plt) => {
-              const m = computePolygonMeasurements(plt.coordinates);
-              const isSelected = selectedEntity?.id === plt.id;
-              return (
-                <div
-                  key={plt.id}
-                  onClick={() => handleSelectEntity({ type: 'PLANTATION', ...plt })}
-                  className={`py-3 px-2 rounded-lg transition cursor-pointer flex items-center justify-between gap-2 ${
-                    isSelected ? 'bg-emerald-50/80 ring-1 ring-emerald-300 my-1' : 'hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <div className="font-mono text-xs font-bold text-slate-900 truncate">{plt.id}</div>
-                    <div className="text-xs font-medium text-slate-700 truncate mt-0.5">{plt.name}</div>
-                    <div className="font-mono text-[11px] text-slate-500 mt-1 leading-snug">
-                      {m.assamBigha.toFixed(3)} Bigha · {m.areaHa.toFixed(4)} ha · {formatIndianNumber(Math.round(m.areaSqFt))} sq ft · {formatIndianNumber(m.areaSqM, 1)} m²
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectEntity({ type: 'PLANTATION', ...plt });
-                    }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex-shrink-0 transition ${
-                      isSelected
-                        ? 'gis-btn-emerald'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {isSelected ? 'Selected' : 'Select'}
-                  </button>
-                </div>
-              );
-            })}
-
             {/* POLOGENs List (< 7 yrs) */}
             {(registry.pologens || []).map((plg) => {
               const m = computePolygonMeasurements(plg.coordinates);
@@ -1102,32 +1399,41 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-xs font-bold text-emerald-800 truncate">{plg.id}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                        {plg.version || 'v1'}
+                      <Sprout className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                      <span className="font-mono text-xs font-bold text-amber-900 truncate">{plg.id}</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800">
+                        &lt;7y
                       </span>
                     </div>
                     <div className="text-xs font-medium text-slate-700 truncate mt-0.5">
-                      {plg.name} · {plg.saplingCount} trees (&lt;7y)
+                      {plg.name} • {plg.saplingCount} Saplings
                     </div>
-                    <div className="font-mono text-[11px] text-slate-500 mt-1 leading-snug">
-                      {m.assamBigha.toFixed(3)} Bigha · {m.areaHa.toFixed(4)} ha · {formatIndianNumber(Math.round(m.areaSqFt))} sq ft · {formatIndianNumber(m.areaSqM, 1)} m²
+                    <div className="text-[11px] text-slate-500">
+                      Farmer: <b className="text-slate-800">{plg.farmerName || 'Bhaben Saikia'}</b>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectEntity({ type: 'POLOGEN', ...plg });
-                    }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex-shrink-0 transition ${
-                      isSelected
-                        ? 'gis-btn-amber'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {isSelected ? 'Selected' : 'Select'}
-                  </button>
+                  {plg.photoUrl && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewingPhoto({
+                          url: plg.photoUrl,
+                          title: plg.name,
+                          kind: 'POLOGEN',
+                          entityId: plg.id,
+                          farmerName: plg.farmerName,
+                          hash: plg.photoSha256
+                        });
+                      }}
+                      className="w-10 h-10 rounded-lg overflow-hidden border border-amber-300 flex-shrink-0 relative group"
+                      title="Click to view photo"
+                    >
+                      <img src={plg.photoUrl} alt="Pologen" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 flex items-center justify-center">
+                        <ZoomIn className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1147,23 +1453,71 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                     <div className="flex items-center gap-1.5">
                       <TreePine className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
                       <span className="font-mono text-xs font-bold text-slate-900 truncate">{t.id}</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                        &ge;7y
+                      </span>
                     </div>
                     <div className="text-xs text-slate-700 truncate mt-0.5">
-                      RFID {t.rfidTag} · {t.ageYears}y · GBH {t.gbhCm} cm
+                      RFID {t.rfidTag} • {t.ageYears}y • GBH {t.gbhCm}cm
                     </div>
-                    <div className="font-mono text-[11px] text-slate-500 mt-0.5 truncate">
-                      {formatCoordinate(t.coordinates[1], t.coordinates[0], exactGpsView)}
+                    <div className="text-[11px] text-slate-500">
+                      Farmer: <b className="text-slate-800">{t.farmerName || 'Bhaben Saikia'}</b>
+                    </div>
+                  </div>
+                  {t.photoUrl && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewingPhoto({
+                          url: t.photoUrl,
+                          title: `Mature Tree ${t.id}`,
+                          kind: 'TREE',
+                          entityId: t.id,
+                          farmerName: t.farmerName,
+                          hash: t.photoSha256
+                        });
+                      }}
+                      className="w-10 h-10 rounded-lg overflow-hidden border border-emerald-300 flex-shrink-0 relative group"
+                      title="Click to view photo"
+                    >
+                      <img src={t.photoUrl} alt="Tree" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 flex items-center justify-center">
+                        <ZoomIn className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Plantations List */}
+            {(registry.plantations || []).map((plt) => {
+              const m = computePolygonMeasurements(plt.coordinates);
+              const isSelected = selectedEntity?.id === plt.id;
+              return (
+                <div
+                  key={plt.id}
+                  onClick={() => handleSelectEntity({ type: 'PLANTATION', ...plt })}
+                  className={`py-3 px-2 rounded-lg transition cursor-pointer flex items-center justify-between gap-2 ${
+                    isSelected ? 'bg-emerald-50/80 ring-1 ring-emerald-300 my-1' : 'hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <div className="font-mono text-xs font-bold text-slate-900 truncate">{plt.id}</div>
+                    <div className="text-xs font-medium text-slate-700 truncate mt-0.5">{plt.name}</div>
+                    <div className="text-[11px] text-slate-500">
+                      Farmer: <b className="text-slate-800">{plt.farmerName}</b>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSelectEntity({ type: 'TREE', ...t });
+                      handleSelectEntity({ type: 'PLANTATION', ...plt });
                     }}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex-shrink-0 transition ${
                       isSelected
-                        ? 'gis-btn-dark'
+                        ? 'gis-btn-emerald'
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
@@ -1176,101 +1530,25 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
         </div>
       </div>
 
-      {/* 4A. SELECT AREA (CUSTOM POLYGON) OR DISTANCE MEASUREMENT CARD */}
-      {activeTool === 'SELECT_AREA' && draftAnalysis?.measurements && (
-        <div className="bg-white border-2 border-sky-500/40 rounded-xl p-4 shadow-sm space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <SquareDashed className="w-4 h-4 text-sky-600" />
-              <span>Custom Selected Area Measurement (Turf.js Geodesic)</span>
-            </h3>
-            <button
-              type="button"
-              onClick={() => setDraftPoints([])}
-              className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-1 rounded bg-slate-100"
-            >
-              Clear Selection
-            </button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-              <span className="text-[10px] uppercase text-slate-500 font-semibold block">Assam Bigha</span>
-              <span className="font-mono font-bold text-slate-900 text-sm">
-                {draftAnalysis.measurements.assamBigha.toFixed(3)} Bigha
-              </span>
-              <span className="text-[10px] text-emerald-700 block">
-                {draftAnalysis.measurements.bighaWhole}B · {draftAnalysis.measurements.katha}K · {draftAnalysis.measurements.lessa}L
-              </span>
-            </div>
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-              <span className="text-[10px] uppercase text-slate-500 font-semibold block">Hectares</span>
-              <span className="font-mono font-bold text-slate-900 text-sm">
-                {draftAnalysis.measurements.areaHa.toFixed(4)} ha
-              </span>
-            </div>
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-              <span className="text-[10px] uppercase text-slate-500 font-semibold block">Square Feet</span>
-              <span className="font-mono font-bold text-slate-900 text-sm">
-                {formatIndianNumber(Math.round(draftAnalysis.measurements.areaSqFt))} sq ft
-              </span>
-            </div>
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-              <span className="text-[10px] uppercase text-slate-500 font-semibold block">Square Meters &amp; Perimeter</span>
-              <span className="font-mono font-bold text-slate-900 text-sm">
-                {formatIndianNumber(draftAnalysis.measurements.areaSqM, 1)} m²
-              </span>
-              <span className="text-[10px] text-slate-500 block">
-                Perimeter: {formatIndianNumber(Math.round(draftAnalysis.measurements.perimeterM))} m
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTool === 'DISTANCE' && (
-        <div className="bg-white border-2 border-sky-500/40 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <Ruler className="w-5 h-5 text-sky-600" />
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Geodesic Distance Measurement Tool</h3>
-              <p className="text-xs text-slate-500">
-                Click points on Google Maps to measure road/boundary distances. Drag any point to recalculate live.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 text-xs font-mono">
-            <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
-              <span className="text-slate-500 block text-[10px]">METERS</span>
-              <span className="font-bold text-slate-900 text-sm">{formatIndianNumber(draftAnalysis?.meters || 0)} m</span>
-            </div>
-            <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
-              <span className="text-slate-500 block text-[10px]">KILOMETERS</span>
-              <span className="font-bold text-slate-900 text-sm">{draftAnalysis?.km || 0} km</span>
-            </div>
-            <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
-              <span className="text-slate-500 block text-[10px]">FEET</span>
-              <span className="font-bold text-slate-900 text-sm">
-                {formatIndianNumber(Math.round((draftAnalysis?.meters || 0) * 3.28084))} ft
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 4B. ACTIVE DRAFT REGISTRATION & TURF.JS VALIDATION CARD */}
-      {['REGISTER_PLANTATION', 'WALK_POLOGEN', 'GEO_PIN_TREE'].includes(activeTool) && (
-        <div className="bg-white border-2 border-emerald-600/30 rounded-xl p-4 shadow-sm space-y-3">
+      {/* 4. ACTIVE DRAFT REGISTRATION & IMAGE CAPTURE CARD */}
+      {['WALK_POLOGEN', 'GEO_PIN_TREE', 'REGISTER_PLANTATION'].includes(activeTool) && (
+        <div className="bg-white border-2 border-emerald-600/40 rounded-xl p-4 shadow-sm space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-700" />
-              <h3 className="text-sm font-bold text-slate-900">
-                {activeTool === 'REGISTER_PLANTATION' && 'Register New Plantation Holding (PLT) — Turf.js Overlap Validation'}
-                {activeTool === 'WALK_POLOGEN' && 'Walk New POLOGEN Block (< 7 Years PLG) — Turf.js Containment & Overlap Validation'}
-                {activeTool === 'GEO_PIN_TREE' && 'Geo-Pin Individual Mature Tree (≥ 7 Years TRE) — Hardware RAM SHA-256'}
-              </h3>
+              <ShieldCheck className="w-5 h-5 text-emerald-700" />
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">
+                  {activeTool === 'WALK_POLOGEN' && 'Walk New POLOGEN Block (< 7 Years Saplings) — Attach to Farmer'}
+                  {activeTool === 'GEO_PIN_TREE' && 'Geo-Pin Individual Mature Tree (≥ 7 Years) — Attach to Farmer'}
+                  {activeTool === 'REGISTER_PLANTATION' && 'Register New Plantation Parcel (PLT) — Attach to Farmer'}
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Select Farmer and Plantation parcel, walk/pin coordinates, and capture photographic proof before committing.
+                </p>
+              </div>
             </div>
 
-            {/* Live Turf.js Status Badges */}
+            {/* Validation Badges */}
             {draftAnalysis && (
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 {draftAnalysis.overlap && (
@@ -1281,9 +1559,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                         : 'bg-rose-50 text-rose-800 border-rose-300'
                     }`}
                   >
-                    {draftAnalysis.overlap.valid
-                      ? '✓ 0.0% Overlap (Turf.js Cleared)'
-                      : `✗ ${draftAnalysis.overlap.overlapPct}% Overlap Conflict`}
+                    {draftAnalysis.overlap.valid ? '✓ 0.0% Overlap' : `✗ ${draftAnalysis.overlap.overlapPct}% Overlap`}
                   </span>
                 )}
                 {draftAnalysis.containment && activeTool === 'WALK_POLOGEN' && (
@@ -1296,7 +1572,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                   >
                     {draftAnalysis.containment.contained
                       ? `✓ Contained in ${draftAnalysis.containment.parentPlantation.id}`
-                      : '⚠ Must lie strictly inside a green Plantation'}
+                      : '⚠ Must lie inside a green Plantation'}
                   </span>
                 )}
                 {activeTool === 'GEO_PIN_TREE' && (
@@ -1316,176 +1592,223 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             )}
           </div>
 
-          {/* Live Draft Measurements Preview */}
-          {draftAnalysis?.measurements && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 text-xs">
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Assam Bigha</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {draftAnalysis.measurements.assamBigha.toFixed(3)} Bigha
-                </span>
-                <span className="text-[10px] text-emerald-700 block">
-                  {draftAnalysis.measurements.bighaWhole}B · {draftAnalysis.measurements.katha}K · {draftAnalysis.measurements.lessa}L
-                </span>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Hectares</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {draftAnalysis.measurements.areaHa.toFixed(4)} ha
-                </span>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Square Feet</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {formatIndianNumber(Math.round(draftAnalysis.measurements.areaSqFt))} sq ft
-                </span>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Square Meters &amp; Perimeter</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {formatIndianNumber(draftAnalysis.measurements.areaSqM, 1)} m²
-                </span>
-                <span className="text-[10px] text-slate-500 block">
-                  Perimeter: {Math.round(draftAnalysis.measurements.perimeterM)} m
-                </span>
-              </div>
+          {/* Form Fields: Farmer Selection First! */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            {/* Owning Farmer */}
+            <div>
+              <label className="text-slate-700 font-bold block mb-1">Owning Farmer *</label>
+              <select
+                value={draftForm.farmerId}
+                onChange={(e) => {
+                  const f = farmers.find(farm => farm.id === e.target.value);
+                  setDraftForm(prev => ({
+                    ...prev,
+                    farmerId: e.target.value,
+                    farmerName: f ? f.name : prev.farmerName
+                  }));
+                }}
+                className="w-full bg-emerald-50/50 border border-emerald-300 font-bold text-slate-800 rounded-lg px-2.5 py-1.5"
+              >
+                {farmers.map(f => (
+                  <option key={f.id} value={f.id}>{f.name} ({f.id})</option>
+                ))}
+              </select>
             </div>
-          )}
 
-          {/* Contextual Registration Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-            {activeTool === 'REGISTER_PLANTATION' && (
-              <>
-                <div>
-                  <label className="text-slate-600 font-semibold block mb-1">Holding Name</label>
-                  <input
-                    type="text"
-                    value={draftForm.name}
-                    onChange={(e) => setDraftForm((f) => ({ ...f, name: e.target.value }))}
-                    placeholder="e.g. Bokakhat Sachi Estate"
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-600 font-semibold block mb-1">Farmer Name</label>
-                  <input
-                    type="text"
-                    value={draftForm.farmerName}
-                    onChange={(e) => setDraftForm((f) => ({ ...f, farmerName: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-600 font-semibold block mb-1">Dag / Patta Reference</label>
-                  <input
-                    type="text"
-                    value={draftForm.dagPatta}
-                    onChange={(e) => setDraftForm((f) => ({ ...f, dagPatta: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900"
-                  />
-                </div>
-              </>
+            {/* Target Plantation */}
+            {activeTool !== 'REGISTER_PLANTATION' && (
+              <div>
+                <label className="text-slate-700 font-bold block mb-1">Target Plantation *</label>
+                <select
+                  value={draftForm.parentPlantationId}
+                  onChange={(e) => setDraftForm(prev => ({ ...prev, parentPlantationId: e.target.value }))}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-semibold text-slate-800"
+                >
+                  {farmerPlantationsList.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.id})</option>
+                  ))}
+                </select>
+              </div>
             )}
 
+            {/* POLOGEN Specific Inputs */}
             {activeTool === 'WALK_POLOGEN' && (
               <>
                 <div>
-                  <label className="text-slate-600 font-semibold block mb-1">Block Name (&lt;7 yrs)</label>
-                  <input
-                    type="text"
-                    value={draftForm.name}
-                    onChange={(e) => setDraftForm((f) => ({ ...f, name: e.target.value }))}
-                    placeholder="e.g. Dergaon Sapling Block C"
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-600 font-semibold block mb-1">Planting Year</label>
-                  <input
-                    type="number"
-                    min="2020"
-                    max="2026"
-                    value={draftForm.plantingYear}
-                    onChange={(e) => setDraftForm((f) => ({ ...f, plantingYear: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-600 font-semibold block mb-1">Estimated Saplings</label>
+                  <label className="text-slate-700 font-bold block mb-1">Sapling Count (&lt;7y) *</label>
                   <input
                     type="number"
                     value={draftForm.saplingCount}
-                    onChange={(e) => setDraftForm((f) => ({ ...f, saplingCount: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono"
+                    onChange={(e) => setDraftForm(prev => ({ ...prev, saplingCount: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono font-bold text-teal-800"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-700 font-bold block mb-1">Planting Year</label>
+                  <input
+                    type="number"
+                    value={draftForm.plantingYear}
+                    onChange={(e) => setDraftForm(prev => ({ ...prev, plantingYear: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-slate-800"
                   />
                 </div>
               </>
             )}
 
+            {/* TREE Specific Inputs */}
             {activeTool === 'GEO_PIN_TREE' && (
               <>
                 <div>
-                  <label className="text-slate-600 font-semibold block mb-1">Physical RFID / Barcode</label>
-                  <input
-                    type="text"
-                    value={draftForm.rfidTag}
-                    onChange={(e) => setDraftForm((f) => ({ ...f, rfidTag: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-600 font-semibold block mb-1">Tree Age (≥ 7 yrs) &amp; GBH (cm)</label>
+                  <label className="text-slate-700 font-bold block mb-1">Tree Age (&ge;7y) &amp; GBH</label>
                   <div className="flex gap-1.5">
                     <input
                       type="number"
                       step="0.1"
                       value={draftForm.ageYears}
-                      onChange={(e) => setDraftForm((f) => ({ ...f, ageYears: e.target.value }))}
-                      className="w-1/2 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-slate-900 font-mono"
+                      onChange={(e) => setDraftForm(prev => ({ ...prev, ageYears: e.target.value }))}
+                      className="w-1/2 bg-white border border-slate-300 rounded-lg px-2 py-1.5 font-mono"
                       placeholder="Age"
                     />
                     <input
                       type="number"
                       step="0.5"
                       value={draftForm.gbhCm}
-                      onChange={(e) => setDraftForm((f) => ({ ...f, gbhCm: e.target.value }))}
-                      className="w-1/2 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-slate-900 font-mono"
-                      placeholder="GBH"
+                      onChange={(e) => setDraftForm(prev => ({ ...prev, gbhCm: e.target.value }))}
+                      className="w-1/2 bg-white border border-slate-300 rounded-lg px-2 py-1.5 font-mono"
+                      placeholder="GBH (cm)"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-slate-600 font-semibold block mb-1">In-App Camera RAM Hash</label>
-                  <button
-                    type="button"
-                    onClick={() => setShowCameraModal(true)}
-                    className="w-full px-3 py-1.5 rounded-lg gis-btn-amber font-semibold flex items-center justify-center gap-1.5"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>Capture AR Photo &amp; SHA-256</span>
-                  </button>
+                  <label className="text-slate-700 font-bold block mb-1">RFID Nail Tag</label>
+                  <input
+                    type="text"
+                    value={draftForm.rfidTag}
+                    onChange={(e) => setDraftForm(prev => ({ ...prev, rfidTag: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono font-bold text-emerald-900"
+                  />
                 </div>
               </>
             )}
 
-            <div className="flex items-end gap-2">
-              <button
-                type="button"
-                onClick={handleSaveDraft}
-                disabled={!draftAnalysis}
-                className="flex-1 px-3 py-1.5 rounded-lg gis-btn-emerald disabled:opacity-40 font-bold flex items-center justify-center gap-1.5 shadow-xs"
-              >
-                <Check className="w-4 h-4" />
-                <span>{isOffline ? 'Queue Offline' : 'Commit to Registry'}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectTool('INSPECT')}
-                className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
-              >
-                Cancel
-              </button>
+            {/* Plantation Specific Inputs */}
+            {activeTool === 'REGISTER_PLANTATION' && (
+              <>
+                <div>
+                  <label className="text-slate-700 font-bold block mb-1">Plot Name</label>
+                  <input
+                    type="text"
+                    value={draftForm.name}
+                    onChange={(e) => setDraftForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g. Nahorjan Agro Plot"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-700 font-bold block mb-1">Dag / Patta Number</label>
+                  <input
+                    type="text"
+                    value={draftForm.dagPatta}
+                    onChange={(e) => setDraftForm(prev => ({ ...prev, dagPatta: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Image Capture Row for POLOGEN and TREE */}
+          {(activeTool === 'WALK_POLOGEN' || activeTool === 'GEO_PIN_TREE') && (
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                {/* Photo Thumbnail if captured */}
+                {(activeTool === 'WALK_POLOGEN' ? draftPologenPhoto : draftTreePhoto) ? (
+                  <div
+                    onClick={() => {
+                      const photoUrl = activeTool === 'WALK_POLOGEN' ? draftPologenPhoto : draftTreePhoto;
+                      setViewingPhoto({
+                        url: photoUrl,
+                        title: activeTool === 'WALK_POLOGEN' ? 'POLOGEN Sapling Block' : 'Mature Tree Trunk',
+                        kind: activeTool === 'WALK_POLOGEN' ? 'POLOGEN' : 'TREE',
+                        entityId: 'DRAFT-CAPTURE',
+                        farmerName: draftForm.farmerName,
+                        hash: cameraHash
+                      });
+                    }}
+                    className="w-16 h-12 rounded-lg overflow-hidden border-2 border-emerald-500 shadow-xs cursor-pointer relative group flex-shrink-0"
+                    title="Click to zoom photo"
+                  >
+                    <img
+                      src={activeTool === 'WALK_POLOGEN' ? draftPologenPhoto : draftTreePhoto}
+                      alt="Capture Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 flex items-center justify-center">
+                      <ZoomIn className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-16 h-12 rounded-lg bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-400 flex-shrink-0">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                )}
+
+                <div>
+                  <div className="font-bold text-slate-900 text-xs flex items-center gap-2">
+                    <span>
+                      {activeTool === 'WALK_POLOGEN'
+                        ? (draftPologenPhoto ? '✓ Sapling Grove Photo Attached' : 'Capture POLOGEN Nursery Photo')
+                        : (draftTreePhoto ? '✓ Mature Tree Photo Attached' : 'Capture AR Tree Trunk Photo')}
+                    </span>
+                    {(activeTool === 'WALK_POLOGEN' ? draftPologenPhoto : draftTreePhoto) && (
+                      <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded font-bold">
+                        SHA-256 Stamped
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    {(activeTool === 'WALK_POLOGEN' ? draftPologenPhoto : draftTreePhoto)
+                      ? `Hash: ${cameraHash.slice(0, 24)}... (Attached to Farmer ${draftForm.farmerName})`
+                      : 'High-res image capture with GPS coordinates & farmer title watermark.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleOpenCamera(activeTool === 'WALK_POLOGEN' ? 'POLOGEN' : 'TREE')}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>
+                    {(activeTool === 'WALK_POLOGEN' ? draftPologenPhoto : draftTreePhoto)
+                      ? 'Re-take Photo'
+                      : (activeTool === 'WALK_POLOGEN' ? 'Open Camera (Sapling Grove)' : 'Open Camera (Tree Trunk)')}
+                  </span>
+                </button>
+              </div>
             </div>
+          )}
+
+          {/* Action Buttons: Commit & Cancel */}
+          <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => handleSelectTool('INSPECT')}
+              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              disabled={!draftAnalysis}
+              className="px-4 py-2 rounded-xl gis-btn-emerald disabled:opacity-40 font-extrabold text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              <Check className="w-4 h-4" />
+              <span>Commit &amp; Attach to Farmer</span>
+            </button>
           </div>
         </div>
       )}
@@ -1505,16 +1828,6 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             </div>
 
             <div className="flex items-center gap-2">
-              {selectedEntity.type === 'TREE' && (
-                <button
-                  type="button"
-                  onClick={() => setShowCameraModal(true)}
-                  className="px-2.5 py-1 rounded-lg gis-btn-amber text-xs font-semibold flex items-center gap-1"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>Inspect AR Photo Hash</span>
-                </button>
-              )}
               {onAdvanceStep && (
                 <button
                   type="button"
@@ -1535,140 +1848,271 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             </div>
           </div>
 
-          {selectedEntity.type !== 'TREE' && selectedMeasurements ? (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Assam Bigha</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {selectedMeasurements.assamBigha.toFixed(3)} Bigha
-                </span>
-                <span className="text-[10px] text-emerald-700 block font-medium">
-                  {selectedMeasurements.bighaWhole}B · {selectedMeasurements.katha}K · {selectedMeasurements.lessa}L
-                </span>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+            {/* Column 1: Attached Farmer */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 space-y-1">
+              <span className="text-[10px] uppercase text-slate-500 font-bold block">Attached Farmer</span>
+              <div className="font-extrabold text-slate-900 text-sm">
+                {selectedEntity.farmerName || 'Bhaben Saikia'}
               </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Hectares</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {selectedMeasurements.areaHa.toFixed(4)} ha
-                </span>
-                <span className="text-[10px] text-slate-500 block">Turf.js Geodesic</span>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Square Feet</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {formatIndianNumber(Math.round(selectedMeasurements.areaSqFt))} sq ft
-                </span>
-                <span className="text-[10px] text-slate-500 block">14,400 sq ft / Bigha</span>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Square Meters</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {formatIndianNumber(selectedMeasurements.areaSqM, 1)} m²
-                </span>
-                <span className="text-[10px] text-slate-500 block">
-                  Perimeter: {formatIndianNumber(Math.round(selectedMeasurements.perimeterM))} m
-                </span>
-              </div>
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-emerald-700 font-semibold block">Turf.js Spatial Audit</span>
-                <span className="font-bold text-emerald-900 text-xs block mt-0.5">✓ 0.0% Overlap Verified</span>
-                <span className="text-[10px] text-emerald-800 block mt-0.5">
-                  {selectedEntity.type === 'POLOGEN'
-                    ? `Parent: ${selectedEntity.parentPlantationId} (${selectedEntity.saplingCount} saplings <7y)`
-                    : `${selectedEntity.dagPatta} · ${selectedEntity.farmerName}`}
-                </span>
+              <div className="text-[10px] text-slate-500 font-mono">
+                ID: {selectedEntity.farmerId || 'FRM-AS-01'}
               </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">RFID / Barcode</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">{selectedEntity.rfidTag}</span>
-                <span className="text-[10px] text-slate-500 block">Parent: {selectedEntity.parentPlantationId}</span>
+
+            {/* Column 2: Parent Plot / Measurements */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 space-y-1">
+              <span className="text-[10px] uppercase text-slate-500 font-bold block">
+                {selectedEntity.type === 'TREE' ? 'Age & Dimensions' : 'Spatial Measurements'}
+              </span>
+              {selectedEntity.type === 'TREE' ? (
+                <>
+                  <div className="font-extrabold text-slate-900 text-sm">
+                    {selectedEntity.ageYears} Yrs • {selectedEntity.gbhCm} cm
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono">
+                    Plot: {selectedEntity.parentPlantationId}
+                  </div>
+                </>
+              ) : selectedMeasurements ? (
+                <>
+                  <div className="font-extrabold text-slate-900 text-sm">
+                    {selectedMeasurements.assamBigha.toFixed(3)} Bigha
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono">
+                    {selectedMeasurements.areaHa.toFixed(3)} ha ({formatIndianNumber(selectedMeasurements.areaSqM, 0)} m²)
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            {/* Column 3: GPS Coordinates & RTK */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 space-y-1">
+              <span className="text-[10px] uppercase text-slate-500 font-bold block">GPS Coordinates &amp; Hash</span>
+              <div className="font-mono font-semibold text-slate-800 text-[11px] truncate">
+                {selectedEntity.coordinates?.[1] ? `${selectedEntity.coordinates[1].toFixed(4)}, ${selectedEntity.coordinates[0].toFixed(4)}` : 'Walked Polygon'}
               </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Age &amp; Trunk GBH</span>
-                <span className="font-mono font-bold text-slate-900 text-sm">
-                  {selectedEntity.ageYears} yrs · {selectedEntity.gbhCm} cm
-                </span>
-                <span className="text-[10px] text-emerald-700 block">≥ 7 yr Eligible</span>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">GPS Coordinates</span>
-                <span className="font-mono font-semibold text-slate-900 text-[11px] block mt-0.5">
-                  {formatCoordinate(selectedEntity.coordinates[1], selectedEntity.coordinates[0], exactGpsView)}
-                </span>
-                <span className="text-[10px] text-slate-500 block">RTK ±{selectedEntity.accuracyM}m</span>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 col-span-2">
-                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Hardware Camera RAM SHA-256 Hash</span>
-                <span className="font-mono text-[10px] text-teal-900 break-all block mt-0.5">
-                  {selectedEntity.photoSha256}
-                </span>
+              <div className="text-[10px] text-emerald-700 font-mono truncate">
+                SHA-256: {(selectedEntity.photoSha256 || '7d4a2f...').slice(0, 16)}...
               </div>
             </div>
-          )}
+
+            {/* Column 4: Captured Photographic Evidence */}
+            <div className="bg-emerald-50/60 border border-emerald-200 rounded-lg p-2.5 flex items-center justify-between gap-2">
+              <div>
+                <span className="text-[10px] uppercase text-emerald-800 font-bold block">Field Image Proof</span>
+                <span className="text-[11px] text-emerald-950 font-bold block mt-0.5">
+                  {selectedEntity.photoUrl ? '✓ Photo Captured' : 'Pending Capture'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedEntity.photoUrl) {
+                      setViewingPhoto({
+                        url: selectedEntity.photoUrl,
+                        title: selectedEntity.name || selectedEntity.id,
+                        kind: selectedEntity.type,
+                        entityId: selectedEntity.id,
+                        farmerName: selectedEntity.farmerName,
+                        hash: selectedEntity.photoSha256
+                      });
+                    }
+                  }}
+                  className="text-[10px] text-emerald-700 font-bold underline hover:text-emerald-900 mt-1 block"
+                >
+                  View Full Size Photo
+                </button>
+              </div>
+
+              {selectedEntity.photoUrl && (
+                <div
+                  onClick={() => {
+                    setViewingPhoto({
+                      url: selectedEntity.photoUrl,
+                      title: selectedEntity.name || selectedEntity.id,
+                      kind: selectedEntity.type,
+                      entityId: selectedEntity.id,
+                      farmerName: selectedEntity.farmerName,
+                      hash: selectedEntity.photoSha256
+                    });
+                  }}
+                  className="w-14 h-12 rounded-lg overflow-hidden border border-emerald-400 shadow-2xs cursor-pointer flex-shrink-0"
+                >
+                  <img src={selectedEntity.photoUrl} alt="Field Proof" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* 6. AR IN-APP CAMERA VIEWFINDER MODAL (RAM SHA-256 HASHING) */}
+      {/* 6. AR FIELD CAMERA VIEWFINDER MODAL */}
       {showCameraModal && (
-        <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="gis-hud-dark border border-slate-700 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
-              <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                <span>REC • HARDWARE RAM CAMERA BUFFER</span>
-              </span>
+        <div className="fixed inset-0 z-[1000] bg-black/85 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="gis-hud-dark border border-slate-700 rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl space-y-0">
+            {/* Header */}
+            <div className="p-3.5 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+                <span className="text-emerald-400 font-bold">
+                  {cameraMode === 'POLOGEN' ? 'POLOGEN NURSERY FIELD CAMERA' : 'TREE TRUNK AR CAMERA'}
+                </span>
+              </div>
               <button
                 type="button"
-                onClick={() => setShowCameraModal(false)}
-                className="text-slate-300 hover:text-white font-bold px-2 py-0.5"
+                onClick={() => {
+                  if (videoRef.current?.srcObject) {
+                    videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+                    videoRef.current.srcObject = null;
+                  }
+                  setIsWebcamActive(false);
+                  setShowCameraModal(false);
+                }}
+                className="text-slate-400 hover:text-white font-bold px-2 py-0.5"
               >
                 ✕ Close
               </button>
             </div>
 
-            <div className="relative h-72 bg-stone-900 overflow-hidden flex items-center justify-center">
-              <div className="absolute inset-0 bg-gradient-to-b from-stone-800 via-stone-900 to-emerald-950 opacity-90 flex items-center justify-center">
-                <div className="w-24 h-full bg-[#3d2714] border-x-4 border-[#24170c] shadow-2xl relative">
-                  <div className="absolute top-20 left-4 w-4 h-4 rounded-full bg-black border border-amber-600/80" />
-                  <div className="absolute top-36 right-4 w-4 h-4 rounded-full bg-black border border-amber-600/80" />
-                  <div className="absolute top-28 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 font-mono text-[8px] font-bold px-1.5 py-0.5 rounded shadow">
-                    #{selectedEntity?.rfidTag || draftForm.rfidTag}
-                  </div>
-                </div>
-              </div>
+            {/* Viewfinder Window */}
+            <div className="relative h-80 bg-stone-950 overflow-hidden flex items-center justify-center">
+              {/* Optional Real Video Stream */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`absolute inset-0 w-full h-full object-cover ${isWebcamActive ? 'block z-0' : 'hidden'}`}
+              />
 
-              <div className="relative z-10 w-44 h-44 border-2 border-emerald-400/40 rounded-2xl flex items-center justify-center pointer-events-none">
+              {/* Realistic Synthetic Simulation Scene */}
+              {!isWebcamActive && (
+                <div className="absolute inset-0 flex items-center justify-center z-0">
+                  {cameraMode === 'POLOGEN' ? (
+                    // POLOGEN Nursery View
+                    <div className="w-full h-full bg-gradient-to-b from-teal-950 via-emerald-950 to-stone-900 relative p-4 flex items-center justify-center">
+                      <div className="w-full h-full border border-dashed border-teal-500/40 rounded-xl relative overflow-hidden flex items-end justify-center pb-8 gap-6">
+                        <div className="w-8 h-24 bg-emerald-600 rounded-t-full shadow-lg relative" />
+                        <div className="w-10 h-32 bg-emerald-500 rounded-t-full shadow-lg relative" />
+                        <div className="w-9 h-28 bg-teal-500 rounded-t-full shadow-lg relative" />
+                        <div className="w-11 h-36 bg-emerald-600 rounded-t-full shadow-lg relative" />
+                        <div className="w-8 h-22 bg-emerald-700 rounded-t-full shadow-lg relative" />
+                      </div>
+                    </div>
+                  ) : (
+                    // Mature Tree Trunk View
+                    <div className="w-full h-full bg-gradient-to-b from-stone-900 via-stone-950 to-emerald-950 relative flex items-center justify-center">
+                      <div className="w-28 h-full bg-[#3b2212] border-x-4 border-[#24150b] shadow-2xl relative">
+                        <div className="absolute top-16 left-4 w-4 h-5 rounded-full bg-black border border-amber-600/80" />
+                        <div className="absolute top-36 right-5 w-4 h-6 rounded-full bg-black border border-amber-600/80" />
+                        <div className="absolute top-24 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 font-mono text-[9px] font-bold px-2 py-0.5 rounded shadow">
+                          #{draftForm.rfidTag}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Alignment Reticle & Corner Brackets */}
+              <div className="relative z-10 w-52 h-52 border-2 border-emerald-400/40 rounded-2xl flex items-center justify-center pointer-events-none">
                 <div className="w-7 h-7 border-t-2 border-l-2 border-emerald-400 absolute top-0 left-0" />
                 <div className="w-7 h-7 border-t-2 border-r-2 border-emerald-400 absolute top-0 right-0" />
                 <div className="w-7 h-7 border-b-2 border-l-2 border-emerald-400 absolute bottom-0 left-0" />
                 <div className="w-7 h-7 border-b-2 border-r-2 border-emerald-400 absolute bottom-0 right-0" />
-                <div className="w-2.5 h-2.5 bg-emerald-400/70 rounded-full" />
+                <div className="w-3 h-3 bg-emerald-400/80 rounded-full" />
               </div>
 
-              <div className="absolute bottom-3 left-3 bg-black/75 p-2 rounded-lg font-mono text-[9px] text-emerald-300 space-y-0.5 border border-emerald-500/30">
-                <div>RTK ACCURACY: ±1.1m • GALLERY UPLOAD BLOCKED</div>
-                <div className="text-teal-300">RAM SHA-256: {cameraHash.substring(0, 28)}...</div>
+              {/* HUD Overlays */}
+              <div className="absolute top-3 left-3 bg-black/80 p-2 rounded-lg font-mono text-[10px] text-emerald-300 space-y-0.5 border border-emerald-500/30 z-20">
+                <div>ATTACHED GROWER: {draftForm.farmerName} ({draftForm.farmerId})</div>
+                <div>PLOT: {draftForm.parentPlantationId}</div>
+                <div>RTK POSITION: 26.5204° N, 93.9782° E (±1.1m)</div>
+              </div>
+
+              <div className="absolute bottom-3 left-3 bg-black/80 p-2 rounded-lg font-mono text-[9px] text-teal-300 space-y-0.5 border border-teal-500/30 z-20">
+                <div>HARDWARE RAM SHA-256: {cameraHash.slice(0, 28)}...</div>
+                <div className="text-emerald-400">STATUS: ON-DEVICE FORENSIC STAMP READY</div>
               </div>
             </div>
 
-            <div className="p-4 flex items-center justify-between">
-              <span className="text-xs text-slate-300">Direct Sensor Memory Buffer</span>
+            {/* Bottom Controls */}
+            <div className="p-4 bg-slate-900 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  const newHash = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-                  setCameraHash(newHash);
-                  setShowCameraModal(false);
-                  showToast(`Captured live photo & computed hardware RAM SHA-256 (${newHash.slice(0, 14)}...)`, 'success');
-                }}
-                className="px-4 py-2 rounded-xl gis-btn-emerald font-bold text-xs flex items-center gap-1.5"
+                onClick={toggleWebcam}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition flex items-center gap-1.5 ${
+                  isWebcamActive
+                    ? 'bg-rose-950 text-rose-300 border-rose-800'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                {isWebcamActive ? <VideoOff className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5" />}
+                <span>{isWebcamActive ? 'Disable Real Webcam' : 'Use Real Device Camera'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSnapPhoto}
+                className="px-5 py-2.5 rounded-xl gis-btn-emerald font-extrabold text-xs flex items-center gap-2 shadow-lg"
               >
                 <Camera className="w-4 h-4" />
-                <span>Capture &amp; Hash in RAM</span>
+                <span>Snap Stamped Field Photo</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. FULL-SIZE FORENSIC PHOTO VIEWER MODAL */}
+      {viewingPhoto && (
+        <div className="fixed inset-0 z-[1100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl space-y-0">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-extrabold text-white">{viewingPhoto.title}</h3>
+                <span className="text-xs text-slate-400 font-mono">
+                  Asset ID: {viewingPhoto.entityId} • Grower: {viewingPhoto.farmerName}
+                </span>
+              </div>
+              <button
+                onClick={() => setViewingPhoto(null)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3 bg-black flex items-center justify-center">
+              <img
+                src={viewingPhoto.url}
+                alt={viewingPhoto.title}
+                className="w-full max-h-[480px] object-contain rounded-xl shadow-lg border border-slate-800"
+              />
+            </div>
+
+            <div className="p-4 bg-slate-950 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="font-mono text-[10px] text-emerald-400 break-all max-w-md">
+                SHA-256: {viewingPhoto.hash || '7d4a2f8c5b9e1a3d6f0c8e2b4a7d9f1e3c5a7b9d0e2f4a6c8e0b2d4f6a8c0e2b'}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={viewingPhoto.url}
+                  download={`NERAMAC-${viewingPhoto.entityId || 'PHOTO'}.jpg`}
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 transition"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Stamped JPEG</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setViewingPhoto(null)}
+                  className="px-4 py-1.5 rounded-xl gis-btn-emerald font-bold text-xs"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -19,10 +19,11 @@ import {
   Layers,
   CheckCircle2,
   Calendar,
-  Tag
+  Tag,
+  Camera
 } from 'lucide-react';
 
-export default function FarmerModule() {
+export default function FarmerModule({ onOpenGeoStudio }) {
   const {
     farmers,
     addFarmer,
@@ -435,6 +436,19 @@ export default function FarmerModule() {
 
               {/* Direct "+ Add" Shortcuts attached to this farmer */}
               <div className="flex items-center gap-2">
+                {onOpenGeoStudio && (
+                  <button
+                    onClick={() => {
+                      setSelectedFarmer(null);
+                      onOpenGeoStudio();
+                    }}
+                    className="px-2.5 py-1.5 bg-amber-700 hover:bg-amber-800 text-white font-bold rounded-lg text-[11px] flex items-center gap-1 transition"
+                    title="Launch Field GIS Studio for interactive map & camera capture"
+                  >
+                    <Camera className="w-3.5 h-3.5 text-amber-300" />
+                    <span>GIS Studio</span>
+                  </button>
+                )}
                 <button
                   onClick={() => setIsAttachPlantationModalOpen(true)}
                   className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-[11px] flex items-center gap-1 transition"
