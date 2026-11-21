@@ -79,7 +79,7 @@ export const ROLE_PERMISSIONS = {
     authority: 'Cluster Field Verification Office',
     badge: 'On-Ground Biometric & GIS Capture',
     color: 'amber',
-    defaultRoute: '/field-gis-studio',
+    defaultRoute: '/field-agent',
     allowedModules: [
       'HOME',
       'GEO_STUDIO',
@@ -103,7 +103,7 @@ export const ROLE_PERMISSIONS = {
     authority: 'Homestead Agarwood Cultivator',
     badge: 'Primary Producer',
     color: 'green',
-    defaultRoute: '/farmers/register',
+    defaultRoute: '/farmer',
     allowedModules: [
       'HOME',
       'FARMER_REGISTER',

@@ -62,18 +62,18 @@ export default function EnterpriseSidebar({
     {
       group: 'Overview & Architecture',
       items: [
-        { id: 'HOME', name: 'Home • Workflow & Roles', icon: Home, badge: '8 Stages', path: '/' },
+        { id: 'HOME', name: 'Home • Workflow & Roles', icon: Home, badge: '10 Stages', path: '/' },
         { id: 'DASHBOARD', name: 'Executive Dashboard', icon: LayoutDashboard, badge: null, path: '/dashboard' }
       ]
     },
     {
       group: 'Origin & Forestry',
       items: [
-        { id: 'FARMERS', name: 'Farmer Registry', icon: Users, badge: farmers.length, path: '/farmers' },
-        { id: 'FARMER_REGISTER', name: 'Farmer Registration Form', icon: UserPlus, badge: 'New', highlight: true, path: '/farmers/register' },
-        { id: 'FARMER_APPROVALS', name: 'Maker-Checker Approvals', icon: ShieldCheck, badge: farmerApplications.filter(a => a.status !== 'APPROVED').length || null, highlight: true, path: '/farmers/approvals' },
+        { id: 'FARMERS', name: 'Farmer Registry', icon: Users, badge: farmers.length, path: '/farmer' },
+        { id: 'FARMER_REGISTER', name: 'Farmer Registration Form', icon: UserPlus, badge: 'New', highlight: true, path: '/farmer/register' },
+        { id: 'FARMER_APPROVALS', name: 'Maker-Checker Approvals', icon: ShieldCheck, badge: farmerApplications.filter(a => a.status !== 'APPROVED').length || null, highlight: true, path: '/farmer/approvals' },
         { id: 'PLANTATIONS', name: 'Plantations & Parcels', icon: Trees, badge: (trees?.length || 0) + (pologens?.length || 0), path: '/plantations' },
-        { id: 'GEO_STUDIO', name: 'Field GIS & SHA-256 Studio', icon: MapPin, badge: 'AR GPS', path: '/field-gis-studio' },
+        { id: 'GEO_STUDIO', name: 'Field GIS & SHA-256 Studio', icon: MapPin, badge: 'AR GPS', path: '/field-agent' },
         { id: 'INOCULATION', name: 'Cultivation & Inoculation', icon: Syringe, badge: null, path: '/inoculation' }
       ]
     },

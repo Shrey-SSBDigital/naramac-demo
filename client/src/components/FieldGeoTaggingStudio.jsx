@@ -1156,7 +1156,118 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
         </div>
       )}
 
-      {/* 2. UNIFIED GIS TOOLBAR CARD */}
+      {/* 2. FIELD AGENT ON-SITE INSPECTION & ASSET CAPTURE BAR */}
+      <div className="bg-emerald-950 border border-emerald-800/80 rounded-2xl p-4 text-white shadow-md space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Field Agent On-Site Inspection
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  Assam & Tripura Forestry Verification
+                </span>
+              </div>
+              <h2 className="text-sm font-black text-white mt-0.5">
+                Select Farmer to Tag POLOGEN Boundaries & Mature Trees
+              </h2>
+            </div>
+          </div>
+
+          {/* Farmer Selector Dropdown */}
+          <div className="flex items-center gap-2 min-w-[300px]">
+            <label className="text-xs font-bold text-slate-300 whitespace-nowrap">Choose Farmer:</label>
+            <select
+              value={draftForm.farmerId}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const f = farmers.find(farm => farm.id === selectedId);
+                setDraftForm(prev => ({
+                  ...prev,
+                  farmerId: selectedId,
+                  farmerName: f ? f.name : prev.farmerName
+                }));
+                const targetPlt = registry.plantations.find(p => p.farmerId === selectedId);
+                if (targetPlt) {
+                  const m = computePolygonMeasurements(targetPlt.coordinates);
+                  if (m.center) {
+                    setViewport({ lat: m.center[1], lng: m.center[0], zoom: 16 });
+                  }
+                }
+              }}
+              className="w-full text-xs px-3 py-1.5 bg-slate-900 border border-emerald-700/60 rounded-xl text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            >
+              {farmers.map(f => (
+                <option key={f.id} value={f.id}>
+                  {f.name} ({f.id}) — {f.village}, {f.dagNumber}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Quick Action Buttons for Field Agent */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-emerald-800/60">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-400 font-medium">Selected Plot:</span>
+            <span className="font-bold text-emerald-300 font-mono">
+              {draftForm.parentPlantationId || 'PLT-AS-GLG-0001-X'}
+            </span>
+            <span className="text-slate-500">•</span>
+            <span className="text-slate-300">
+              Grower: <span className="font-bold text-white">{draftForm.farmerName}</span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => handleSelectTool('WALK_POLOGEN')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                activeTool === 'WALK_POLOGEN'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-black'
+                  : 'bg-emerald-900/80 hover:bg-emerald-800 text-teal-200 border border-teal-700/60'
+              }`}
+            >
+              <Footprints className="w-3.5 h-3.5" />
+              <span>Add POLOGEN (&lt; 7y Saplings)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectTool('GEO_PIN_TREE')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                activeTool === 'GEO_PIN_TREE'
+                  ? 'bg-amber-400 text-slate-950 shadow-md font-black'
+                  : 'bg-emerald-900/80 hover:bg-emerald-800 text-amber-200 border border-amber-700/60'
+              }`}
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              <span>Add Tree Point (≥ 7y Tag)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                handleOpenCamera(activeTool === 'WALK_POLOGEN' ? 'POLOGEN' : 'TREE');
+                if (!isWebcamActive) {
+                  setTimeout(() => toggleWebcam(), 300);
+                }
+              }}
+              className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>Capture Image (Real Camera)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. UNIFIED GIS TOOLBAR CARD */}
       <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Cluster Selector */}

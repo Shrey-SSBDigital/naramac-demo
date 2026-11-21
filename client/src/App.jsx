@@ -107,6 +107,16 @@ function AppContent() {
     r.allowedModules.includes(activeModule)
   );
 
+  // Dedicated Home Page: Shows strictly the 10-Step Workflow, Stakeholders & Responsibilities
+  if (activeModule === 'HOME') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-emerald-600 selection:text-white">
+        <HomeWorkflowOverview onNavigate={navigate} />
+        <Toast toasts={toasts} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-slate-100 text-slate-900 font-sans antialiased overflow-hidden selection:bg-emerald-600 selection:text-white">
       {/* 1. Enterprise Sidebar Navigation (strictly role-filtered) */}
@@ -114,7 +124,7 @@ function AppContent() {
         activeModule={activeModule}
         onSelectModule={(mod) => navigate(mod)}
         onOpenLegacyFlow={() => navigate('/flow')}
-        onOpenLegacyGeoStudio={() => navigate('/field-gis-studio')}
+        onOpenLegacyGeoStudio={() => navigate('/field-agent')}
       />
 
       {/* 2. Main Work Area */}
@@ -184,7 +194,7 @@ function AppContent() {
             </div>
           ) : (
             <>
-              {/* Home: Workflow & Roles Overview (Landing Page) */}
+              {/* Home: Workflow & Roles Overview (Fallback if rendered inside main) */}
               {activeModule === 'HOME' && (
                 <HomeWorkflowOverview onNavigate={navigate} />
               )}
@@ -196,7 +206,10 @@ function AppContent() {
 
               {/* Farmer Registry */}
               {activeModule === 'FARMERS' && (
-                <FarmerModule onOpenGeoStudio={() => navigate('/field-gis-studio')} />
+                <FarmerModule
+                  onOpenGeoStudio={() => navigate('/field-agent')}
+                  onOpenRegister={() => navigate('/farmer/register')}
+                />
               )}
 
               {/* Farmer Registration Form */}

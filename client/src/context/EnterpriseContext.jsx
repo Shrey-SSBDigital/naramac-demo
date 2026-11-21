@@ -621,41 +621,100 @@ export function EnterpriseProvider({ children }) {
     return newInoc;
   };
 
-  // 4. Harvest Management
+  // 4. Harvest Management (Farmer Apply -> DFO Sanction -> Field Agent Confirm & Fell)
   const applyHarvest = (harvestData) => {
     const id = `HAU-2026-${String(harvests.length + 1).padStart(3, '0')}`;
     const newHarvest = {
       id,
       applicationDate: new Date().toISOString().split('T')[0],
-      status: 'PENDING_DFO_SANCTION',
+      status: 'SUBMITTED_AWAITING_DFO',
       makerCheckerApproved: false,
+      estimatedWeightKg: harvestData.estimatedWeightKg || 38.0,
+      reasonForHarvest: harvestData.reasonForHarvest || 'Resin maturity reached 24 months post-inoculation',
       ...harvestData
     };
     const updated = [newHarvest, ...harvests];
     setHarvests(updated);
     persistState({ harvests: updated });
-    logAudit('APPLY_HARVEST', 'Harvest Management', `Submitted harvest application ${id} for tree ${newHarvest.treeId}`, id);
-    addToast(`Harvest application ${id} submitted for DFO sanction`);
+    logAudit('APPLY_HARVEST', 'Harvest Management', `Farmer ${newHarvest.farmerName} submitted harvest application ${id} for tree ${newHarvest.treeId}`, id);
+    addToast(`Harvest application ${id} submitted. Forwarded to DFO for felling permission!`);
     return newHarvest;
   };
 
-  const approveHarvestAndFell = (harvestId, dfoSanctionNumber, woodWeightKg, resinGrade = 'GRADE_A_DARK_RESIN') => {
+  const dfoApproveHarvest = (harvestId, approvalData = {}) => {
     const harvest = harvests.find(h => h.id === harvestId);
-    if (!harvest) return;
+    if (!harvest) return null;
 
-    const batchId = `HBT-AS-2026-${String(harvestBatches.length + 1).padStart(3, '0')}`;
+    const sanctionNo = approvalData.dfoSanctionNumber || `DFO/GLT/2026/HARV-${Math.floor(100 + Math.random() * 900)}`;
+    const permitId = `PMT-DFO-2026-${String(permits.length + 1).padStart(3, '0')}`;
+
     const updatedHarvests = harvests.map(h => {
       if (h.id === harvestId) {
         return {
           ...h,
-          dfoSanctionNumber,
+          dfoSanctionNumber: sanctionNo,
           dfoSanctionDate: new Date().toISOString().split('T')[0],
-          fellingDate: new Date().toISOString().split('T')[0],
+          dfoOfficerName: approvalData.dfoOfficerName || 'S. K. Bordoloi, IFS (DFO Golaghat)',
+          approvedTreeIds: approvalData.approvedTreeIds || [harvest.treeId],
+          approvedMaxWeightKg: parseFloat(approvalData.approvedMaxWeightKg) || harvest.estimatedWeightKg || 45.0,
+          permitDoc: approvalData.permitDoc || `DFO_Felling_Permit_${harvestId}.pdf`,
+          status: 'DFO_APPROVED_AWAITING_FELLING',
           makerCheckerApproved: true,
-          checkerOfficer: 'NERAMAC Admin (Verified)',
-          freshWoodWeightKg: parseFloat(woodWeightKg) * 1.1,
-          cleanedHeartwoodKg: parseFloat(woodWeightKg),
-          stumpPhotoHash: `sha256:${Math.random().toString(16).slice(2)}`,
+          dfoRemarks: approvalData.remarks || 'Homestead revenue land verified. Statutory felling approved under Assam Agarwood Policy 2020.'
+        };
+      }
+      return h;
+    });
+
+    // Auto-create official Permit record in permits state
+    const newPermit = {
+      id: permitId,
+      permitNumber: sanctionNo,
+      type: 'FELLING',
+      issuedBy: 'Divisional Forest Officer (Golaghat)',
+      issueDate: new Date().toISOString().split('T')[0],
+      expiryDate: '2026-06-30',
+      holderId: harvest.farmerId,
+      holderName: harvest.farmerName,
+      status: 'ACTIVE',
+      quotaKg: harvest.estimatedWeightKg || 45.0,
+      usedKg: 0,
+      documentHash: `sha256:${Math.random().toString(16).slice(2)}`,
+      linkedEntities: [harvest.treeId, harvestId]
+    };
+    const updatedPermits = [newPermit, ...permits];
+
+    setHarvests(updatedHarvests);
+    setPermits(updatedPermits);
+    persistState({ harvests: updatedHarvests, permits: updatedPermits });
+
+    logAudit('DFO_HARVEST_SANCTIONED', 'Permit & Harvest Management', `DFO sanctioned felling for ${harvest.treeId} (Order: ${sanctionNo})`, sanctionNo);
+    addToast(`DFO Felling Sanction ${sanctionNo} approved for Tree ${harvest.treeId}!`);
+    return { harvest: updatedHarvests.find(h => h.id === harvestId), permit: newPermit };
+  };
+
+  const fieldAgentConfirmAndFell = (harvestId, fellingData = {}) => {
+    const harvest = harvests.find(h => h.id === harvestId);
+    if (!harvest) return null;
+
+    const batchId = `HBT-AS-2026-${String(harvestBatches.length + 1).padStart(3, '0')}`;
+    const cleanedKg = parseFloat(fellingData.cleanedHeartwoodKg || fellingData.woodWeightKg || 38.5);
+    const chipsKg = parseFloat(fellingData.sapwoodChipsKg || 12.0);
+    const photoHash = fellingData.stumpPhotoSha256 || `sha256:${Math.random().toString(16).slice(2)}`;
+
+    const updatedHarvests = harvests.map(h => {
+      if (h.id === harvestId) {
+        return {
+          ...h,
+          fellingDate: new Date().toISOString().split('T')[0],
+          fieldAgent: fellingData.inspectorName || 'NERAMAC-FA-04 (Dipankar Neog)',
+          treeQrVerified: true,
+          freshWoodWeightKg: Number((cleanedKg * 1.1).toFixed(1)),
+          cleanedHeartwoodKg: cleanedKg,
+          sapwoodChipsKg: chipsKg,
+          stumpPhotoHash: photoHash,
+          stumpPhotoUrl: fellingData.stumpPhotoUrl || null,
+          gpsCoordinates: fellingData.gpsCoordinates || [93.9782, 26.5204],
           batchGeneratedId: batchId,
           status: 'FELL_COMPLETED'
         };
@@ -670,8 +729,9 @@ export function EnterpriseProvider({ children }) {
       farmerId: harvest.farmerId,
       farmerName: harvest.farmerName,
       plantationId: harvest.plantationId,
-      netWeightKg: parseFloat(woodWeightKg),
-      resinGrade,
+      netWeightKg: cleanedKg,
+      chipsWeightKg: chipsKg,
+      resinGrade: fellingData.resinGrade || 'GRADE_A_DARK_RESIN',
       chippedStatus: 'RAW_LOGS',
       currentLocation: 'Harvest Site / Farm Gate',
       currentCustodian: 'FIELD_AGENT',
@@ -679,12 +739,11 @@ export function EnterpriseProvider({ children }) {
       parentOfAggregation: null,
       transitPassNumber: `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`,
       harvestTimestamp: new Date().toISOString(),
+      stumpPhotoSha256: photoHash,
       portablePrinterTag: `BAR-${batchId}-QR`
     };
 
     const updatedBatches = [newBatch, ...harvestBatches];
-
-    // Update tree status
     const updatedTrees = trees.map(t => t.id === harvest.treeId ? { ...t, status: 'HARVESTED' } : t);
 
     setHarvests(updatedHarvests);
@@ -692,8 +751,14 @@ export function EnterpriseProvider({ children }) {
     setTrees(updatedTrees);
 
     persistState({ harvests: updatedHarvests, harvestBatches: updatedBatches, trees: updatedTrees });
-    logAudit('FELL_AND_CREATE_BATCH', 'Harvest Management', `Felled tree ${harvest.treeId} & generated ${batchId} (${woodWeightKg} kg)`, batchId);
-    addToast(`Felling approved. Harvest Batch ${batchId} generated (${woodWeightKg} kg)`);
+    logAudit('FELL_AND_CREATE_BATCH', 'Harvest Recording', `Field Agent confirmed tree ${harvest.treeId}, felling weighment ${cleanedKg}kg. Minted Harvest Batch ${batchId}`, batchId);
+    addToast(`Tree ${harvest.treeId} felling confirmed! Harvest Batch ${batchId} generated (${cleanedKg} kg)`);
+    return { batch: newBatch, harvest: updatedHarvests.find(h => h.id === harvestId) };
+  };
+
+  const approveHarvestAndFell = (harvestId, dfoSanctionNumber, woodWeightKg, resinGrade = 'GRADE_A_DARK_RESIN') => {
+    dfoApproveHarvest(harvestId, { dfoSanctionNumber, approvedMaxWeightKg: woodWeightKg });
+    return fieldAgentConfirmAndFell(harvestId, { cleanedHeartwoodKg: woodWeightKg, resinGrade });
   };
 
   // 5. Permit Management
@@ -1184,6 +1249,8 @@ export function EnterpriseProvider({ children }) {
         addTree,
         addInoculation,
         applyHarvest,
+        dfoApproveHarvest,
+        fieldAgentConfirmAndFell,
         approveHarvestAndFell,
         addPermit,
         createMovement,

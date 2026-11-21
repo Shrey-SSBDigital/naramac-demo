@@ -1,28 +1,37 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// Path to Module ID mapping
+// Path to Module ID mapping with full support for singular/plural routes and aliases
 export const ROUTE_MAP = {
   '/': 'HOME',
   '/home': 'HOME',
   '/dashboard': 'DASHBOARD',
+  '/farmer': 'FARMERS',
   '/farmers': 'FARMERS',
+  '/farmer/register': 'FARMER_REGISTER',
   '/farmers/register': 'FARMER_REGISTER',
+  '/farmer/approvals': 'FARMER_APPROVALS',
   '/farmers/approvals': 'FARMER_APPROVALS',
-  '/plantations': 'PLANTATIONS',
+  '/field-agent': 'GEO_STUDIO',
   '/field-gis-studio': 'GEO_STUDIO',
+  '/plantations': 'PLANTATIONS',
   '/inoculation': 'INOCULATION',
   '/harvest': 'HARVEST',
   '/permits': 'PERMITS',
+  '/dfo': 'PERMITS',
   '/movement': 'MOVEMENT',
   '/aggregation': 'AGGREGATION',
   '/processing': 'PROCESSING',
+  '/cpc': 'PROCESSING',
   '/laboratory': 'LABORATORY',
+  '/lab': 'LABORATORY',
   '/inventory': 'INVENTORY',
   '/finished-products': 'FINISHED_PRODUCTS',
   '/export': 'EXPORT',
   '/shipments': 'SHIPMENT',
+  '/shipment': 'SHIPMENT',
   '/domestic-sales': 'DOMESTIC_SALES',
   '/traceability': 'TRACEABILITY',
+  '/verify': 'TRACEABILITY',
   '/audit-reports': 'AUDIT_REPORTS',
   '/flow': 'FLOW'
 };
@@ -31,11 +40,11 @@ export const ROUTE_MAP = {
 export const MODULE_TO_ROUTE = {
   HOME: '/',
   DASHBOARD: '/dashboard',
-  FARMERS: '/farmers',
-  FARMER_REGISTER: '/farmers/register',
-  FARMER_APPROVALS: '/farmers/approvals',
+  FARMERS: '/farmer',
+  FARMER_REGISTER: '/farmer/register',
+  FARMER_APPROVALS: '/farmer/approvals',
   PLANTATIONS: '/plantations',
-  GEO_STUDIO: '/field-gis-studio',
+  GEO_STUDIO: '/field-agent',
   INOCULATION: '/inoculation',
   HARVEST: '/harvest',
   PERMITS: '/permits',
@@ -61,7 +70,7 @@ function resolveCurrentRoute() {
     return { path: '/', module: 'HOME', params: {} };
   }
 
-  // Check hash fallback (e.g. #/farmers/register) or pathname
+  // Check hash fallback (e.g. #/farmer/register) or pathname
   let path = window.location.pathname || '/';
   if (window.location.hash && window.location.hash.startsWith('#/')) {
     path = window.location.hash.slice(1);
@@ -76,6 +85,12 @@ function resolveCurrentRoute() {
   // Exact match
   if (ROUTE_MAP[path]) {
     return { path, module: ROUTE_MAP[path], params: {} };
+  }
+
+  // Strip trailing slash if any
+  const normalized = path.replace(/\/$/, '');
+  if (ROUTE_MAP[normalized]) {
+    return { path: normalized, module: ROUTE_MAP[normalized], params: {} };
   }
 
   // Default to HOME if at root or unknown
@@ -110,12 +125,13 @@ export function useAppRouter() {
       targetModule = target;
       targetPath = MODULE_TO_ROUTE[target];
     } else if (ROUTE_MAP[target]) {
-      // Called with path (e.g. '/farmers/register')
+      // Called with path (e.g. '/farmer/register')
       targetPath = target;
       targetModule = ROUTE_MAP[target];
     } else if (typeof target === 'string' && target.startsWith('/')) {
       targetPath = target;
-      targetModule = ROUTE_MAP[target] || 'HOME';
+      const cleanPath = target.split('?')[0].replace(/\/$/, '') || '/';
+      targetModule = ROUTE_MAP[cleanPath] || 'HOME';
     }
 
     try {
@@ -123,7 +139,6 @@ export function useAppRouter() {
         window.history.pushState({ module: targetModule }, '', targetPath);
       }
     } catch (e) {
-      // Fallback for sandboxed or cross-origin environments
       window.location.hash = targetPath;
     }
 

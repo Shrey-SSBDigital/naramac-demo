@@ -26,455 +26,519 @@ import {
   ChevronRight,
   Info,
   Building2,
-  Fingerprint
+  Fingerprint,
+  Scale,
+  ShoppingBag,
+  Eye,
+  LayoutDashboard,
+  Search,
+  Check
 } from 'lucide-react';
 
 export default function HomeWorkflowOverview({ onNavigate }) {
-  const { activeRole, setActiveRole, addToast, farmerApplications, farmers } = useEnterprise();
-  const [selectedStage, setSelectedStage] = useState(1);
-  const [activeTab, setActiveTab] = useState('PIPELINE'); // 'PIPELINE' | 'ROLES' | 'QUICK_START'
+  const { activeRole, setActiveRole, addToast, farmers, farmerApplications, harvestBatches } = useEnterprise();
+  const [selectedWorkflowStep, setSelectedWorkflowStep] = useState(1);
+  const [activeSection, setActiveSection] = useState('WORKFLOW'); // 'WORKFLOW' | 'STAKEHOLDERS'
 
-  // The 8 Core End-to-End Value Chain Stages
-  const WORKFLOW_STAGES = [
+  // The 10 End-to-End Workflow Stages as requested
+  const WORKFLOW_STEPS = [
     {
-      stage: 1,
-      id: 'ONBOARDING',
-      title: 'Farmer & Land Title Onboarding',
-      subtitle: 'Revenue Validation & Dag/Patta Verification',
+      step: 1,
+      id: 'FARMER_PLANTATION',
+      title: '1. Farmer & Plantation Registration',
+      subtitle: 'Homestead Origin, Land Title & Tree Geo-Tagging',
+      path: '/farmer/register',
+      altPath: '/farmer',
       moduleId: 'FARMER_REGISTER',
-      path: '/farmers/register',
       icon: Users,
       color: 'emerald',
       stakeholders: ['FARMER', 'FIELD_AGENT', 'NERAMAC_ADMIN'],
-      statutoryRule: 'Assam Agarwood (Aquilaria malaccensis) Policy 2020 • Land Revenue Jamabandi Title Mandate',
-      inputs: 'Farmer identity, Dag & Patta revenue numbers, Jamabandi land records, DPDP Act 2023 masked Aadhaar',
-      outputs: 'Pending Farmer Application (APP-AS-2026-XXX) with Lat Mandal inspection requisition',
-      description: 'Farmers submit formal homestead agarwood cultivation applications declaring land titles, Dag/Patta numbers, and estimated saplings (<7y) and mature trees (≥7y). Includes DPDP Act 2023 compliant data protection.',
-      makerChecker: 'Lat Mandal verifies land ownership with Circle Office; Field Agent inspects ground boundaries.'
+      subpoints: [
+        '1. Farmer registration and verification (Identity, DPDP Act 2023 masked Aadhaar).',
+        '2. Land and ownership document registration (Revenue Dag & Patta numbers, Jamabandi records).',
+        '3. Plantation registration with GPS boundary (Polygon mapping via Field GIS Studio).',
+        '4. Individual tree registration with Tree ID, QR code, GPS coordinates and photographs.'
+      ],
+      description: 'The foundation of traceability starts at the farm gate. Farmers register their private homestead land with revenue titles to prove non-forest origin. Field agents survey the land, walk perimeter boundaries (POLOGEN), and attach laser RFID tags to individual mature trees.',
+      statutoryRule: 'Assam Agarwood (Aquilaria malaccensis) Policy 2020 • Land Revenue Jamabandi Title Mandate'
     },
     {
-      stage: 2,
-      id: 'GIS_STUDIO',
-      title: 'Field GIS & Forensic Photo Capture',
-      subtitle: 'POLOGEN Boundary Walk & Mature Tree Tagging',
-      moduleId: 'GEO_STUDIO',
-      path: '/field-gis-studio',
-      icon: MapPin,
-      color: 'amber',
-      stakeholders: ['FIELD_AGENT', 'NERAMAC_ADMIN', 'FOREST_DEPT'],
-      statutoryRule: 'MoEFCC Guidelines: POLOGEN polygon capture for saplings < 7 yrs; Individual RFID nail tagging for trees ≥ 7 yrs',
-      inputs: 'On-site RTK GPS location, plantation physical perimeter, tree Girth at Breast Height (GBH in cm)',
-      outputs: 'Walked POLOGEN polygon geometry, tagged tree registry, tamper-evident photo stamped with Web Crypto SHA-256 buffer hash',
-      description: 'NERAMAC Field Agents walk plantation perimeters creating POLOGEN polygon boundaries for young saplings and geo-pinning mature trees with laser RFID tags. Photos are watermarked and cryptographically hashed in real time.',
-      makerChecker: 'SHA-256 buffer hash verifies photo integrity without server round-trip; prevents spoofed tree images.'
-    },
-    {
-      stage: 3,
-      id: 'INOCULATION',
-      title: 'Cultivation & Biological Inoculation',
-      subtitle: 'AAU Fusarium Fungal Inoculation & Growth Audit',
-      moduleId: 'INOCULATION',
+      step: 2,
+      id: 'CULTIVATION_MONITORING',
+      title: '2. Cultivation & Tree Monitoring',
+      subtitle: 'Biological Inoculation & Growth Surveillance',
       path: '/inoculation',
+      altPath: '/field-agent',
+      moduleId: 'INOCULATION',
       icon: Syringe,
       color: 'teal',
       stakeholders: ['FIELD_AGENT', 'FARMER', 'NERAMAC_ADMIN'],
-      statutoryRule: 'Assam Agricultural University (AAU) Certified Inoculant Strains (Fusarium solani / Chaetomium globosum)',
-      inputs: 'Mature Agarwood tree (GBH ≥ 50cm, age ≥ 7 yrs), certified fungal culture batch, spiral drill pattern',
-      outputs: 'Cryptographic Inoculation Passport (INO-2023-XXX), induction date, 18-24 month resin maturation countdown',
-      description: 'Fungal inoculum is induced into tree trunks via calibrated spiral drilling to stimulate oleoresin synthesis. Field agents record drill depth, hole counts, batch codes, and monitor resin deposition milestones.',
-      makerChecker: 'Periodic field audits verify callus wound healing and resin duct development prior to felling sanction.'
+      subpoints: [
+        '1. Cultivation activity records (pruning, irrigation, organic soil enrichment).',
+        '2. Inoculation intervention records (AAU Fusarium solani biological induction strain, spiral drill depths, hole count).',
+        '3. Tree growth, inspection and health monitoring (GBH cm progression, callus wound healing, resin duct deposition).'
+      ],
+      description: 'Cultivation and artificial fungal induction records ensure Agarwood oleoresin synthesis is systematically documented. Field agents record inoculation interventions and monitor trees over their 18 to 24 month maturation cycle.',
+      statutoryRule: 'Assam Agricultural University (AAU) Certified Inoculant Protocol • CITES Appendix II Non-Detriment Guidelines'
     },
     {
-      stage: 4,
-      id: 'HARVEST_SANCTION',
-      title: 'Statutory Harvest & DFO Felling Sanction',
-      subtitle: 'Forest Department Clearance & Felling Orders',
-      moduleId: 'HARVEST',
+      step: 3,
+      id: 'HARVEST_APPLICATION',
+      title: '3. Harvest Application & Approval',
+      subtitle: 'Farmer Requisition & DFO Statutory Sanction',
       path: '/harvest',
+      altPath: '/permits',
+      moduleId: 'HARVEST',
       icon: Axe,
-      color: 'red',
-      stakeholders: ['FOREST_DEPT', 'NERAMAC_ADMIN', 'FIELD_AGENT'],
-      statutoryRule: 'DFO Felling Sanction Order • Transit Pass Form II (Assam Forest Regulation 1891 / Tripura Forest Rules)',
-      inputs: 'Matured resinous tree (18+ months post-inoculation), farmer harvest application, DFO inspection dossier',
-      outputs: 'Statutory DFO Felling Sanction (DFO/GLT/HARV-XXX), Stump verification photo hash, Harvest Batch (HBT-AS-2026-XXX)',
-      description: 'Forest Department DFO validates that trees originate from non-forest homestead land. Field agents supervise tree felling, extract infected heartwood, record net green weight, and generate uniquely serialized Harvest Batches.',
-      makerChecker: 'DFO physical stamp and field agent stump photo hash prevent illegal felling from reserved forest reserves.'
+      color: 'amber',
+      stakeholders: ['FARMER', 'FIELD_AGENT', 'FOREST_DEPT', 'NERAMAC_ADMIN'],
+      subpoints: [
+        '1. Farmer submits harvesting application declaring inoculated mature trees and estimated wood weight.',
+        '2. Field agent inspects plantation on-site and scans tree QR codes / RFID tags.',
+        '3. Authority (DFO / Forest Dept) verifies trees, confirms homestead revenue ownership, and approves specific Tree IDs and quantities.',
+        '4. Statutory Harvest Permit is issued and cryptographically uploaded.'
+      ],
+      description: 'Before any tree can be felled, a strict statutory check ensures it was cultivated on private homestead land. The Divisional Forest Officer (DFO) scrutinizes the Lat Mandal report and issues a formal Felling Sanction Order.',
+      statutoryRule: 'Assam Forest Regulation 1891 • DFO Statutory Felling Sanction Order'
     },
     {
-      stage: 5,
-      id: 'MOVEMENT_DEPOT',
-      title: 'Depot Intake & Gate Tolerance Control',
-      subtitle: 'Weighment Reconciliation & Strict Variance Check',
-      moduleId: 'MOVEMENT',
+      step: 4,
+      id: 'HARVEST_RECORDING',
+      title: '4. Harvest Recording',
+      subtitle: 'On-Site Tree Confirmation & Scale Weighment',
+      path: '/harvest',
+      altPath: '/field-agent',
+      moduleId: 'HARVEST',
+      icon: Scale,
+      color: 'red',
+      stakeholders: ['FIELD_AGENT', 'FARMER', 'NERAMAC_ADMIN'],
+      subpoints: [
+        '1. Field agent scans approved tree QR codes / RFID tags on-site prior to felling.',
+        '2. Records actual harvested quantity (certified cleaned heartwood kg & sapwood chips kg), photographs, GPS and date.',
+        '3. System creates unique Harvest Batch (HBT-AS-2026-XXX) preserving complete source Tree IDs.'
+      ],
+      description: 'Supervised tree felling and digital scale weighment at the farm gate. Field agents capture real camera photographs of the stump stamped with RTK coordinates and Web Crypto SHA-256 buffer hash.',
+      statutoryRule: 'NERAMAC SOP Section 4.2 • Farm-Gate Weighment & Stump Verification Photo Cryptography'
+    },
+    {
+      step: 5,
+      id: 'MOVEMENT_COLLECTION',
+      title: '5. Material Movement & Collection',
+      subtitle: 'Transit Passes & Gate Tolerance Verification',
       path: '/movement',
+      altPath: '/aggregation',
+      moduleId: 'MOVEMENT',
       icon: Truck,
       color: 'blue',
       stakeholders: ['COLLECTION_OPERATOR', 'FIELD_AGENT', 'NERAMAC_ADMIN'],
-      statutoryRule: 'NERAMAC SOP: Mandatory Gate Tolerance Verification (maximum allowable transit weight discrepancy ≤ ±1.5%)',
-      inputs: 'Dispatched raw green heartwood, electronic Transit Pass (e-TP), dispatch weighbridge slip',
-      outputs: 'Depot Receipt Certificate, certified net intake weight, gate tolerance audit record (PASS / HOLD)',
-      description: 'Raw agarwood is transported to designated NERAMAC cluster collection depots (Golaghat / Hojai / Kadamtala). Operators perform dual weighment to detect moisture loss or unauthorized material substitution.',
-      makerChecker: 'Automated lock: Any discrepancy exceeding ±1.5% flags automated alert and freezes transit lot for physical audit.'
+      subpoints: [
+        '1. Sender creates dispatch record with electronic Transit Pass (e-TP) and vehicle manifest.',
+        '2. Receiver confirms receipt and dual weighment at collection centre (Gate Tolerance discrepancy ≤ ±1.5%).',
+        '3. Optional: Collection centre combines multiple Harvest Batches into an Aggregation Batch while retaining source lineage.'
+      ],
+      description: 'Raw green heartwood is dispatched under Form II Transit Passes to designated cluster collection depots (Golaghat / Hojai / Kadamtala). Dual weighment prevents tampering or illegal timber substitution.',
+      statutoryRule: 'Electronic Transit Pass (e-TP) • Form II (Assam Forest Rules) • NERAMAC Gate Tolerance (±1.5%)'
     },
     {
-      stage: 6,
-      id: 'PROCESSING_DISTILL',
-      title: 'Aggregation & CPC Hydro-Distillation',
-      subtitle: 'Batch Pooling & Steam Extraction Stills',
-      moduleId: 'PROCESSING',
+      step: 6,
+      id: 'PROCESSING_DISTILLATION',
+      title: '6. Processing & Distillation',
+      subtitle: 'CPC Hydro-Distillation & Mass Balance Ledger',
       path: '/processing',
+      altPath: '/inventory',
+      moduleId: 'PROCESSING',
       icon: Factory,
-      color: 'indigo',
+      color: 'cyan',
       stakeholders: ['CPC_OPERATOR', 'NERAMAC_ADMIN'],
-      statutoryRule: 'Common Facility Centre (CFC) Distillation Protocol • Strict Input/Output Mass Balance Conservation',
-      inputs: 'Aggregated Harvest Batches (AGG-AS-2026-XXX), boiler charge loading, mechanical chipping & soaking logs',
-      outputs: 'Grade-1 Dehn Al Oudh Pure Oil (OIL-2026-XXX), Grade-2 oil, floral hydrosol water, spent wood residue',
-      description: 'Material from multiple compliant farmers is aggregated while preserving source tree lineage. The charge is hydro-distilled in calibrated stainless steel stills (ST-01 to ST-08) for 72-96 hours under controlled temperature.',
-      makerChecker: 'Mass Balance Ledger calculates input dry weight vs output oil, hydrosol, and waste to guarantee zero adulteration.'
+      subpoints: [
+        '1. Processing centre receives raw wood material and verifies custody barcode.',
+        '2. Creates processing/distillation order for hydro-distillation stills (Boilers ST-01 to ST-08).',
+        '3. Records input charge quantity, machine ID, soaking duration, and operator credentials.',
+        '4. Records distillation outputs: Grade-1 pure agarwood oil (Dehn Al Oudh), Grade-2 oil, floral hydrosol, and exhausted residue.'
+      ],
+      description: 'At the Common Processing Centre (CPC), agarwood logs are chipped and hydro-distilled for 72 to 96 hours. A strict mass balance ledger calculates raw wood to oil conversion to guarantee purity and zero adulteration.',
+      statutoryRule: 'Common Facility Centre (CFC) Operational Protocol • Mass Balance Conservation Standards'
     },
     {
-      stage: 7,
-      id: 'QUALITY_LAB',
-      title: 'NABL Quality Lab & GC-MS Profiling',
-      subtitle: 'Chemical Purity & CITES Species Authentication',
-      moduleId: 'LABORATORY',
+      step: 7,
+      id: 'SAMPLING_LAB_TESTING',
+      title: '7. Sampling & Laboratory Testing',
+      subtitle: 'GC-MS Chemical Profiling & CITES Species Purity',
       path: '/laboratory',
+      altPath: '/audit-reports',
+      moduleId: 'LABORATORY',
       icon: FlaskConical,
       color: 'purple',
       stakeholders: ['LAB_OFFICER', 'NERAMAC_ADMIN', 'FOREST_DEPT'],
-      statutoryRule: 'ISO/IEC 17025 Accredited Laboratory Testing • CITES Appendix II Species Verification (Aquilaria malaccensis)',
-      inputs: 'Sterile 50ml composite oil sample (SMP-LAB-2026-XXX) drawn under dual custody',
-      outputs: 'Gas Chromatography-Mass Spectrometry (GC-MS) report, Sesquiterpene biomarker index, Certificate of Analysis (CoA)',
-      description: 'Accredited chemists test the oil for key therapeutic sesquiterpenes (Agarospirol ≥ 8.5%, Jinkoh-eremol, Guaiol). Checks ensure zero synthetic DPG, DEP, or mineral oil dilution, releasing the lot for packaging.',
-      makerChecker: 'Dual digital signatures by Chemist and Laboratory Director required before Certificate of Analysis is minted.'
+      subpoints: [
+        '1. Sample collection and registration under dual custodian tamper-evident seals.',
+        '2. Laboratory performs quality tests via Gas Chromatography - Mass Spectrometry (GC-MS).',
+        '3. Chemical results and reports uploaded (Agarospirol ≥ 8.5%, Jinkoh-eremol, Guaiol biomarker index).',
+        '4. Quality approval, rejection or quarantine with cryptographically signed Certificate of Analysis (CoA).'
+      ],
+      description: 'Accredited NABL quality testing validates botanical species authenticity (Aquilaria malaccensis) and verifies absence of synthetic adulterants (DPG, DEP, mineral oils). Certified lots receive quality release for packaging.',
+      statutoryRule: 'ISO/IEC 17025 Accredited Laboratory Testing • CITES Species Botanical Verification'
     },
     {
-      stage: 8,
-      id: 'PACKAGING_EXPORT',
-      title: 'Laser QR Packaging & Global Export',
-      subtitle: 'Serialized Crystal Flacons & CITES Export Lots',
-      moduleId: 'FINISHED_PRODUCTS',
+      step: 8,
+      id: 'FINISHED_PACKAGING',
+      title: '8. Finished Product & Packaging',
+      subtitle: 'Laser QR Serialization & Crystal Flacon Packing',
       path: '/finished-products',
+      altPath: '/inventory',
+      moduleId: 'FINISHED_PRODUCTS',
       icon: PackageCheck,
+      color: 'indigo',
+      stakeholders: ['NERAMAC_ADMIN', 'EXPORTER'],
+      subpoints: [
+        '1. Approved released oil and certified chips sent for final cleanroom packaging.',
+        '2. Individual product serial numbers generated (PCK-NER-2026-XXX).',
+        '3. Laser-etched QR codes attached to each finished 12ml luxury crystal flacon and gift box.',
+        '4. Product enters finished bonded inventory ready for commercial distribution.'
+      ],
+      description: 'Finished products are packaged under sterile custody. Each pack receives a permanent, tamper-evident laser QR code embedding its cryptographic provenance token linking directly to the origin tree.',
+      statutoryRule: 'Unique Serial Numbering Specification • DGFT Export Packaging Guidelines'
+    },
+    {
+      step: 9,
+      id: 'COMMERCIAL_DISTRIBUTION',
+      title: '9. Domestic Sale OR Export',
+      subtitle: 'Domestic Attar Houses & CITES Port Lots',
+      path: '/export',
+      altPath: '/domestic-sales',
+      moduleId: 'EXPORT',
+      icon: PlaneTakeoff,
+      color: 'blue',
+      stakeholders: ['EXPORTER', 'NERAMAC_ADMIN', 'FOREST_DEPT'],
+      subpoints: [
+        'Domestic route: Buyer registration → Sales order → Dispatch manifest → Receipt/delivery confirmation.',
+        'Export route: Export Batch creation → Wildlife Crime Control Bureau (WCCB) export approval → Shipment Lot consolidation → Port export documents (Customs / Shipping Bill) → Dispatch to UAE, Saudi Arabia, EU, and Japan.'
+      ],
+      description: 'The platform accommodates bifurcated supply chain routes: direct wholesale to domestic perfumers (Kannauj, Mumbai, Lucknow) or consolidation into international CITES Export Consignments for global luxury fragrance houses.',
+      statutoryRule: 'CITES Export Quota Allocation • Wildlife Crime Control Bureau (WCCB) NOC • DGFT Export Licensing'
+    },
+    {
+      step: 10,
+      id: 'BUYER_VERIFICATION',
+      title: '10. Final Buyer Verification',
+      subtitle: 'Instant Smartphone QR Scan & End-to-End Provenance',
+      path: '/traceability',
+      altPath: '/verify',
+      moduleId: 'TRACEABILITY',
+      icon: QrCode,
       color: 'emerald',
-      stakeholders: ['EXPORTER', 'BUYER_PUBLIC', 'NERAMAC_ADMIN'],
-      statutoryRule: 'CITES Export Permit Quota • DGFT Export Licensing • Unique Product Laser QR Serialization',
-      inputs: 'Certified Grade-1 pure agarwood oil, tamper-evident 12ml crystal flacons, CITES export quota sanction',
-      outputs: 'Serialized finished packs (PCK-NER-2026-XXX), Export Batches (EXP-2026-XXX), terminal shipment lots',
-      description: 'Oil is bottled into luxury crystal flacons laser-etched with unique QR codes. Export batches are consolidated for customs inspection and dispatched to global perfumery markets in UAE, Saudi Arabia, EU, and Japan.',
-      makerChecker: 'Public scanning instantly surfaces complete tree-to-bottle lineage, farmer compensation, and NABL purity tests.'
+      stakeholders: ['BUYER_PUBLIC', 'EXPORTER'],
+      subpoints: [
+        '1. Buyer scans product QR code using smartphone camera or web portal.',
+        '2. Views authentic product identity, botanical species, grower profile, and NABL GC-MS purity results.',
+        '3. Views complete processing and transit movement history from tree felling to packaging.',
+        '4. Verifies authenticity, statutory DFO clearances, and fair-trade farmer compensation.'
+      ],
+      description: 'The ultimate consumer verification gateway. Scanning any finished bottle reveals its complete, immutable provenance timeline with DPDP Act compliant privacy protections, delivering total transparency.',
+      statutoryRule: 'DPDP Act 2023 Compliant Public Provenance • National Traceability Standards'
     }
   ];
 
-  const currentStageData = WORKFLOW_STAGES.find(s => s.stage === selectedStage) || WORKFLOW_STAGES[0];
+  const currentStepData = WORKFLOW_STEPS.find(s => s.step === selectedWorkflowStep) || WORKFLOW_STEPS[0];
 
   const handleRoleSwitch = (roleId) => {
     setActiveRole(roleId);
     const roleObj = ROLE_PERMISSIONS[roleId];
-    addToast(`Perspective updated to: ${roleObj?.name || roleId}`, 'info');
+    addToast(`Switched active perspective to: ${roleObj?.name || roleId}`, 'info');
   };
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 text-white p-6 sm:p-8 shadow-md border border-emerald-800/40">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="bg-emerald-600 text-white font-black text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs">
-                GOVERNMENT OF INDIA • MDONER
-              </span>
-              <span className="bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                Assam & Tripura Clusters
-              </span>
-              <span className="bg-white/10 text-emerald-200 text-[10px] font-mono px-2 py-0.5 rounded-md">
-                RFP 06/31 Production Blueprint
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      {/* 1. Clean Top Header Bar */}
+      <header className="bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-slate-950 flex items-center justify-center font-black text-xl shadow-lg ring-2 ring-emerald-500/20">
+            N
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-extrabold text-white tracking-tight">NERAMAC ASCTS</span>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Official Architecture Portal
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
-              NERAMAC Agarwood Traceability & Supply Chain System
+            <p className="text-xs text-slate-400">
+              Agarwood Traceability & Supply Chain Management System • RFP 06/31
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Portal Jump Buttons */}
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <button
+            onClick={() => onNavigate('/farmer')}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+          >
+            <Users className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Farmer Portal</span>
+          </button>
+          <button
+            onClick={() => onNavigate('/field-agent')}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+          >
+            <MapPin className="w-3.5 h-3.5 text-amber-400" />
+            <span>Field Agent Studio</span>
+          </button>
+          <button
+            onClick={() => onNavigate('/harvest')}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-red-300 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+          >
+            <Axe className="w-3.5 h-3.5 text-red-400" />
+            <span>Harvest & DFO</span>
+          </button>
+          <button
+            onClick={() => onNavigate('/traceability')}
+            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>Traceability Scanner</span>
+          </button>
+          <button
+            onClick={() => onNavigate('/dashboard')}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            <span>Dashboard</span>
+          </button>
+        </div>
+      </header>
+
+      {/* 2. Hero Objective & Value Chain Overview */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 border border-emerald-500/20 p-6 sm:p-8 text-white shadow-2xl space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-3xl">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded bg-emerald-500 text-slate-950 shadow-xs">
+                Govt. of India • MDoNER
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                Assam (Golaghat / Hojai) & Tripura (Kadamtala)
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-slate-300">
+                End-to-End Forward & Backward Traceability
+              </span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
+              Centralized Agarwood Traceability & Supply Chain System
             </h1>
+
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Complete forward and backward traceability engine for <span className="text-emerald-400 font-semibold italic">Aquilaria malaccensis</span> (Assam Agarwood) — from farmer homestead registration, POLOGEN GIS walking, and biological inoculation, to hydro-distillation, NABL GC-MS lab testing, and CITES export packaging.
+              Track <span className="text-emerald-400 font-semibold italic">Aquilaria malaccensis</span> through its complete statutory lifecycle: from private homestead farmer registration and RTK GPS polygon boundary capture, through fungal inoculation, DFO harvest approvals, supervised scale weighment, CPC hydro-distillation, NABL GC-MS chemical profiling, and laser QR packaging to domestic perfumery sale or CITES international export.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 flex-shrink-0">
-            <button
-              onClick={() => onNavigate('/traceability')}
-              className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition group"
-            >
-              <QrCode className="w-4 h-4 text-emerald-100 group-hover:scale-110 transition" />
-              <span>Launch QR Traceability Scanner</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </button>
-            <button
-              onClick={() => onNavigate('/farmers/register')}
-              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition"
-            >
-              <Users className="w-4 h-4 text-emerald-300" />
-              <span>Register New Farmer Onboarding</span>
-            </button>
+          <div className="bg-slate-900/80 backdrop-blur-md p-4 rounded-2xl border border-slate-800 space-y-2.5 flex-shrink-0 min-w-[280px]">
+            <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+              Current Active Perspective:
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-black text-sm text-emerald-400">
+                {USER_ROLES.find(r => r.id === activeRole)?.name}
+              </div>
+              <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                {activeRole}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Navigation across workspaces is strictly segregated according to statutory custodian powers.
+            </p>
           </div>
         </div>
 
-        {/* Live System Counter Chips */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-slate-700/60">
-          <div className="bg-slate-900/60 backdrop-blur-sm p-3 rounded-xl border border-slate-700/40">
-            <div className="text-[10px] font-bold text-slate-400 uppercase">Registered Farmers</div>
-            <div className="text-lg font-black text-emerald-400 mt-0.5">{farmers.length} Growers</div>
-            <div className="text-[9px] text-slate-400">Assam & Tripura Clusters</div>
+        {/* Toggle between 10-Step Workflow and Stakeholders Matrix */}
+        <div className="pt-4 border-t border-slate-800 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveSection('WORKFLOW')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                activeSection === 'WORKFLOW'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              <GitBranch className="w-4 h-4" />
+              <span>1. Complete 10-Stage Workflow Specification</span>
+            </button>
+            <button
+              onClick={() => setActiveSection('STAKEHOLDERS')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                activeSection === 'STAKEHOLDERS'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>2. Stakeholder Roles & Responsibilities (10 Roles)</span>
+            </button>
           </div>
-          <div className="bg-slate-900/60 backdrop-blur-sm p-3 rounded-xl border border-slate-700/40">
-            <div className="text-[10px] font-bold text-slate-400 uppercase">Pending Applications</div>
-            <div className="text-lg font-black text-amber-400 mt-0.5">
-              {farmerApplications.filter(a => a.status !== 'APPROVED').length} In Pipeline
-            </div>
-            <div className="text-[9px] text-slate-400">Maker-Checker Portal</div>
-          </div>
-          <div className="bg-slate-900/60 backdrop-blur-sm p-3 rounded-xl border border-slate-700/40">
-            <div className="text-[10px] font-bold text-slate-400 uppercase">Active Role Perspective</div>
-            <div className="text-lg font-black text-white mt-0.5 truncate">
-              {USER_ROLES.find(r => r.id === activeRole)?.name || activeRole}
-            </div>
-            <div className="text-[9px] text-emerald-300">RBAC Filtered Workspace</div>
-          </div>
-          <div className="bg-slate-900/60 backdrop-blur-sm p-3 rounded-xl border border-slate-700/40">
-            <div className="text-[10px] font-bold text-slate-400 uppercase">Security & Cryptography</div>
-            <div className="text-lg font-black text-cyan-400 mt-0.5">SHA-256 + RTK</div>
-            <div className="text-[9px] text-slate-400">Web Crypto Forensic Seal</div>
+
+          <div className="text-xs text-slate-400 font-medium">
+            Click any stage or role to view details and launch its workspace
           </div>
         </div>
       </div>
 
-      {/* 2. Navigation Tabs for Home Overview */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setActiveTab('PIPELINE')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              activeTab === 'PIPELINE'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-          >
-            <GitBranch className="w-3.5 h-3.5" />
-            <span>End-to-End Value Chain Pipeline (8 Stages)</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('ROLES')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              activeTab === 'ROLES'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Stakeholders & Roles Matrix (10 Roles)</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('QUICK_START')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              activeTab === 'QUICK_START'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Workflow Launchpad</span>
-          </button>
-        </div>
-
-        <div className="text-[11px] font-semibold text-slate-500 hidden sm:block">
-          Interactive Architecture Guide
-        </div>
-      </div>
-
-      {/* TAB 1: 8-STAGE VALUE CHAIN PIPELINE */}
-      {activeTab === 'PIPELINE' && (
+      {/* SECTION 1: COMPLETE 10-STAGE WORKFLOW PIPELINE */}
+      {activeSection === 'WORKFLOW' && (
         <div className="space-y-6">
-          {/* Horizontal Step Indicator Strip */}
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs overflow-x-auto">
-            <div className="flex items-center min-w-[780px] justify-between">
-              {WORKFLOW_STAGES.map((stg, idx) => {
+          {/* Step Selector Horizontal Strip */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-xl overflow-x-auto">
+            <div className="flex items-center min-w-[960px] justify-between gap-1">
+              {WORKFLOW_STEPS.map((stg) => {
                 const Icon = stg.icon;
-                const isSelected = selectedStage === stg.stage;
+                const isSelected = selectedWorkflowStep === stg.step;
+
                 return (
-                  <React.Fragment key={stg.stage}>
-                    <button
-                      onClick={() => setSelectedStage(stg.stage)}
-                      className={`flex flex-col items-center p-2 rounded-xl transition text-center min-w-[85px] group ${
-                        isSelected
-                          ? 'bg-emerald-50 text-emerald-900 ring-2 ring-emerald-600 font-bold'
-                          : 'hover:bg-slate-50 text-slate-600'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-1 text-xs font-black transition ${
-                        isSelected
-                          ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
-                      }`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <span className="text-[10px] font-extrabold line-clamp-1">
-                        Stage {stg.stage}
-                      </span>
-                      <span className="text-[9px] text-slate-500 line-clamp-1 max-w-[80px]">
-                        {stg.id}
-                      </span>
-                    </button>
-                    {idx < WORKFLOW_STAGES.length - 1 && (
-                      <div className="h-0.5 flex-1 mx-1 bg-slate-200 min-w-[12px]" />
-                    )}
-                  </React.Fragment>
+                  <button
+                    key={stg.step}
+                    onClick={() => setSelectedWorkflowStep(stg.step)}
+                    className={`flex-1 p-2.5 rounded-xl transition text-center flex flex-col items-center group min-w-[90px] ${
+                      isSelected
+                        ? 'bg-emerald-500 text-slate-950 shadow-lg'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-1 text-xs font-black transition ${
+                      isSelected ? 'bg-slate-950 text-emerald-400' : 'bg-slate-800 text-slate-400 group-hover:text-white'
+                    }`}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-[11px] font-black line-clamp-1">
+                      Step {stg.step}
+                    </span>
+                    <span className={`text-[9px] line-clamp-1 max-w-[85px] ${isSelected ? 'text-slate-900 font-bold' : 'text-slate-500'}`}>
+                      {stg.title.split('. ')[1] || stg.title}
+                    </span>
+                  </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Detailed Stage Deep-Dive Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 md:p-6 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-              <div className="flex items-start gap-3.5">
-                <div className="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-lg shadow-xs flex-shrink-0">
-                  {currentStageData.stage}
+          {/* Active Step Deep-Dive Card */}
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black text-xl shadow-lg flex-shrink-0">
+                  {currentStepData.step}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
-                      Stage {currentStageData.stage} of 8 • Value-Chain Step
+                    <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">
+                      Workflow Stage {currentStepData.step} of 10
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md border border-slate-200">
-                      Route: {currentStageData.path}
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                      Primary Route: {currentStepData.path}
                     </span>
                   </div>
-                  <h2 className="text-lg font-black text-slate-900">
-                    {currentStageData.title}
+                  <h2 className="text-xl sm:text-2xl font-black text-white mt-1">
+                    {currentStepData.title}
                   </h2>
-                  <p className="text-xs text-slate-500 font-medium">
-                    {currentStageData.subtitle}
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {currentStepData.subtitle}
                   </p>
                 </div>
               </div>
 
+              <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                <button
+                  onClick={() => onNavigate(currentStepData.path)}
+                  className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+                >
+                  <span>Launch {currentStepData.title.split('. ')[1]} Workspace</span>
+                  <ExternalLink className="w-3.5 h-3.5 ml-0.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+              {currentStepData.description}
+            </p>
+
+            {/* Sub-steps Checklist (Exact specification from RFP) */}
+            <div className="space-y-3">
+              <div className="text-xs font-black text-emerald-400 uppercase tracking-wider">
+                Operational Sub-Steps & System Activities:
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {currentStepData.subpoints.map((sub, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 flex items-start gap-2.5"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">{sub}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Regulatory Authority & Custodians */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Statutory Rule & Authority
+                </span>
+                <p className="text-xs text-slate-300 font-medium">{currentStepData.statutoryRule}</p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-black uppercase text-teal-400 tracking-wider flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5" />
+                  Responsible Custodians for this Stage
+                </span>
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {currentStepData.stakeholders.map(roleId => (
+                    <span
+                      key={roleId}
+                      className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700"
+                    >
+                      {USER_ROLES.find(r => r.id === roleId)?.name || roleId}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Stage Stepper Navigation */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
               <button
-                onClick={() => onNavigate(currentStageData.path)}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 self-start sm:self-auto"
+                disabled={selectedWorkflowStep === 1}
+                onClick={() => setSelectedWorkflowStep(prev => Math.max(1, prev - 1))}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 transition"
               >
-                <span>Open {currentStageData.title}</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                ← Previous Stage
               </button>
-            </div>
-
-            {/* Description & Overview */}
-            <div className="text-xs text-slate-700 leading-relaxed bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80">
-              {currentStageData.description}
-            </div>
-
-            {/* Grid of Key Metadata */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Statutory Framework */}
-              <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/70 space-y-1">
-                <div className="flex items-center gap-1.5 text-amber-900 font-bold text-xs">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Statutory Authority & Compliance Rule</span>
-                </div>
-                <p className="text-[11px] text-amber-800 leading-normal">
-                  {currentStageData.statutoryRule}
-                </p>
-              </div>
-
-              {/* Maker-Checker Control */}
-              <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200/70 space-y-1">
-                <div className="flex items-center gap-1.5 text-blue-900 font-bold text-xs">
-                  <Lock className="w-3.5 h-3.5 text-blue-700" />
-                  <span>Maker-Checker & Verification Gate</span>
-                </div>
-                <p className="text-[11px] text-blue-800 leading-normal">
-                  {currentStageData.makerChecker}
-                </p>
-              </div>
-
-              {/* Inputs */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-                  Required Input Material / Documents
-                </div>
-                <p className="text-xs font-semibold text-slate-800">
-                  {currentStageData.inputs}
-                </p>
-              </div>
-
-              {/* Outputs */}
-              <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200/70 space-y-1">
-                <div className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider">
-                  Generated Output Artifact / Digital Record
-                </div>
-                <p className="text-xs font-bold text-emerald-900">
-                  {currentStageData.outputs}
-                </p>
-              </div>
-            </div>
-
-            {/* Responsible Stakeholders in this Stage */}
-            <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-600">Custodians for this Stage:</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {currentStageData.stakeholders.map((roleId) => {
-                    const roleInfo = USER_ROLES.find(r => r.id === roleId);
-                    const isMyRole = activeRole === roleId;
-                    return (
-                      <span
-                        key={roleId}
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
-                          isMyRole
-                            ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'bg-slate-100 text-slate-700 border border-slate-200'
-                        }`}
-                      >
-                        {isMyRole && <CheckCircle2 className="w-3 h-3 text-white" />}
-                        {roleInfo?.name || roleId}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={selectedStage === 1}
-                  onClick={() => setSelectedStage(prev => Math.max(1, prev - 1))}
-                  className="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40"
-                >
-                  Previous Stage
-                </button>
-                <button
-                  disabled={selectedStage === 8}
-                  onClick={() => setSelectedStage(prev => Math.min(8, prev + 1))}
-                  className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-40"
-                >
-                  Next Stage
-                </button>
-              </div>
+              <span className="text-xs font-mono text-slate-400 font-bold">
+                Stage {selectedWorkflowStep} / 10
+              </span>
+              <button
+                disabled={selectedWorkflowStep === 10}
+                onClick={() => setSelectedWorkflowStep(prev => Math.min(10, prev + 1))}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-40 transition"
+              >
+                Next Stage →
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 2: STAKEHOLDERS & ROLES MATRIX */}
-      {activeTab === 'ROLES' && (
+      {/* SECTION 2: STAKEHOLDERS & ROLES MATRIX */}
+      {activeSection === 'STAKEHOLDERS' && (
         <div className="space-y-4">
-          <div className="bg-white p-4 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed flex items-center justify-between gap-4">
+          <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-xs text-slate-300 leading-relaxed flex items-center justify-between gap-4">
             <div>
-              <span className="font-bold text-slate-800">Strict Role-Based Access Control (RBAC):</span>
-              {' '}Each user role is strictly restricted to its statutory functions. The sidebar navigation dynamically adapts to only show authorized operations for the currently active perspective.
-            </div>
-            <div className="text-[11px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold flex-shrink-0">
-              Active: {USER_ROLES.find(r => r.id === activeRole)?.name}
+              <span className="font-bold text-white">Strict Segregation of Duties (RBAC):</span>
+              {' '}Each of the 10 stakeholder roles has designated statutory powers, maker-checker authorization gates, and tailored operational modules. Switching perspective updates the allowed routes and active permissions.
             </div>
           </div>
 
@@ -486,38 +550,38 @@ export default function HomeWorkflowOverview({ onNavigate }) {
               return (
                 <div
                   key={role.id}
-                  className={`bg-white rounded-xl border p-4.5 space-y-3 transition flex flex-col justify-between ${
+                  className={`rounded-2xl border p-5 space-y-3 transition flex flex-col justify-between ${
                     isCurrent
-                      ? 'border-emerald-600 ring-2 ring-emerald-500/20 shadow-sm'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'bg-slate-900 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xl'
+                      : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="text-sm font-black text-slate-900">{role.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-black text-white">{role.name}</h3>
                           {isCurrent && (
-                            <span className="bg-emerald-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded">
-                              CURRENT
+                            <span className="bg-emerald-500 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded">
+                              ACTIVE PERSPECTIVE
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] font-medium text-slate-500">{rbac?.authority || role.desc}</p>
+                        <p className="text-[11px] text-slate-400 font-medium">{rbac?.authority || role.desc}</p>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 flex-shrink-0">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 flex-shrink-0">
                         {role.badge}
                       </span>
                     </div>
 
                     <div className="space-y-1">
-                      <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                        Statutory Mandate & Duties
+                      <div className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                        Core Responsibilities & Statutory Mandate
                       </div>
-                      <ul className="text-xs text-slate-600 space-y-1">
-                        {(rbac?.responsibilities || [role.desc]).map((resp, rIdx) => (
-                          <li key={rIdx} className="flex items-start gap-1.5">
-                            <span className="text-emerald-600 font-bold">•</span>
+                      <ul className="text-xs text-slate-300 space-y-1">
+                        {(rbac?.responsibilities || [role.desc]).map((resp, idx) => (
+                          <li key={idx} className="flex items-start gap-1.5">
+                            <span className="text-emerald-400 font-bold">•</span>
                             <span className="leading-snug">{resp}</span>
                           </li>
                         ))}
@@ -525,9 +589,9 @@ export default function HomeWorkflowOverview({ onNavigate }) {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                    <div className="text-[10px] text-slate-500 font-medium">
-                      Allowed Modules: <span className="font-bold text-slate-700">{rbac?.allowedModules?.length || 0}</span>
+                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                    <div className="text-[10px] font-mono text-slate-400">
+                      Primary: <span className="text-slate-200 font-bold">{rbac?.defaultRoute || '/'}</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -536,20 +600,22 @@ export default function HomeWorkflowOverview({ onNavigate }) {
                         disabled={isCurrent}
                         className={`text-xs font-bold px-3 py-1.5 rounded-lg transition ${
                           isCurrent
-                            ? 'bg-emerald-100 text-emerald-800 cursor-default'
-                            : 'bg-slate-800 hover:bg-slate-900 text-white shadow-xs'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-default'
+                            : 'bg-slate-800 hover:bg-slate-700 text-white'
                         }`}
                       >
-                        {isCurrent ? 'Active Perspective' : 'Switch to this Role'}
+                        {isCurrent ? 'Active' : 'Switch Perspective'}
                       </button>
+
                       <button
                         onClick={() => {
                           handleRoleSwitch(role.id);
                           if (rbac?.defaultRoute) onNavigate(rbac.defaultRoute);
                         }}
-                        className="text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition"
-                        title="Switch and navigate to primary screen"
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1 shadow-sm"
+                        title="Switch and open primary workspace"
                       >
+                        <span>Open Workspace</span>
                         <ExternalLink className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -557,131 +623,6 @@ export default function HomeWorkflowOverview({ onNavigate }) {
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: WORKFLOW LAUNCHPAD */}
-      {activeTab === 'QUICK_START' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Card 1: Farmer Onboarding */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-              <Users className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Farmer Registration Form</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Formal registration form with Jamabandi Dag/Patta upload and DPDP Act masked Aadhaar.
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigate('/farmers/register')}
-              className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <span>Go to Registration Form</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Card 2: Field GIS Studio */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-              <MapPin className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Field GIS Studio & SHA-256</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Walk POLOGEN boundaries, geo-pin mature trees, and capture SHA-256 watermarked photos.
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigate('/field-gis-studio')}
-              className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <span>Open Field GIS Studio</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Card 3: NERAMAC Maker-Checker Approvals */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900">NERAMAC Maker-Checker Portal</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Review Lat Mandal verification, inspect SHA-256 field photos, and sanction digital FRM IDs.
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigate('/farmers/approvals')}
-              className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <span>Open Approvals Portal</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Card 4: Distillation & CPC Stills */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
-              <Factory className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Distillation & CPC Stills</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Hydro-distillation charge runs (ST-01 to ST-08) and strict input/output mass balance ledger.
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigate('/processing')}
-              className="w-full py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <span>Open Processing Module</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Card 5: NABL Lab & GC-MS Profiles */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center font-bold">
-              <FlaskConical className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900">NABL Quality Lab & GC-MS</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Sesquiterpene biomarker chemical profiling and Certificate of Analysis (CoA) release.
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigate('/laboratory')}
-              className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <span>Open Laboratory Module</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Card 6: QR Provenance Scanner */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-              <QrCode className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900">QR Provenance Scanner</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Scan or enter any finished flacon or batch ID to verify forward and backward provenance.
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigate('/traceability')}
-              className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <span>Open Traceability Engine</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
       )}
