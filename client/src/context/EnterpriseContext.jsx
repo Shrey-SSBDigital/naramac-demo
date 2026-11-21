@@ -621,13 +621,13 @@ export function EnterpriseProvider({ children }) {
     return newInoc;
   };
 
-  // 4. Harvest Management (Farmer Apply -> DFO Sanction -> Field Agent Confirm & Fell)
+  // 4. Harvest Management (Farmer Apply -> NERAMAC Verification -> DFO Approval -> Approved? Yes -> Authorisation ID / No -> Back to Harvest Application)
   const applyHarvest = (harvestData) => {
     const id = `HAU-2026-${String(harvests.length + 1).padStart(3, '0')}`;
     const newHarvest = {
       id,
       applicationDate: new Date().toISOString().split('T')[0],
-      status: 'SUBMITTED_AWAITING_DFO',
+      status: 'SUBMITTED_AWAITING_NERAMAC',
       makerCheckerApproved: false,
       estimatedWeightKg: harvestData.estimatedWeightKg || 38.0,
       reasonForHarvest: harvestData.reasonForHarvest || 'Resin maturity reached 24 months post-inoculation',
@@ -637,14 +637,40 @@ export function EnterpriseProvider({ children }) {
     setHarvests(updated);
     persistState({ harvests: updated });
     logAudit('APPLY_HARVEST', 'Harvest Management', `Farmer ${newHarvest.farmerName} submitted harvest application ${id} for tree ${newHarvest.treeId}`, id);
-    addToast(`Harvest application ${id} submitted. Forwarded to DFO for felling permission!`);
+    addToast(`Harvest application ${id} submitted. Awaiting NERAMAC field verification!`);
     return newHarvest;
+  };
+
+  const neramacVerifyHarvest = (harvestId, verificationData = {}) => {
+    const harvest = harvests.find(h => h.id === harvestId);
+    if (!harvest) return null;
+
+    const updatedHarvests = harvests.map(h => {
+      if (h.id === harvestId) {
+        return {
+          ...h,
+          status: 'NERAMAC_VERIFIED_AWAITING_DFO',
+          neramacVerifiedDate: new Date().toISOString().split('T')[0],
+          neramacOfficerName: verificationData.officerName || 'NERAMAC-FA-04 (Dipankar Neog)',
+          neramacVerificationNotes: verificationData.notes || 'On-site homestead origin & tree tag verified. Recommended for DFO felling sanction.',
+          verifiedTreeConfirmed: true
+        };
+      }
+      return h;
+    });
+
+    setHarvests(updatedHarvests);
+    persistState({ harvests: updatedHarvests });
+    logAudit('NERAMAC_HARVEST_VERIFIED', 'Harvest Management', `NERAMAC verified harvest application ${harvestId} for tree ${harvest.treeId}. Forwarded to DFO.`, harvestId);
+    addToast(`NERAMAC verification completed for ${harvestId}. Forwarded to DFO for statutory approval!`);
+    return updatedHarvests.find(h => h.id === harvestId);
   };
 
   const dfoApproveHarvest = (harvestId, approvalData = {}) => {
     const harvest = harvests.find(h => h.id === harvestId);
     if (!harvest) return null;
 
+    const authId = approvalData.harvestAuthorisationId || `HA-AS-GLG-2026-${String(Math.floor(100 + Math.random() * 900))}`;
     const sanctionNo = approvalData.dfoSanctionNumber || `DFO/GLT/2026/HARV-${Math.floor(100 + Math.random() * 900)}`;
     const permitId = `PMT-DFO-2026-${String(permits.length + 1).padStart(3, '0')}`;
 
@@ -652,6 +678,7 @@ export function EnterpriseProvider({ children }) {
       if (h.id === harvestId) {
         return {
           ...h,
+          harvestAuthorisationId: authId,
           dfoSanctionNumber: sanctionNo,
           dfoSanctionDate: new Date().toISOString().split('T')[0],
           dfoOfficerName: approvalData.dfoOfficerName || 'S. K. Bordoloi, IFS (DFO Golaghat)',
@@ -660,6 +687,7 @@ export function EnterpriseProvider({ children }) {
           permitDoc: approvalData.permitDoc || `DFO_Felling_Permit_${harvestId}.pdf`,
           status: 'DFO_APPROVED_AWAITING_FELLING',
           makerCheckerApproved: true,
+          dfoDecision: 'APPROVED',
           dfoRemarks: approvalData.remarks || 'Homestead revenue land verified. Statutory felling approved under Assam Agarwood Policy 2020.'
         };
       }
@@ -670,6 +698,7 @@ export function EnterpriseProvider({ children }) {
     const newPermit = {
       id: permitId,
       permitNumber: sanctionNo,
+      authorisationId: authId,
       type: 'FELLING',
       issuedBy: 'Divisional Forest Officer (Golaghat)',
       issueDate: new Date().toISOString().split('T')[0],
@@ -680,7 +709,7 @@ export function EnterpriseProvider({ children }) {
       quotaKg: harvest.estimatedWeightKg || 45.0,
       usedKg: 0,
       documentHash: `sha256:${Math.random().toString(16).slice(2)}`,
-      linkedEntities: [harvest.treeId, harvestId]
+      linkedEntities: [harvest.treeId, harvestId, authId]
     };
     const updatedPermits = [newPermit, ...permits];
 
@@ -688,9 +717,57 @@ export function EnterpriseProvider({ children }) {
     setPermits(updatedPermits);
     persistState({ harvests: updatedHarvests, permits: updatedPermits });
 
-    logAudit('DFO_HARVEST_SANCTIONED', 'Permit & Harvest Management', `DFO sanctioned felling for ${harvest.treeId} (Order: ${sanctionNo})`, sanctionNo);
-    addToast(`DFO Felling Sanction ${sanctionNo} approved for Tree ${harvest.treeId}!`);
+    logAudit('DFO_HARVEST_SANCTIONED', 'Permit & Harvest Management', `DFO issued Harvest Authorisation ${authId} for Tree ${harvest.treeId} (Order: ${sanctionNo})`, authId);
+    addToast(`Harvest Authorisation ${authId} issued by DFO for Tree ${harvest.treeId}!`);
     return { harvest: updatedHarvests.find(h => h.id === harvestId), permit: newPermit };
+  };
+
+  const dfoRejectHarvest = (harvestId, rejectionData = {}) => {
+    const harvest = harvests.find(h => h.id === harvestId);
+    if (!harvest) return null;
+
+    const reason = typeof rejectionData === 'string' ? rejectionData : (rejectionData.reason || 'Land Revenue Jamabandi discrepancy or insufficient homestead title proof.');
+
+    const updatedHarvests = harvests.map(h => {
+      if (h.id === harvestId) {
+        return {
+          ...h,
+          status: 'DFO_REJECTED_RETURNED_TO_FARMER',
+          dfoDecision: 'REJECTED_LOOP_BACK',
+          rejectionReason: reason,
+          rejectedDate: new Date().toISOString().split('T')[0],
+          dfoOfficerName: rejectionData.dfoOfficerName || 'S. K. Bordoloi, IFS (DFO Golaghat)'
+        };
+      }
+      return h;
+    });
+
+    setHarvests(updatedHarvests);
+    persistState({ harvests: updatedHarvests });
+    logAudit('DFO_HARVEST_REJECTED', 'Harvest Management', `DFO rejected harvest application ${harvestId} for tree ${harvest.treeId}. Returned to Farmer Application step. Reason: ${reason}`, harvestId);
+    addToast(`DFO rejected application ${harvestId}. Looped back to Harvest Application for correction.`, 'error');
+    return updatedHarvests.find(h => h.id === harvestId);
+  };
+
+  const resubmitHarvest = (harvestId, updatedData = {}) => {
+    const updatedHarvests = harvests.map(h => {
+      if (h.id === harvestId) {
+        return {
+          ...h,
+          ...updatedData,
+          status: 'SUBMITTED_AWAITING_NERAMAC',
+          dfoDecision: null,
+          resubmittedDate: new Date().toISOString().split('T')[0]
+        };
+      }
+      return h;
+    });
+
+    setHarvests(updatedHarvests);
+    persistState({ harvests: updatedHarvests });
+    logAudit('RESUBMIT_HARVEST', 'Harvest Management', `Farmer resubmitted harvest application ${harvestId} after correcting deficiency`, harvestId);
+    addToast(`Harvest application ${harvestId} resubmitted! Sent back to NERAMAC verification.`);
+    return updatedHarvests.find(h => h.id === harvestId);
   };
 
   const fieldAgentConfirmAndFell = (harvestId, fellingData = {}) => {
@@ -1249,7 +1326,10 @@ export function EnterpriseProvider({ children }) {
         addTree,
         addInoculation,
         applyHarvest,
+        neramacVerifyHarvest,
         dfoApproveHarvest,
+        dfoRejectHarvest,
+        resubmitHarvest,
         fieldAgentConfirmAndFell,
         approveHarvestAndFell,
         addPermit,

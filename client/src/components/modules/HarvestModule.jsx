@@ -30,7 +30,10 @@ export default function HarvestModule() {
     harvests,
     harvestBatches,
     applyHarvest,
+    neramacVerifyHarvest,
     dfoApproveHarvest,
+    dfoRejectHarvest,
+    resubmitHarvest,
     fieldAgentConfirmAndFell,
     trees,
     farmers,
@@ -41,15 +44,34 @@ export default function HarvestModule() {
   const [activeTab, setActiveTab] = useState('QUEUE'); // 'QUEUE' | 'NEW_APP' | 'BATCHES'
   const [selectedHarvest, setSelectedHarvest] = useState(null);
 
-  // DFO Sanction Modal State
+  // NERAMAC Verification Modal State
+  const [isNeramacModalOpen, setIsNeramacModalOpen] = useState(false);
+  const [neramacTarget, setNeramacTarget] = useState(null);
+  const [neramacForm, setNeramacForm] = useState({
+    officerName: 'NERAMAC-FA-04 (Dipankar Neog)',
+    notes: 'On-site homestead origin & tree RFID tag verified. Private revenue Dag/Patta confirmed. Recommended for DFO felling sanction.'
+  });
+
+  // DFO Decision Modal State (Approved? Yes -> Authorisation ID / No -> Back to Harvest Application)
   const [isDfoModalOpen, setIsDfoModalOpen] = useState(false);
   const [dfoTarget, setDfoTarget] = useState(null);
+  const [dfoDecisionTab, setDfoDecisionTab] = useState('APPROVE'); // 'APPROVE' | 'REJECT'
   const [dfoForm, setDfoForm] = useState({
+    harvestAuthorisationId: '',
     dfoSanctionNumber: '',
     approvedMaxWeightKg: 42.0,
     dfoOfficerName: 'S. K. Bordoloi, IFS (DFO Golaghat)',
     permitDoc: 'DFO_Felling_Sanction_Permit.pdf',
-    remarks: 'Private homestead origin verified. Non-forest land clearance confirmed. Approved under Assam Agarwood Policy 2020.'
+    remarks: 'Private homestead origin verified. Non-forest land clearance confirmed. Approved under Assam Agarwood Policy 2020.',
+    rejectionReason: 'Land Revenue Jamabandi discrepancy: Homestead Patta title documentation needs updated Lat Mandal certification.'
+  });
+
+  // Resubmit Modal State
+  const [isResubmitModalOpen, setIsResubmitModalOpen] = useState(false);
+  const [resubmitTarget, setResubmitTarget] = useState(null);
+  const [resubmitForm, setResubmitForm] = useState({
+    estimatedWeightKg: 38.0,
+    correctedNotes: 'Attached updated Lat Mandal verification copy and confirmed revenue Dag/Patta coordinates.'
   });
 
   // Field Agent Felling & Weighment Modal State
@@ -99,26 +121,76 @@ export default function HarvestModule() {
     setActiveTab('QUEUE');
   };
 
-  // Open DFO Approval Modal
+  // Open NERAMAC Verification Modal
+  const handleOpenNeramacModal = (harvest) => {
+    setNeramacTarget(harvest);
+    setNeramacForm({
+      officerName: 'NERAMAC-FA-04 (Dipankar Neog)',
+      notes: `Verified homestead land title for farmer ${harvest.farmerName}. Inspected Tree ${harvest.treeId} and verified RFID tag on-site.`
+    });
+    setIsNeramacModalOpen(true);
+  };
+
+  const handleNeramacSubmit = (e) => {
+    e.preventDefault();
+    if (!neramacTarget) return;
+    neramacVerifyHarvest(neramacTarget.id, neramacForm);
+    setIsNeramacModalOpen(false);
+    setNeramacTarget(null);
+  };
+
+  // Open DFO Decision Modal
   const handleOpenDfoModal = (harvest) => {
     setDfoTarget(harvest);
+    setDfoDecisionTab('APPROVE');
+    const authId = `HA-AS-GLG-2026-${Math.floor(200 + Math.random() * 800)}`;
     setDfoForm({
+      harvestAuthorisationId: authId,
       dfoSanctionNumber: `DFO/GLT/2026/HARV-${Math.floor(200 + Math.random() * 800)}`,
       approvedMaxWeightKg: harvest.estimatedWeightKg || 42.0,
       dfoOfficerName: 'S. K. Bordoloi, IFS (DFO Golaghat)',
       permitDoc: `DFO_Sanction_Permit_${harvest.id}.pdf`,
-      remarks: `Homestead land Dag & Patta checked with Revenue Mandal. Felling sanctioned for Tree ${harvest.treeId}.`
+      remarks: `Homestead land Dag & Patta checked with Revenue Mandal. Felling sanctioned for Tree ${harvest.treeId}.`,
+      rejectionReason: 'Land Revenue Jamabandi discrepancy: Homestead Patta title documentation needs updated Lat Mandal certification.'
     });
     setIsDfoModalOpen(true);
   };
 
-  // Submit DFO Approval
+  // Submit DFO Approval or Rejection
   const handleDfoSubmit = (e) => {
     e.preventDefault();
     if (!dfoTarget) return;
-    dfoApproveHarvest(dfoTarget.id, dfoForm);
+    if (dfoDecisionTab === 'APPROVE') {
+      dfoApproveHarvest(dfoTarget.id, dfoForm);
+    } else {
+      dfoRejectHarvest(dfoTarget.id, {
+        reason: dfoForm.rejectionReason,
+        dfoOfficerName: dfoForm.dfoOfficerName
+      });
+    }
     setIsDfoModalOpen(false);
     setDfoTarget(null);
+  };
+
+  // Open Resubmit Modal (when DFO rejected and looped back)
+  const handleOpenResubmitModal = (harvest) => {
+    setResubmitTarget(harvest);
+    setResubmitForm({
+      estimatedWeightKg: harvest.estimatedWeightKg || 38.0,
+      correctedNotes: 'Attached updated Lat Mandal verification copy and confirmed revenue Dag/Patta coordinates.'
+    });
+    setIsResubmitModalOpen(true);
+  };
+
+  const handleResubmitSubmit = (e) => {
+    e.preventDefault();
+    if (!resubmitTarget) return;
+    resubmitHarvest(resubmitTarget.id, {
+      estimatedWeightKg: parseFloat(resubmitForm.estimatedWeightKg) || 38.0,
+      reasonForHarvest: `Resubmitted: ${resubmitForm.correctedNotes}`
+    });
+    setIsResubmitModalOpen(false);
+    setResubmitTarget(null);
   };
 
   // Open Field Agent Felling Modal
@@ -245,15 +317,20 @@ export default function HarvestModule() {
       )
     },
     {
-      header: 'DFO Sanction Order',
+      header: 'Authorisation & DFO Order',
       accessor: 'dfoSanctionNumber',
       render: (h) => (
         <div>
-          <span className={`font-mono text-xs font-bold ${h.dfoSanctionNumber ? 'text-blue-900' : 'text-amber-800'}`}>
-            {h.dfoSanctionNumber || 'Awaiting DFO Sanction'}
+          {h.harvestAuthorisationId && (
+            <div className="font-mono font-black text-xs text-emerald-800">
+              Auth: {h.harvestAuthorisationId}
+            </div>
+          )}
+          <span className={`font-mono text-[11px] font-bold ${h.dfoSanctionNumber ? 'text-blue-900' : 'text-amber-800'}`}>
+            {h.dfoSanctionNumber || 'Pending DFO Review'}
           </span>
           <div className="text-[10px] text-slate-500">
-            {h.dfoSanctionDate ? `Sanctioned: ${h.dfoSanctionDate}` : 'Under Forest Dept Scrutiny'}
+            {h.dfoSanctionDate ? `Sanctioned: ${h.dfoSanctionDate}` : (h.neramacVerifiedDate ? `NERAMAC Verified: ${h.neramacVerifiedDate}` : 'Under Initial Scrutiny')}
           </div>
         </div>
       )
@@ -275,26 +352,45 @@ export default function HarvestModule() {
       )
     },
     {
-      header: 'Workflow Status',
+      header: 'Workflow Stage (Approval Loop)',
       accessor: 'status',
       render: (h) => {
-        if (h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION') {
+        if (h.status === 'SUBMITTED_AWAITING_NERAMAC') {
           return (
             <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
-              1. AWAITING DFO SANCTION
+              1. AWAITING NERAMAC VERIFY
             </span>
+          );
+        }
+        if (h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION') {
+          return (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-900 border border-blue-300">
+              2. NERAMAC VERIFIED • AWAITING DFO
+            </span>
+          );
+        }
+        if (h.status === 'DFO_REJECTED_RETURNED_TO_FARMER') {
+          return (
+            <div className="space-y-0.5">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-900 border border-rose-300 flex items-center gap-1 w-max">
+                ✗ DFO REJECTED • LOOPED BACK
+              </span>
+              <div className="text-[9px] text-rose-700 italic max-w-xs truncate" title={h.rejectionReason}>
+                {h.rejectionReason}
+              </div>
+            </div>
           );
         }
         if (h.status === 'DFO_APPROVED_AWAITING_FELLING') {
           return (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-900 border border-blue-300">
-              2. DFO SANCTIONED • READY TO FELL
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-900 border border-teal-300">
+              3. APPROVED • AUTHORISATION ISSUED
             </span>
           );
         }
         return (
           <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">
-            3. FELL COMPLETED • BATCH MINTED
+            4. FELL COMPLETED • BATCH MINTED
           </span>
         );
       }
@@ -303,8 +399,21 @@ export default function HarvestModule() {
       header: 'Operational Actions',
       accessor: 'id',
       render: (h) => (
-        <div className="flex items-center gap-1.5">
-          {(h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION') && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {h.status === 'SUBMITTED_AWAITING_NERAMAC' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenNeramacModal(h);
+              }}
+              className="px-2.5 py-1 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-xs transition flex items-center gap-1"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>NERAMAC Verify</span>
+            </button>
+          )}
+
+          {(h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION') && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -312,8 +421,21 @@ export default function HarvestModule() {
               }}
               className="px-2.5 py-1 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-lg shadow-xs transition flex items-center gap-1"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>DFO Sanction</span>
+              <FileCheck className="w-3.5 h-3.5" />
+              <span>DFO Decision (Approved?)</span>
+            </button>
+          )}
+
+          {h.status === 'DFO_REJECTED_RETURNED_TO_FARMER' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenResubmitModal(h);
+              }}
+              className="px-2.5 py-1 text-xs font-bold text-white bg-rose-700 hover:bg-rose-800 rounded-lg shadow-xs transition flex items-center gap-1"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Modify & Resubmit</span>
             </button>
           )}
 
@@ -326,7 +448,7 @@ export default function HarvestModule() {
               className="px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition flex items-center gap-1"
             >
               <Scale className="w-3.5 h-3.5" />
-              <span>Field Agent Felling & Weigh</span>
+              <span>Record Felling & Weigh</span>
             </button>
           )}
 
@@ -350,36 +472,57 @@ export default function HarvestModule() {
   return (
     <div className="space-y-5">
       {/* 1. Header Hero Bar */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-              Stages 3 & 4 • Harvest Operations
-            </span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-              /harvest
-            </span>
+      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                Phase 2: Statutory Approval & Harvest Gate
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                /harvest
+              </span>
+            </div>
+            <h1 className="text-xl font-black text-slate-900 mt-1">
+              Harvest Application, NERAMAC Verification & DFO Statutory Approval
+            </h1>
+            <p className="text-xs text-slate-500">
+              Statutory Decision Gate: Harvest Application → NERAMAC Verification → DFO Approval → Approved? (No loops back to application; Yes issues Harvest Authorisation ID)
+            </p>
           </div>
-          <h1 className="text-xl font-black text-slate-900 mt-1">
-            Harvest Application, DFO Approval & Felling Weightage
-          </h1>
-          <p className="text-xs text-slate-500">
-            End-to-end 3-step loop: 1. Farmer Applies → 2. DFO Sanctions Felling Permit → 3. Field Agent Confirms Tree & Weighs Harvest Batch
-          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTab('NEW_APP')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs ${
+                activeTab === 'NEW_APP'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+              }`}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Apply for Tree Harvest (Farmer)</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setActiveTab('NEW_APP')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs ${
-              activeTab === 'NEW_APP'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
-            }`}
-          >
-            <Plus className="w-4 h-4" />
-            <span>Apply for Tree Harvest (Farmer)</span>
-          </button>
+        {/* Visual Pipeline Decision Flow */}
+        <div className="bg-slate-900 text-white p-3 rounded-xl border border-slate-800 flex items-center gap-2 text-[11px] overflow-x-auto">
+          <span className="font-bold text-amber-300 whitespace-nowrap">Approval Flow:</span>
+          <span className="bg-slate-800 px-2 py-1 rounded font-semibold text-slate-200 whitespace-nowrap">1. Harvest Application</span>
+          <span className="text-slate-500">→</span>
+          <span className="bg-slate-800 px-2 py-1 rounded font-semibold text-amber-300 whitespace-nowrap">2. NERAMAC Verification</span>
+          <span className="text-slate-500">→</span>
+          <span className="bg-slate-800 px-2 py-1 rounded font-semibold text-blue-300 whitespace-nowrap">3. DFO Approval</span>
+          <span className="text-slate-500">→</span>
+          <span className="bg-purple-950 border border-purple-500/40 text-purple-200 px-2 py-1 rounded font-bold whitespace-nowrap">Approved?</span>
+          <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 rounded border border-slate-700 whitespace-nowrap">
+            <span className="text-rose-400 font-bold">No:</span>
+            <span className="text-slate-400">loops back to Harvest Application</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-emerald-400 font-bold">Yes:</span>
+            <span className="text-emerald-300 font-bold">Harvest Authorisation ID</span>
+          </div>
         </div>
       </div>
 
@@ -592,76 +735,208 @@ export default function HarvestModule() {
         </div>
       )}
 
-      {/* DFO SANCTION APPROVAL MODAL (Step 2) */}
-      {isDfoModalOpen && dfoTarget && (
+      {/* NERAMAC VERIFICATION MODAL */}
+      {isNeramacModalOpen && neramacTarget && (
         <Modal
-          isOpen={isDfoModalOpen}
-          onClose={() => setIsDfoModalOpen(false)}
-          title={`DFO Felling Sanction • Tree ${dfoTarget.treeId}`}
-          subtitle={`Authority: Divisional Forest Officer • Application: ${dfoTarget.id}`}
+          isOpen={isNeramacModalOpen}
+          onClose={() => setIsNeramacModalOpen(false)}
+          title={`NERAMAC Field Verification • Tree ${neramacTarget.treeId}`}
+          subtitle={`Applicant: ${neramacTarget.farmerName} • Application ID: ${neramacTarget.id}`}
         >
-          <form onSubmit={handleDfoSubmit} className="space-y-4 text-xs">
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-1">
-              <span className="font-bold text-blue-900">Applicant Farmer Dossier:</span>
-              <p className="text-[11px] text-blue-800">
-                Grower: <span className="font-bold">{dfoTarget.farmerName}</span> ({dfoTarget.farmerId}) • Plantation: {dfoTarget.plantationId} ({dfoTarget.cluster})
+          <form onSubmit={handleNeramacSubmit} className="space-y-4 text-xs">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+              <span className="font-bold text-amber-900">Field Agent Verification Step:</span>
+              <p className="text-[11px] text-amber-800">
+                Confirm on-site physical inspection of homestead agarwood tree, RFID tag, and Jamabandi land revenue Patta before forwarding to the Divisional Forest Officer (DFO).
               </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Official DFO Sanction Order Number *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={dfoForm.dfoSanctionNumber}
-                  onChange={e => setDfoForm({ ...dfoForm, dfoSanctionNumber: e.target.value })}
-                  className="w-full text-xs px-3 py-2 border rounded-lg font-mono font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Approved Harvest Quota (kg) *
-                </label>
-                <input
-                  type="number"
-                  step="0.5"
-                  required
-                  value={dfoForm.approvedMaxWeightKg}
-                  onChange={e => setDfoForm({ ...dfoForm, approvedMaxWeightKg: e.target.value })}
-                  className="w-full text-xs px-3 py-2 border rounded-lg font-mono"
-                />
-              </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                Sanctioning Forest Officer Name & Title
+                Verifying NERAMAC Officer Name & Designation *
               </label>
               <input
                 type="text"
-                value={dfoForm.dfoOfficerName}
-                onChange={e => setDfoForm({ ...dfoForm, dfoOfficerName: e.target.value })}
+                required
+                value={neramacForm.officerName}
+                onChange={e => setNeramacForm({ ...neramacForm, officerName: e.target.value })}
                 className="w-full text-xs px-3 py-2 border rounded-lg"
               />
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                Statutory Felling Clearance Remarks
+                Field Inspection & Tree Verification Notes *
               </label>
               <textarea
-                rows={2}
-                value={dfoForm.remarks}
-                onChange={e => setDfoForm({ ...dfoForm, remarks: e.target.value })}
-                className="w-full text-xs p-2.5 border rounded-lg"
+                rows={3}
+                required
+                value={neramacForm.notes}
+                onChange={e => setNeramacForm({ ...neramacForm, notes: e.target.value })}
+                className="w-full text-xs p-3 border rounded-lg"
               />
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsNeramacModalOpen(false)}
+                className="px-4 py-2 border rounded-xl font-bold hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-xs"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Verify & Forward to DFO</span>
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* DFO APPROVAL DECISION GATE MODAL (Approved? Yes -> Authorisation ID / No -> Back to Harvest Application) */}
+      {isDfoModalOpen && dfoTarget && (
+        <Modal
+          isOpen={isDfoModalOpen}
+          onClose={() => setIsDfoModalOpen(false)}
+          title={`DFO Statutory Approval Decision Gate • Tree ${dfoTarget.treeId}`}
+          subtitle={`Forest Department Authority • Application ID: ${dfoTarget.id}`}
+        >
+          <form onSubmit={handleDfoSubmit} className="space-y-4 text-xs">
+            {/* Decision Gateway Switcher */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setDfoDecisionTab('APPROVE')}
+                className={`py-2 text-xs font-black rounded-lg transition flex items-center justify-center gap-1.5 ${
+                  dfoDecisionTab === 'APPROVE'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Decision: YES (Issue Authorisation ID)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDfoDecisionTab('REJECT')}
+                className={`py-2 text-xs font-black rounded-lg transition flex items-center justify-center gap-1.5 ${
+                  dfoDecisionTab === 'REJECT'
+                    ? 'bg-rose-700 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <AlertCircle className="w-4 h-4" />
+                <span>Decision: NO (Loop Back to App)</span>
+              </button>
+            </div>
+
+            {dfoDecisionTab === 'APPROVE' ? (
+              <div className="space-y-3">
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
+                  <span className="font-bold text-emerald-900">Sanction Approval & Authorisation ID Generation:</span>
+                  <p className="text-[11px] text-emerald-800">
+                    Homestead revenue land validated. Generating statutory Harvest Authorisation ID and felling clearance order.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Harvest Authorisation ID *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={dfoForm.harvestAuthorisationId}
+                      onChange={e => setDfoForm({ ...dfoForm, harvestAuthorisationId: e.target.value })}
+                      className="w-full text-xs px-3 py-2 border border-emerald-300 bg-emerald-50/50 rounded-lg font-mono font-bold text-emerald-950"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Official DFO Sanction Order Number *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={dfoForm.dfoSanctionNumber}
+                      onChange={e => setDfoForm({ ...dfoForm, dfoSanctionNumber: e.target.value })}
+                      className="w-full text-xs px-3 py-2 border rounded-lg font-mono font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Approved Harvest Quota (kg) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      required
+                      value={dfoForm.approvedMaxWeightKg}
+                      onChange={e => setDfoForm({ ...dfoForm, approvedMaxWeightKg: e.target.value })}
+                      className="w-full text-xs px-3 py-2 border rounded-lg font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Sanctioning Forest Officer Name & Title
+                    </label>
+                    <input
+                      type="text"
+                      value={dfoForm.dfoOfficerName}
+                      onChange={e => setDfoForm({ ...dfoForm, dfoOfficerName: e.target.value })}
+                      className="w-full text-xs px-3 py-2 border rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Statutory Felling Clearance Remarks
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={dfoForm.remarks}
+                    onChange={e => setDfoForm({ ...dfoForm, remarks: e.target.value })}
+                    className="w-full text-xs p-2.5 border rounded-lg"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
+                  <span className="font-bold text-rose-900">Decision: Rejected & Return to Harvest Application:</span>
+                  <p className="text-[11px] text-rose-800">
+                    If revenue documents, homestead boundaries, or tree RFID records have discrepancies, the application loops back to the farmer for correction.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-rose-900 mb-1">
+                    Deficiency Note / Rejection Reason (Returned to Farmer) *
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={dfoForm.rejectionReason}
+                    onChange={e => setDfoForm({ ...dfoForm, rejectionReason: e.target.value })}
+                    className="w-full text-xs p-3 border border-rose-300 rounded-lg focus:ring-2 focus:ring-rose-500/20"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setIsDfoModalOpen(false)}
@@ -671,10 +946,84 @@ export default function HarvestModule() {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-xs"
+                className={`px-5 py-2.5 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-xs ${
+                  dfoDecisionTab === 'APPROVE' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-700 hover:bg-rose-800'
+                }`}
               >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Issue Statutory Felling Sanction</span>
+                {dfoDecisionTab === 'APPROVE' ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Approve & Issue Authorisation ID</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Reject & Loop Back to Application</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* FARMER RESUBMIT APPLICATION MODAL (Loop-back resolution) */}
+      {isResubmitModalOpen && resubmitTarget && (
+        <Modal
+          isOpen={isResubmitModalOpen}
+          onClose={() => setIsResubmitModalOpen(false)}
+          title={`Correct & Resubmit Harvest Application • ${resubmitTarget.id}`}
+          subtitle={`Tree: ${resubmitTarget.treeId} • Grower: ${resubmitTarget.farmerName}`}
+        >
+          <form onSubmit={handleResubmitSubmit} className="space-y-4 text-xs">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
+              <span className="font-bold text-rose-900">DFO Stated Deficiency:</span>
+              <p className="text-[11px] text-rose-800 italic">
+                "{resubmitTarget.rejectionReason}"
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Estimated Cleaned Heartwood (kg) *
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                required
+                value={resubmitForm.estimatedWeightKg}
+                onChange={e => setResubmitForm({ ...resubmitForm, estimatedWeightKg: e.target.value })}
+                className="w-full text-xs px-3 py-2 border rounded-lg font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Correction & Updated Revenue Document Notes *
+              </label>
+              <textarea
+                rows={3}
+                required
+                value={resubmitForm.correctedNotes}
+                onChange={e => setResubmitForm({ ...resubmitForm, correctedNotes: e.target.value })}
+                className="w-full text-xs p-3 border rounded-lg"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsResubmitModalOpen(false)}
+                className="px-4 py-2 border rounded-xl font-bold hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-xs"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Resubmit to NERAMAC</span>
               </button>
             </div>
           </form>
