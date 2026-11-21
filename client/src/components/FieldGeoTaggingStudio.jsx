@@ -1210,20 +1210,75 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
           </div>
         </div>
 
-        {/* Quick Action Buttons for Field Agent */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-emerald-800/60">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-400 font-medium">Selected Plot:</span>
-            <span className="font-bold text-emerald-300 font-mono">
-              {draftForm.parentPlantationId || 'PLT-AS-GLG-0001-X'}
+        {/* Farmer's Assets: POLOGENs & Trees for selected farmer */}
+        <div className="pt-3 border-t border-emerald-800/60 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-emerald-300">
+              Assets for {draftForm.farmerName}
             </span>
-            <span className="text-slate-500">•</span>
-            <span className="text-slate-300">
-              Grower: <span className="font-bold text-white">{draftForm.farmerName}</span>
+            <span className="text-[10px] text-slate-400 font-mono">
+              {registry.pologens.filter(p => p.farmerId === draftForm.farmerId).length} POLOGEN ·{' '}
+              {registry.trees.filter(t => t.farmerId === draftForm.farmerId).length} Trees
             </span>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* POLOGENs for farmer */}
+          {registry.pologens.filter(p => p.farmerId === draftForm.farmerId).length > 0 && (
+            <div className="space-y-1">
+              <div className="text-[10px] uppercase font-extrabold text-teal-400 tracking-wider px-1">
+                POLOGEN Sapling Blocks (&lt;7 yrs)
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {registry.pologens.filter(p => p.farmerId === draftForm.farmerId).map(plg => (
+                  <button
+                    key={plg.id}
+                    type="button"
+                    onClick={() => handleSelectEntity({ type: 'POLOGEN', ...plg })}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition border ${
+                      selectedEntity?.id === plg.id
+                        ? 'bg-teal-500 text-slate-950 border-teal-400'
+                        : 'bg-emerald-900/70 text-teal-200 border-teal-800/60 hover:bg-emerald-800'
+                    }`}
+                  >
+                    <Sprout className="w-3 h-3 flex-shrink-0" />
+                    <span className="font-mono">{plg.id.slice(-8)}</span>
+                    <span className="text-[9px] opacity-70">· {plg.saplingCount} saplings</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Trees for farmer */}
+          {registry.trees.filter(t => t.farmerId === draftForm.farmerId).length > 0 && (
+            <div className="space-y-1">
+              <div className="text-[10px] uppercase font-extrabold text-amber-400 tracking-wider px-1">
+                Mature Trees (≥7 yrs)
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {registry.trees.filter(t => t.farmerId === draftForm.farmerId).map(tree => (
+                  <button
+                    key={tree.id}
+                    type="button"
+                    onClick={() => handleSelectEntity({ type: 'TREE', ...tree })}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition border ${
+                      selectedEntity?.id === tree.id
+                        ? 'bg-amber-400 text-slate-950 border-amber-300'
+                        : 'bg-emerald-900/70 text-amber-200 border-amber-800/60 hover:bg-emerald-800'
+                    }`}
+                  >
+                    <TreePine className="w-3 h-3 flex-shrink-0" />
+                    <span className="font-mono">{tree.id.slice(-8)}</span>
+                    <span className="text-[9px] opacity-70">· {tree.ageYears}y</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons row */}
+          <div className="flex flex-wrap items-center gap-2 pt-1.5">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Add:</span>
             <button
               type="button"
               onClick={() => handleSelectTool('WALK_POLOGEN')}
@@ -1234,7 +1289,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
               }`}
             >
               <Footprints className="w-3.5 h-3.5" />
-              <span>Add POLOGEN (&lt; 7y Saplings)</span>
+              <span>POLOGEN Boundary (&lt;7y)</span>
             </button>
 
             <button
@@ -1247,7 +1302,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
               }`}
             >
               <MapPin className="w-3.5 h-3.5" />
-              <span>Add Tree Point (≥ 7y Tag)</span>
+              <span>Tree Geo-Pin (≥7y)</span>
             </button>
 
             <button
@@ -1261,7 +1316,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
               className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
             >
               <Camera className="w-3.5 h-3.5" />
-              <span>Capture Image (Real Camera)</span>
+              <span>Capture Image</span>
             </button>
           </div>
         </div>
