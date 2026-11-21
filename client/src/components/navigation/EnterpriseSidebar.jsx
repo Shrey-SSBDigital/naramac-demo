@@ -54,6 +54,7 @@ export default function EnterpriseSidebar({
   } = useEnterprise();
 
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
+  const [showAllModules, setShowAllModules] = useState(false);
 
   const currentRoleConfig = ROLE_PERMISSIONS[activeRole] || ROLE_PERMISSIONS.NERAMAC_ADMIN;
 
@@ -125,6 +126,8 @@ export default function EnterpriseSidebar({
       items: visibleItems
     };
   }).filter(grp => grp.items.length > 0);
+
+  const displayedNavGroups = showAllModules ? ALL_NAV_GROUPS : filteredNavGroups;
 
   return (
     <aside className="w-72 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0 flex-shrink-0 z-30 shadow-xs">
@@ -204,11 +207,30 @@ export default function EnterpriseSidebar({
             </div>
           )}
         </div>
+
+        {/* Toggle between Role Filtered & All Modules */}
+        <div className="mt-2 flex items-center justify-between px-1 text-[11px]">
+          <span className="text-slate-500 font-medium">Show all modules</span>
+          <button
+            type="button"
+            onClick={() => setShowAllModules(!showAllModules)}
+            className={`relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              showAllModules ? 'bg-emerald-600' : 'bg-slate-300'
+            }`}
+            title="Toggle between Role-Filtered view and All System Modules"
+          >
+            <span
+              className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                showAllModules ? 'translate-x-4' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
       </div>
 
-      {/* Navigation Group Items (Filtered by RBAC) */}
+      {/* Navigation Group Items */}
       <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4">
-        {filteredNavGroups.map((grp, gIdx) => (
+        {displayedNavGroups.map((grp, gIdx) => (
           <div key={gIdx} className="space-y-1">
             <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-2 py-0.5">
               {grp.group}
