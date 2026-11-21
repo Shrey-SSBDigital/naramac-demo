@@ -23,17 +23,31 @@ export default function EnterpriseNavbar({ activeModule, onSelectModule, onOpenT
       <div className="px-5 py-2.5 flex items-center justify-between gap-4">
         {/* Left: Brand Identity & Active Perspective */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-800 to-emerald-600 text-white flex items-center justify-center font-black text-base shadow-sm ring-2 ring-emerald-500/20">
+          <button
+            onClick={() => onSelectModule('HOME')}
+            className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-800 to-emerald-600 text-white flex items-center justify-center font-black text-base shadow-sm ring-2 ring-emerald-500/20 hover:scale-105 transition flex-shrink-0"
+            title="Go to Home Overview"
+          >
             N
-          </div>
+          </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-extrabold text-slate-900 tracking-tight">
+              <button
+                onClick={() => onSelectModule('HOME')}
+                className="text-sm font-extrabold text-slate-900 tracking-tight hover:text-emerald-700 transition text-left"
+              >
                 NERAMAC ASCTS
-              </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-700 text-white">
-                Enterprise
-              </span>
+              </button>
+              <button
+                onClick={() => onSelectModule('HOME')}
+                className={`text-[10px] font-bold px-2 py-0.5 rounded transition ${
+                  activeModule === 'HOME'
+                    ? 'bg-emerald-700 text-white'
+                    : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                }`}
+              >
+                Home • Workflow
+              </button>
               <span className="hidden sm:inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
                 Assam & Tripura Clusters
               </span>

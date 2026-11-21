@@ -50,7 +50,8 @@ import { useEnterprise } from '../context/EnterpriseContext';
 import {
   generateSyntheticFieldPhoto,
   stampWatermarkOnCanvas,
-  generateCryptoHash
+  generateCryptoHash,
+  computeRealSha256
 } from '../utils/photoCaptureUtils';
 
 // Default seed fallback
@@ -794,7 +795,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
   };
 
   // Snap and Watermark Photo
-  const handleSnapPhoto = () => {
+  const handleSnapPhoto = async () => {
     const currentFarmer = farmers.find(f => f.id === draftForm.farmerId) || farmers[0];
     const targetPlt = registry.plantations.find(p => p.id === (
       draftAnalysis?.parentPlantation?.id ||
@@ -855,16 +856,19 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
       });
     }
 
+    // Compute genuine cryptographic SHA-256 buffer hash using Web Crypto API
+    const realSha256 = await computeRealSha256(photoDataUrl);
+
     if (cameraMode === 'POLOGEN') {
       setDraftPologenPhoto(photoDataUrl);
-      setCameraHash(currentHash);
+      setCameraHash(realSha256);
     } else {
       setDraftTreePhoto(photoDataUrl);
-      setCameraHash(currentHash);
+      setCameraHash(realSha256);
     }
 
     setShowCameraModal(false);
-    showToast(`✓ Field ${cameraMode === 'POLOGEN' ? 'POLOGEN sapling grove' : 'mature tree'} photo captured & stamped with SHA-256`, 'success');
+    showToast(`✓ Field ${cameraMode === 'POLOGEN' ? 'POLOGEN sapling grove' : 'mature tree'} photo captured & sealed with Web Crypto SHA-256`, 'success');
   };
 
   // Save Draft (Commits to EnterpriseContext and local Spatial Registry)

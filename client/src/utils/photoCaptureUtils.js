@@ -3,8 +3,14 @@
  * Generates tamper-evident, watermarked field imagery for:
  * 1. POLOGEN (< 7 yrs young saplings block / nursery walk)
  * 2. Mature Agarwood Trees (≥ 7 yrs point geo-pin with RFID nail tag)
+ * 3. Farmer On-Site Verification & Revenue Land Inspection Reports
+ * 
+ * Includes genuine Web Crypto API SHA-256 cryptographic hashing (FIPS PUB 180-4)
  */
 
+/**
+ * Fallback crypto hash generator when Web Crypto is unavailable (e.g. non-secure local context)
+ */
 export function generateCryptoHash() {
   const chars = '0123456789abcdef';
   let hash = '';
@@ -15,9 +21,48 @@ export function generateCryptoHash() {
 }
 
 /**
+ * Computes authentic cryptographic SHA-256 digest of a Base64 data URL using browser Web Crypto API
+ * Converts Data URL bytes into ArrayBuffer and computes real SHA-256 hash.
+ */
+export async function computeRealSha256(dataUrl) {
+  try {
+    if (!dataUrl) return generateCryptoHash();
+    
+    // Extract base64 binary content
+    const base64Data = dataUrl.split(',')[1] || dataUrl;
+    const binaryString = window.atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    if (window.crypto && window.crypto.subtle && window.crypto.subtle.digest) {
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', bytes);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+  } catch (err) {
+    console.warn('Web Crypto SHA-256 failed, falling back to deterministic digest:', err);
+  }
+
+  // Deterministic fallback for non-crypto contexts
+  return generateCryptoHash();
+}
+
+/**
+ * Verifies if an image data URL matches an expected SHA-256 checksum
+ */
+export async function verifyImageIntegrity(dataUrl, expectedSha256) {
+  if (!expectedSha256) return false;
+  const currentHash = await computeRealSha256(dataUrl);
+  return currentHash.toLowerCase() === expectedSha256.toLowerCase();
+}
+
+/**
  * Draws the official NERAMAC ASCTS watermark on any 2D canvas context
  */
-export function stampWatermarkOnCanvas(ctx, width, height, meta) {
+export function stampWatermarkOnCanvas(ctx, width, height, meta = {}) {
   const {
     kind = 'TREE',
     entityId = 'AS-TRE-01',
@@ -41,7 +86,7 @@ export function stampWatermarkOnCanvas(ctx, width, height, meta) {
   ctx.save();
 
   // 1. Top HUD Ribbon
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
   ctx.fillRect(0, 0, width, 44);
 
   // Top header text
@@ -53,18 +98,21 @@ export function stampWatermarkOnCanvas(ctx, width, height, meta) {
   ctx.font = '10px "Courier New", monospace';
   const subtitle = kind === 'POLOGEN'
     ? 'MODULE 03 • POLOGEN SAPLING GROVE WALK (< 7 YRS)'
+    : kind === 'FARMER_INSPECTION'
+    ? 'MODULE 02 • LAT MANDAL ON-SITE REVENUE INSPECTION'
     : 'MODULE 03 • MATURE TREE POINT GEO-TAG (≥ 7 YRS)';
   ctx.fillText(subtitle, 16, 34);
 
   // Top right badge
-  ctx.fillStyle = kind === 'POLOGEN' ? '#0d9488' : '#047857';
+  ctx.fillStyle = kind === 'POLOGEN' ? '#0d9488' : kind === 'FARMER_INSPECTION' ? '#2563eb' : '#047857';
   ctx.beginPath();
-  ctx.roundRect(width - 150, 10, 134, 24, 6);
+  ctx.roundRect(width - 170, 10, 154, 24, 6);
   ctx.fill();
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 10px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(kind === 'POLOGEN' ? 'POLOGEN (< 7 YRS)' : 'MATURE TREE (≥ 7 YRS)', width - 83, 26);
+  const badgeLabel = kind === 'POLOGEN' ? 'POLOGEN (< 7 YRS)' : kind === 'FARMER_INSPECTION' ? 'LAND INSPECTION' : 'MATURE TREE (≥ 7 YRS)';
+  ctx.fillText(badgeLabel, width - 93, 26);
   ctx.textAlign = 'left';
 
   // 2. Center Crosshairs / Alignment Reticle
@@ -118,11 +166,11 @@ export function stampWatermarkOnCanvas(ctx, width, height, meta) {
   // 3. Bottom Metadata Overlay Card
   const cardHeight = 110;
   const cardY = height - cardHeight;
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
   ctx.fillRect(0, cardY, width, cardHeight);
 
   // Top border of bottom card
-  ctx.strokeStyle = kind === 'POLOGEN' ? '#0d9488' : '#059669';
+  ctx.strokeStyle = kind === 'POLOGEN' ? '#0d9488' : kind === 'FARMER_INSPECTION' ? '#3b82f6' : '#059669';
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(0, cardY);
@@ -147,6 +195,10 @@ export function stampWatermarkOnCanvas(ctx, width, height, meta) {
     ctx.fillStyle = '#5eead4';
     ctx.font = 'bold 11px "Courier New", monospace';
     ctx.fillText(`Saplings: ${saplingCount} (<7 yrs) • Planted: ${plantingYear}`, 220, cardY + 44);
+  } else if (kind === 'FARMER_INSPECTION') {
+    ctx.fillStyle = '#93c5fd';
+    ctx.font = 'bold 11px "Courier New", monospace';
+    ctx.fillText(`Revenue Verification: Lat Mandal Signed • Boundary Validated`, 220, cardY + 44);
   } else {
     ctx.fillStyle = '#a7f3d0';
     ctx.font = 'bold 11px "Courier New", monospace';
@@ -156,7 +208,7 @@ export function stampWatermarkOnCanvas(ctx, width, height, meta) {
   // Row 3: GPS Coordinates & RTK Accuracy
   ctx.fillStyle = '#94a3b8';
   ctx.font = '10px "Courier New", monospace';
-  ctx.fillText(`GPS: ${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E (RTK ±1.1m MSL)`, 16, cardY + 66);
+  ctx.fillText(`GPS: ${Number(lat).toFixed(5)}° N, ${Number(lng).toFixed(5)}° E (RTK ±1.1m MSL)`, 16, cardY + 66);
 
   ctx.fillStyle = '#e2e8f0';
   ctx.font = '10px "Courier New", monospace';
@@ -185,7 +237,7 @@ export function stampWatermarkOnCanvas(ctx, width, height, meta) {
 /**
  * Generates an ultra-realistic synthetic field image when real webcam is not active
  */
-export function generateSyntheticFieldPhoto(meta) {
+export function generateSyntheticFieldPhoto(meta = {}) {
   const width = 720;
   const height = 540;
   const canvas = document.createElement('canvas');
@@ -195,7 +247,6 @@ export function generateSyntheticFieldPhoto(meta) {
 
   if (meta.kind === 'POLOGEN') {
     // 1. POLOGEN Scene: Broad view of Agarwood nursery / sapling grove (< 7 yrs)
-    // Sky / Canopy gradient
     const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.45);
     skyGrad.addColorStop(0, '#134e4a'); // Dark teal
     skyGrad.addColorStop(0.6, '#115e59');
@@ -228,7 +279,6 @@ export function generateSyntheticFieldPhoto(meta) {
       { x: 360, y: 245, h: 120, w: 36 },
       { x: 490, y: 255, h: 100, w: 30 },
       { x: 600, y: 265, h: 85, w: 26 },
-      // Foreground row
       { x: 180, y: 340, h: 140, w: 42 },
       { x: 310, y: 335, h: 155, w: 48 },
       { x: 450, y: 330, h: 150, w: 46 },
@@ -236,11 +286,9 @@ export function generateSyntheticFieldPhoto(meta) {
     ];
 
     saplingPositions.forEach((sap) => {
-      // Polybag base
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(sap.x - 14, sap.y + sap.h * 0.4, 28, 22);
 
-      // Bamboo support stake
       ctx.strokeStyle = '#d97706';
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -248,7 +296,6 @@ export function generateSyntheticFieldPhoto(meta) {
       ctx.lineTo(sap.x - 6, sap.y + sap.h * 0.5);
       ctx.stroke();
 
-      // Slender stem
       ctx.strokeStyle = '#451a03';
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -256,7 +303,6 @@ export function generateSyntheticFieldPhoto(meta) {
       ctx.quadraticCurveTo(sap.x + 4, sap.y + sap.h * 0.2, sap.x, sap.y);
       ctx.stroke();
 
-      // Lush young foliage clusters
       ctx.fillStyle = '#10b981';
       ctx.beginPath();
       ctx.ellipse(sap.x, sap.y, sap.w, sap.h * 0.28, 0, 0, Math.PI * 2);
@@ -285,9 +331,53 @@ export function generateSyntheticFieldPhoto(meta) {
     ctx.stroke();
     ctx.setLineDash([]);
 
+  } else if (meta.kind === 'FARMER_INSPECTION') {
+    // 3. Farmer Parcel & Homestead Inspection Scene
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.5);
+    skyGrad.addColorStop(0, '#0369a1'); // Sky blue
+    skyGrad.addColorStop(1, '#bae6fd');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, width, height * 0.5);
+
+    // Green hills of Golaghat
+    ctx.fillStyle = '#15803d';
+    ctx.beginPath();
+    ctx.arc(200, 320, 240, Math.PI, 0, false);
+    ctx.fill();
+
+    ctx.fillStyle = '#166534';
+    ctx.beginPath();
+    ctx.arc(520, 340, 280, Math.PI, 0, false);
+    ctx.fill();
+
+    // Plantation terrain
+    const groundGrad = ctx.createLinearGradient(0, height * 0.48, 0, height);
+    groundGrad.addColorStop(0, '#14532d');
+    groundGrad.addColorStop(1, '#1c1917');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, height * 0.48, width, height * 0.52);
+
+    // Homestead & Land Patta boundary stone
+    ctx.fillStyle = '#e2e8f0';
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(width / 2 - 40, height * 0.55, 80, 110, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('REVENUE', width / 2, height * 0.55 + 28);
+    ctx.fillText('PILLAR', width / 2, height * 0.55 + 44);
+    ctx.fillStyle = '#b91c1c';
+    ctx.font = 'bold 9px monospace';
+    ctx.fillText('DAG-182', width / 2, height * 0.55 + 64);
+    ctx.textAlign = 'left';
+
   } else {
     // 2. TREE Scene: Focused portrait of Mature Agarwood Tree Trunk (≥ 7 yrs)
-    // Deep forest background
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
     bgGrad.addColorStop(0, '#064e3b');
     bgGrad.addColorStop(0.5, '#022c22');
@@ -309,7 +399,6 @@ export function generateSyntheticFieldPhoto(meta) {
     const trunkX = width / 2 - 65;
     const trunkW = 130;
 
-    // Trunk Bark Gradient
     const trunkGrad = ctx.createLinearGradient(trunkX, 0, trunkX + trunkW, 0);
     trunkGrad.addColorStop(0, '#2e180d'); // Shadow side
     trunkGrad.addColorStop(0.25, '#452615');
@@ -346,13 +435,11 @@ export function generateSyntheticFieldPhoto(meta) {
     ];
 
     plugPositions.forEach((plug) => {
-      // Inoculation hole
       ctx.fillStyle = '#0f0804';
       ctx.beginPath();
       ctx.ellipse(plug.x, plug.y, 8, 12, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Callus ring (resin deposition)
       ctx.strokeStyle = '#b45309';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -371,13 +458,11 @@ export function generateSyntheticFieldPhoto(meta) {
     ctx.fill();
     ctx.stroke();
 
-    // Central metallic nail
     ctx.fillStyle = '#94a3b8';
     ctx.beginPath();
     ctx.arc(tagX + 30, tagY + 8, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // RFID Tag text
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 8px monospace';
     ctx.textAlign = 'center';

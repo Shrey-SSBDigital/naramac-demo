@@ -20,7 +20,8 @@ import {
   MOCK_INVENTORY,
   MOCK_AUDIT_LOGS,
   MOCK_COLLECTION_CENTRES,
-  MOCK_PROCESSING_CENTRES
+  MOCK_PROCESSING_CENTRES,
+  MOCK_FARMER_APPLICATIONS
 } from '../data/mockEnterpriseData';
 
 const EnterpriseContext = createContext(null);
@@ -49,6 +50,7 @@ export function EnterpriseProvider({ children }) {
 
   // Main state with localStorage hydration
   const [farmers, setFarmers] = useState(MOCK_FARMERS);
+  const [farmerApplications, setFarmerApplications] = useState(MOCK_FARMER_APPLICATIONS);
   const [plantations, setPlantations] = useState(MOCK_PLANTATIONS);
   const [pologens, setPologens] = useState(MOCK_POLOGENS);
   const [trees, setTrees] = useState(MOCK_TREES);
@@ -74,6 +76,7 @@ export function EnterpriseProvider({ children }) {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.farmers) setFarmers(parsed.farmers);
+        if (parsed.farmerApplications) setFarmerApplications(parsed.farmerApplications);
         if (parsed.plantations) setPlantations(parsed.plantations);
         if (parsed.pologens) setPologens(parsed.pologens);
         if (parsed.trees) setTrees(parsed.trees);
@@ -102,6 +105,7 @@ export function EnterpriseProvider({ children }) {
     try {
       const current = {
         farmers,
+        farmerApplications,
         plantations,
         pologens,
         trees,
@@ -137,6 +141,7 @@ export function EnterpriseProvider({ children }) {
   const resetToInitialData = () => {
     localStorage.removeItem(STORAGE_KEY);
     setFarmers(MOCK_FARMERS);
+    setFarmerApplications(MOCK_FARMER_APPLICATIONS);
     setPlantations(MOCK_PLANTATIONS);
     setPologens(MOCK_POLOGENS);
     setTrees(MOCK_TREES);
@@ -177,6 +182,262 @@ export function EnterpriseProvider({ children }) {
   };
 
   // --- Actions ---
+
+  // 0. Farmer Onboarding & Maker-Checker Workflow
+  const submitFarmerApplication = (appData) => {
+    const isTripura = appData.state === 'Tripura' || appData.cluster?.includes('Tripura');
+    const prefix = isTripura ? 'APP-TR' : 'APP-AS';
+    const id = `${prefix}-2026-${String(farmerApplications.length + 1).padStart(3, '0')}`;
+    const saplingsCount = parseInt(appData.saplingsCount) || 0;
+    const matureTreesCount = parseInt(appData.matureTreesCount) || 0;
+    const estimatedTrees = saplingsCount + matureTreesCount || parseInt(appData.estimatedTrees) || 150;
+
+    const newApp = {
+      id,
+      farmerName: appData.farmerName || 'Applicant Farmer',
+      fatherName: appData.fatherName || 'Father Name',
+      gender: appData.gender || 'Male',
+      age: parseInt(appData.age) || 45,
+      phone: appData.phone || '+91 94350 00000',
+      aadhaarMasked: appData.aadhaarMasked || `XXXX-XXXX-${appData.aadhaarLast4 || '4921'}`,
+      state: isTripura ? 'Tripura' : 'Assam',
+      cluster: appData.cluster || (isTripura ? 'Kadamtala Cluster' : 'Golaghat Cluster'),
+      district: appData.district || (isTripura ? 'North Tripura' : 'Golaghat'),
+      subdivision: appData.subdivision || 'Bokakhat',
+      village: appData.village || 'Village Gaon',
+      dagNumber: appData.dagNumber || 'Dag 100, Patta 25',
+      landAreaAcres: parseFloat(appData.landAreaAcres) || 2.5,
+      jamabandiDoc: appData.jamabandiDoc || 'Jamabandi_Uploaded.pdf',
+      jamabandiHash: appData.jamabandiHash || `sha256:${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`,
+      bankName: appData.bankName || 'State Bank of India',
+      bankAccountNumber: appData.bankAccountNumber || 'XXXX-XXXX-8921',
+      ifscCode: appData.ifscCode || 'SBIN0000083',
+      estimatedTrees,
+      saplingsCount,
+      matureTreesCount,
+      plantingYear: parseInt(appData.plantingYear) || 2020,
+      plantationName: appData.plantationName || `${appData.farmerName}'s Agarwood Parcel`,
+      status: 'SUBMITTED_PENDING_INSPECTION',
+      submissionDate: new Date().toISOString().split('T')[0],
+      inspectionReport: null,
+      approvalDetails: null
+    };
+
+    const updated = [newApp, ...farmerApplications];
+    setFarmerApplications(updated);
+    persistState({ farmerApplications: updated });
+    logAudit('FARMER_APPLICATION_SUBMITTED', 'Farmer Registration', `Submitted application ${id} for grower ${newApp.farmerName}`, id);
+    addToast(`Farmer Registration Application ${id} submitted successfully!`);
+    return newApp;
+  };
+
+  const conductFieldInspection = (appId, inspectionData) => {
+    const appIndex = farmerApplications.findIndex(a => a.id === appId);
+    if (appIndex === -1) return null;
+
+    const existingApp = farmerApplications[appIndex];
+    const updatedApp = {
+      ...existingApp,
+      status: 'FIELD_INSPECTED_PENDING_APPROVAL',
+      inspectionReport: {
+        inspected: true,
+        inspectorId: inspectionData.inspectorId || 'NERAMAC-FA-04',
+        inspectorName: inspectionData.inspectorName || 'Dipankar Neog (Field Agent)',
+        inspectionDate: new Date().toISOString().split('T')[0],
+        latMandalVerified: true,
+        latMandalName: inspectionData.latMandalName || 'P. Bora (Circle Lat Mandal)',
+        boundariesVerified: true,
+        verifiedMatureTrees: parseInt(inspectionData.verifiedMatureTrees) || existingApp.matureTreesCount,
+        verifiedSaplings: parseInt(inspectionData.verifiedSaplings) || existingApp.saplingsCount,
+        pologenBoundaryWalked: true,
+        pologenAreaAcres: parseFloat(inspectionData.pologenAreaAcres) || existingApp.landAreaAcres,
+        coordinates: inspectionData.coordinates || [93.9782, 26.5204],
+        photoSha256: inspectionData.photoSha256 || `sha256:${Math.random().toString(16).slice(2)}`,
+        photoUrl: inspectionData.photoUrl || null,
+        fieldRemarks: inspectionData.fieldRemarks || 'Boundaries and tree counts field verified with Lat Mandal. No reserve forest encroachment.'
+      }
+    };
+
+    const updatedList = [...farmerApplications];
+    updatedList[appIndex] = updatedApp;
+    setFarmerApplications(updatedList);
+    persistState({ farmerApplications: updatedList });
+    logAudit('FIELD_INSPECTION_COMPLETED', 'Field GIS Studio', `Field Agent conducted Lat Mandal inspection for ${appId} with SHA-256 photo`, appId);
+    addToast(`Field inspection report & SHA-256 photo attached to ${appId}`);
+    return updatedApp;
+  };
+
+  const approveFarmerApplication = (appId, approvalData = {}) => {
+    const app = farmerApplications.find(a => a.id === appId);
+    if (!app) return null;
+
+    const isTripura = app.state === 'Tripura' || app.cluster?.includes('Tripura');
+    const farmerPrefix = isTripura ? 'FRM-TR' : 'FRM-AS';
+    const farmerId = `${farmerPrefix}-${String(farmers.length + 1).padStart(2, '0')}`;
+
+    // 1. Create official Farmer record
+    const newFarmer = {
+      id: farmerId,
+      name: app.farmerName,
+      fatherName: app.fatherName,
+      gender: app.gender,
+      age: app.age,
+      phone: app.phone,
+      aadhaarMasked: app.aadhaarMasked,
+      state: app.state,
+      cluster: app.cluster,
+      district: app.district,
+      subdivision: app.subdivision,
+      village: app.village,
+      dagNumber: app.dagNumber,
+      landAreaAcres: app.landAreaAcres,
+      treeCount: app.estimatedTrees,
+      status: 'ACTIVE',
+      registrationDate: new Date().toISOString().split('T')[0],
+      verifiedBy: approvalData.approvedBy || 'NERAMAC-MD-01 (Managing Director)',
+      coordinates: app.inspectionReport?.coordinates ? [app.inspectionReport.coordinates[1], app.inspectionReport.coordinates[0]] : [26.5204, 93.9782]
+    };
+
+    // 2. Create Plantation record
+    const pltPrefix = isTripura ? 'PLT-TR' : 'PLT-AS';
+    const pltId = `${pltPrefix}-${String(plantations.length + 1).padStart(2, '0')}`;
+    const lat = app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[1] : 26.5204;
+    const lng = app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[0] : 93.9782;
+
+    const newPlantation = {
+      id: pltId,
+      farmerId,
+      farmerName: app.farmerName,
+      name: app.plantationName || `${app.farmerName} Agro-Parcel`,
+      cluster: app.cluster,
+      state: app.state,
+      district: app.district,
+      areaHectares: Number((app.landAreaAcres * 0.404686).toFixed(2)),
+      soilType: 'Alluvial Red Loam',
+      elevationMeters: 98,
+      boundaryPolygon: [
+        [lat - 0.001, lng - 0.001],
+        [lat + 0.001, lng - 0.0008],
+        [lat + 0.0008, lng + 0.0012],
+        [lat - 0.0012, lng + 0.0009],
+        [lat - 0.001, lng - 0.001]
+      ],
+      totalTrees: app.estimatedTrees,
+      matureTrees: app.inspectionReport?.verifiedMatureTrees || app.matureTreesCount || 50,
+      youngTrees: app.inspectionReport?.verifiedSaplings || app.saplingsCount || 100,
+      geoVerified: true,
+      inspectionDate: new Date().toISOString().split('T')[0]
+    };
+
+    // 3. Create POLOGEN (< 7 yrs) record if saplings present
+    const saplingsNum = app.inspectionReport?.verifiedSaplings || app.saplingsCount;
+    let newPologensList = [...pologens];
+    if (saplingsNum > 0) {
+      const plgId = `PLG-2026-${String(pologens.length + 1).padStart(3, '0')}`;
+      const newPologen = {
+        id: plgId,
+        farmerId,
+        farmerName: app.farmerName,
+        plantationId: pltId,
+        plantationName: newPlantation.name,
+        name: `Sapling Grove (${app.farmerName})`,
+        cluster: app.cluster,
+        plantingYear: app.plantingYear || 2022,
+        ageYears: Math.max(1, 2026 - (app.plantingYear || 2022)),
+        saplingCount: saplingsNum,
+        boundaryPolygon: newPlantation.boundaryPolygon,
+        inspectionStatus: 'VERIFIED',
+        lastAuditDate: new Date().toISOString().split('T')[0]
+      };
+      newPologensList = [newPologen, ...newPologensList];
+    }
+
+    // 4. Create initial mature tree record (≥ 7 yrs) if mature trees present
+    const matureNum = app.inspectionReport?.verifiedMatureTrees || app.matureTreesCount;
+    let newTreesList = [...trees];
+    if (matureNum > 0) {
+      const treeId = `TRE-${isTripura ? 'TR' : 'AS'}-${String(trees.length + 1).padStart(3, '0')}`;
+      const newTree = {
+        id: treeId,
+        rfidTag: `TAG-AGY-${String(trees.length + 1).padStart(3, '0')}`,
+        farmerId,
+        farmerName: app.farmerName,
+        plantationId: pltId,
+        plantationName: newPlantation.name,
+        cluster: app.cluster,
+        variety: 'Aquilaria malaccensis',
+        plantingYear: 2015,
+        ageYears: 11,
+        gbhCm: 68,
+        heightMeters: 14.5,
+        inoculationStatus: 'NOT_INOCULATED',
+        healthStatus: 'HEALTHY',
+        coordinates: [lat, lng],
+        geoVerified: true,
+        tagDate: new Date().toISOString().split('T')[0]
+      };
+      newTreesList = [newTree, ...newTreesList];
+    }
+
+    // 5. Update application status
+    const sanctionOrderNo = `NERAMAC/ASCTS/REG/2026/${String(farmerApplications.length + 10).padStart(3, '0')}`;
+    const dfoClearanceNo = `DFO/${app.district?.slice(0, 3).toUpperCase() || 'GLT'}/NOC/2026/${String(Math.floor(Math.random() * 80) + 20)}`;
+    const updatedApp = {
+      ...app,
+      status: 'APPROVED',
+      approvalDetails: {
+        approvedBy: approvalData.approvedBy || 'NERAMAC-MD-01 (Managing Director)',
+        approvalDate: new Date().toISOString().split('T')[0],
+        sanctionedFarmerId: farmerId,
+        sanctionOrderNo,
+        dfoClearanceNo,
+        remarks: approvalData.remarks || 'Sanctioned under Assam Agarwood Policy 2020. Digital QR grower card issued.'
+      }
+    };
+
+    const updatedAppList = farmerApplications.map(a => a.id === appId ? updatedApp : a);
+    const updatedFarmersList = [newFarmer, ...farmers];
+    const updatedPlantationsList = [newPlantation, ...plantations];
+
+    setFarmerApplications(updatedAppList);
+    setFarmers(updatedFarmersList);
+    setPlantations(updatedPlantationsList);
+    setPologens(newPologensList);
+    setTrees(newTreesList);
+
+    persistState({
+      farmerApplications: updatedAppList,
+      farmers: updatedFarmersList,
+      plantations: updatedPlantationsList,
+      pologens: newPologensList,
+      trees: newTreesList
+    });
+
+    logAudit('FARMER_SANCTIONED_MAKER_CHECKER', 'Farmer Approval', `Sanctioned Farmer ID ${farmerId} for ${app.farmerName} (Order: ${sanctionOrderNo})`, farmerId);
+    addToast(`Farmer ${app.farmerName} officially SANCTIONED as ${farmerId} with Digital QR Card!`);
+    return { application: updatedApp, farmer: newFarmer, plantation: newPlantation };
+  };
+
+  const rejectFarmerApplication = (appId, reason) => {
+    const updated = farmerApplications.map(a => {
+      if (a.id === appId) {
+        return {
+          ...a,
+          status: 'REJECTED',
+          approvalDetails: {
+            approvedBy: 'NERAMAC Rejection Committee',
+            approvalDate: new Date().toISOString().split('T')[0],
+            remarks: reason || 'Application rejected due to revenue title discrepancies.'
+          }
+        };
+      }
+      return a;
+    });
+    setFarmerApplications(updated);
+    persistState({ farmerApplications: updated });
+    logAudit('FARMER_APPLICATION_REJECTED', 'Farmer Approval', `Application ${appId} rejected: ${reason}`, appId);
+    addToast(`Application ${appId} rejected.`);
+  };
 
   // 1. Farmer Management
   const addFarmer = (farmerData) => {
@@ -891,6 +1152,7 @@ export function EnterpriseProvider({ children }) {
 
         // Data entities
         farmers,
+        farmerApplications,
         plantations,
         pologens,
         trees,
@@ -912,6 +1174,10 @@ export function EnterpriseProvider({ children }) {
         processingCentres: MOCK_PROCESSING_CENTRES,
 
         // Actions
+        submitFarmerApplication,
+        conductFieldInspection,
+        approveFarmerApplication,
+        rejectFarmerApplication,
         addFarmer,
         addPlantation,
         addPologen,

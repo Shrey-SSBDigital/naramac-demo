@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useEnterprise } from '../../context/EnterpriseContext';
+import { isModuleAllowedForRole, ROLE_PERMISSIONS } from '../../utils/rbacConfig';
+import { USER_ROLES } from '../../data/mockEnterpriseData';
 import {
   LayoutDashboard,
+  Home,
   Users,
+  UserPlus,
+  ShieldCheck,
   Trees,
   Syringe,
   Axe,
@@ -20,7 +25,10 @@ import {
   FileSpreadsheet,
   GitFork,
   MapPin,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Lock,
+  ChevronDown
 } from 'lucide-react';
 
 export default function EnterpriseSidebar({
@@ -31,7 +39,9 @@ export default function EnterpriseSidebar({
 }) {
   const {
     activeRole,
+    setActiveRole,
     farmers,
+    farmerApplications,
     pologens,
     trees,
     harvests,
@@ -43,89 +53,162 @@ export default function EnterpriseSidebar({
     exportBatches
   } = useEnterprise();
 
-  // Navigation Group Structure covering all 17 required modules
-  const NAV_GROUPS = [
+  const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
+
+  const currentRoleConfig = ROLE_PERMISSIONS[activeRole] || ROLE_PERMISSIONS.NERAMAC_ADMIN;
+
+  // Master Navigation Groups with All Enterprise Routes
+  const ALL_NAV_GROUPS = [
     {
-      group: 'Overview',
+      group: 'Overview & Architecture',
       items: [
-        { id: 'DASHBOARD', name: 'Executive Dashboard', icon: LayoutDashboard, badge: null }
+        { id: 'HOME', name: 'Home • Workflow & Roles', icon: Home, badge: '8 Stages', path: '/' },
+        { id: 'DASHBOARD', name: 'Executive Dashboard', icon: LayoutDashboard, badge: null, path: '/dashboard' }
       ]
     },
     {
       group: 'Origin & Forestry',
       items: [
-        { id: 'FARMERS', name: 'Farmer Management', icon: Users, badge: farmers.length },
-        { id: 'PLANTATIONS', name: 'Plantations, POLOGEN & Trees', icon: Trees, badge: (trees?.length || 0) + (pologens?.length || 0) },
-        { id: 'INOCULATION', name: 'Cultivation & Inoculation', icon: Syringe, badge: null }
+        { id: 'FARMERS', name: 'Farmer Registry', icon: Users, badge: farmers.length, path: '/farmers' },
+        { id: 'FARMER_REGISTER', name: 'Farmer Registration Form', icon: UserPlus, badge: 'New', highlight: true, path: '/farmers/register' },
+        { id: 'FARMER_APPROVALS', name: 'Maker-Checker Approvals', icon: ShieldCheck, badge: farmerApplications.filter(a => a.status !== 'APPROVED').length || null, highlight: true, path: '/farmers/approvals' },
+        { id: 'PLANTATIONS', name: 'Plantations & Parcels', icon: Trees, badge: (trees?.length || 0) + (pologens?.length || 0), path: '/plantations' },
+        { id: 'GEO_STUDIO', name: 'Field GIS & SHA-256 Studio', icon: MapPin, badge: 'AR GPS', path: '/field-gis-studio' },
+        { id: 'INOCULATION', name: 'Cultivation & Inoculation', icon: Syringe, badge: null, path: '/inoculation' }
       ]
     },
     {
       group: 'Harvest & Statutory',
       items: [
-        { id: 'HARVEST', name: 'Harvest Management', icon: Axe, badge: harvests.length },
-        { id: 'PERMITS', name: 'Permits & DFO Orders', icon: FileBadge2, badge: null }
+        { id: 'HARVEST', name: 'Harvest Management', icon: Axe, badge: harvests.length, path: '/harvest' },
+        { id: 'PERMITS', name: 'Permits & DFO Orders', icon: FileBadge2, badge: null, path: '/permits' }
       ]
     },
     {
       group: 'Depot & Movement',
       items: [
-        { id: 'MOVEMENT', name: 'Material Movement', icon: Truck, badge: movements.length },
-        { id: 'AGGREGATION', name: 'Depot Aggregation', icon: Boxes, badge: aggregations.length },
-        { id: 'INVENTORY', name: 'Inventory & Vault Stock', icon: Warehouse, badge: null }
+        { id: 'MOVEMENT', name: 'Material Movement (≤1.5%)', icon: Truck, badge: movements.length, path: '/movement' },
+        { id: 'AGGREGATION', name: 'Depot Aggregation Pooling', icon: Boxes, badge: aggregations.length, path: '/aggregation' },
+        { id: 'INVENTORY', name: 'Inventory & Vault Stock', icon: Warehouse, badge: null, path: '/inventory' }
       ]
     },
     {
       group: 'CPC Processing & Lab',
       items: [
-        { id: 'PROCESSING', name: 'Distillation & CPC Run', icon: Factory, badge: distillations.length },
-        { id: 'LABORATORY', name: 'NABL Lab & GC-MS Purity', icon: FlaskConical, badge: labTests.length },
-        { id: 'FINISHED_PRODUCTS', name: 'Finished Flacons & QR', icon: PackageCheck, badge: finishedProducts.length }
+        { id: 'PROCESSING', name: 'Distillation Stills & Oil', icon: Factory, badge: distillations.length, path: '/processing' },
+        { id: 'LABORATORY', name: 'NABL Lab & GC-MS Purity', icon: FlaskConical, badge: labTests.length, path: '/laboratory' },
+        { id: 'FINISHED_PRODUCTS', name: 'Finished Flacons & Laser QR', icon: PackageCheck, badge: finishedProducts.length, path: '/finished-products' }
       ]
     },
     {
       group: 'Sales & Distribution',
       items: [
-        { id: 'EXPORT', name: 'Export Batches (CITES)', icon: PlaneTakeoff, badge: exportBatches.length },
-        { id: 'SHIPMENT', name: 'Shipment & Terminal Lots', icon: Ship, badge: null },
-        { id: 'DOMESTIC_SALES', name: 'Domestic Attar Sales', icon: Store, badge: null }
+        { id: 'EXPORT', name: 'Export Batches (CITES)', icon: PlaneTakeoff, badge: exportBatches.length, path: '/export' },
+        { id: 'SHIPMENT', name: 'Shipment & Terminal Lots', icon: Ship, badge: null, path: '/shipments' },
+        { id: 'DOMESTIC_SALES', name: 'Domestic Attar Sales', icon: Store, badge: null, path: '/domestic-sales' }
       ]
     },
     {
       group: 'Trust & Governance',
       items: [
-        { id: 'TRACEABILITY', name: 'Traceability & QR Scan', icon: QrCode, badge: 'Live', highlight: true },
-        { id: 'AUDIT_REPORTS', name: 'Audit Logs & Mass Balance', icon: FileSpreadsheet, badge: null }
+        { id: 'TRACEABILITY', name: 'Traceability & QR Scan', icon: QrCode, badge: 'Live', highlight: true, path: '/traceability' },
+        { id: 'AUDIT_REPORTS', name: 'Audit Logs & Mass Balance', icon: FileSpreadsheet, badge: null, path: '/audit-reports' }
       ]
     }
   ];
+
+  // Dynamically filter navigation items based on active role RBAC permissions
+  const filteredNavGroups = ALL_NAV_GROUPS.map(grp => {
+    const visibleItems = grp.items.filter(item => isModuleAllowedForRole(activeRole, item.id));
+    return {
+      ...grp,
+      items: visibleItems
+    };
+  }).filter(grp => grp.items.length > 0);
 
   return (
     <aside className="w-72 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0 flex-shrink-0 z-30 shadow-xs">
       {/* Brand Header */}
       <div className="p-3 border-b border-slate-200">
-        <div className="brand-header p-3.5 rounded-xl shadow-xs text-white space-y-1.5">
+        <button
+          onClick={() => onSelectModule('HOME')}
+          className="w-full text-left brand-header p-3 rounded-xl shadow-xs text-white space-y-1 transition hover:opacity-95"
+        >
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-white text-emerald-800 flex items-center justify-center font-extrabold text-lg shadow-xs flex-shrink-0">
               N
             </div>
-            <div>
+            <div className="truncate">
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-white text-sm tracking-tight">NERAMAC</span>
                 <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-400/40">
                   ASCTS
                 </span>
               </div>
-              <p className="text-[10px] text-emerald-100 font-medium">
-                Full-Stack Enterprise MERN Platform
+              <p className="text-[10px] text-emerald-100 font-medium truncate">
+                Agarwood Traceability System
               </p>
             </div>
           </div>
+        </button>
+
+        {/* Active Role Card & Dropdown Switcher */}
+        <div className="mt-2 relative">
+          <button
+            onClick={() => setRoleSwitcherOpen(!roleSwitcherOpen)}
+            className="w-full p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-between text-left transition"
+          >
+            <div className="truncate pr-1">
+              <div className="text-[9px] uppercase font-extrabold text-slate-400 tracking-wider">
+                Perspective (RBAC)
+              </div>
+              <div className="text-xs font-bold text-slate-900 truncate">
+                {currentRoleConfig.name}
+              </div>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                {currentRoleConfig.allowedModules.length} Mod
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </div>
+          </button>
+
+          {/* Role Dropdown */}
+          {roleSwitcherOpen && (
+            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1.5 max-h-72 overflow-y-auto">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1">
+                Switch Stakeholder Role
+              </div>
+              {USER_ROLES.map(r => (
+                <button
+                  key={r.id}
+                  onClick={() => {
+                    setActiveRole(r.id);
+                    setRoleSwitcherOpen(false);
+                  }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition ${
+                    activeRole === r.id
+                      ? 'bg-emerald-600 text-white font-bold'
+                      : 'hover:bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  <span className="truncate">{r.name}</span>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
+                    activeRole === r.id ? 'bg-emerald-800 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {r.badge}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Navigation Group Items */}
+      {/* Navigation Group Items (Filtered by RBAC) */}
       <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4">
-        {NAV_GROUPS.map((grp, gIdx) => (
+        {filteredNavGroups.map((grp, gIdx) => (
           <div key={gIdx} className="space-y-1">
             <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-2 py-0.5">
               {grp.group}
@@ -142,8 +225,8 @@ export default function EnterpriseSidebar({
                     isActive
                       ? 'bg-emerald-600 text-white shadow-xs font-bold'
                       : item.highlight
-                        ? 'text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100 font-bold border border-emerald-200'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100 font-bold border border-emerald-200/80'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 truncate">
@@ -155,6 +238,8 @@ export default function EnterpriseSidebar({
                       className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
                         isActive
                           ? 'bg-emerald-800 text-white'
+                          : item.highlight
+                          ? 'bg-emerald-200 text-emerald-900 font-bold'
                           : 'bg-slate-100 text-slate-600 border border-slate-200'
                       }`}
                     >
@@ -167,39 +252,30 @@ export default function EnterpriseSidebar({
           </div>
         ))}
 
-        {/* Guided Flow & GIS Studios Quick Access */}
-        <div className="pt-2 border-t border-slate-200 space-y-1.5">
-          <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-2">
-            Interactive Demonstrators
+        {/* Guided Flow Demonstrator */}
+        {isModuleAllowedForRole(activeRole, 'FLOW') && (
+          <div className="pt-2 border-t border-slate-200 space-y-1.5">
+            <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-2">
+              Step-by-Step Flow
+            </div>
+            <button
+              onClick={onOpenLegacyFlow}
+              className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-bold flex items-center justify-between text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 transition"
+            >
+              <div className="flex items-center gap-2">
+                <GitFork className="w-4 h-4 text-teal-700" />
+                <span>14-Step Flow Wizard</span>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-teal-600" />
+            </button>
           </div>
-          <button
-            onClick={onOpenLegacyFlow}
-            className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-bold flex items-center justify-between text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 transition"
-          >
-            <div className="flex items-center gap-2">
-              <GitFork className="w-4 h-4 text-teal-700" />
-              <span>14-Step Flow Wizard</span>
-            </div>
-            <ChevronRight className="w-3.5 h-3.5 text-teal-600" />
-          </button>
-
-          <button
-            onClick={onOpenLegacyGeoStudio}
-            className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-bold flex items-center justify-between text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition"
-          >
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-amber-700" />
-              <span>Field GIS Studio</span>
-            </div>
-            <ChevronRight className="w-3.5 h-3.5 text-amber-600" />
-          </button>
-        </div>
+        )}
       </div>
 
       {/* Footer Info */}
       <div className="p-3 border-t border-slate-200 bg-slate-50 text-[10px] text-slate-500 flex items-center justify-between">
         <span className="font-semibold text-slate-700">Govt. of India (MDoNER)</span>
-        <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">v2.0.0</span>
+        <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">v2.1.0</span>
       </div>
     </aside>
   );
