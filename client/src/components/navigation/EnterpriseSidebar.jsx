@@ -25,6 +25,7 @@ import {
   FileSpreadsheet,
   GitFork,
   MapPin,
+  Footprints,
   ChevronRight,
   Sparkles,
   Lock,
@@ -74,7 +75,8 @@ export default function EnterpriseSidebar({
         { id: 'FARMER_REGISTER', name: 'Farmer Registration Form', icon: UserPlus, badge: 'New', highlight: true, path: '/farmer/register' },
         { id: 'FARMER_APPROVALS', name: 'Maker-Checker Approvals', icon: ShieldCheck, badge: farmerApplications.filter(a => a.status !== 'APPROVED').length || null, highlight: true, path: '/farmer/approvals' },
         { id: 'PLANTATIONS', name: 'Plantations & Parcels', icon: Trees, badge: (trees?.length || 0) + (pologens?.length || 0), path: '/plantations' },
-        { id: 'GEO_STUDIO', name: 'Field GIS & SHA-256 Studio', icon: MapPin, badge: 'AR GPS', path: '/field-agent' },
+        { id: 'FIELD_INSPECTION', name: 'Field Inspection (Geo-Tag)', icon: MapPin, badge: 'GPS+Photo', highlight: true, path: '/field-inspection' },
+        { id: 'GEO_STUDIO', name: 'Field GIS & SHA-256 Studio', icon: GitFork, badge: 'GIS Map', path: '/field-gis-studio' },
         { id: 'INOCULATION', name: 'Cultivation & Inoculation', icon: Syringe, badge: null, path: '/inoculation' }
       ]
     },

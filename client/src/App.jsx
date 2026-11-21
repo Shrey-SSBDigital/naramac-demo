@@ -36,6 +36,7 @@ import AuditReportsModule from './components/modules/AuditReportsModule';
 // 4. Interactive Guided Flow & GIS Studios
 import LiveWorkflowView from './components/LiveWorkflowView';
 import FieldGeoTaggingStudio from './components/FieldGeoTaggingStudio';
+import FieldInspectionModule from './components/modules/FieldInspectionModule';
 
 import { ShieldAlert, ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, Home } from 'lucide-react';
 
@@ -169,6 +170,11 @@ function AppContent() {
               {/* Plantations & Trees GIS */}
               {activeModule === 'PLANTATIONS' && (
                 <PlantationModule onOpenGeoStudio={() => navigate('/field-gis-studio')} />
+              )}
+
+              {/* Field Inspection Wizard (Farmer → Type → GPS → Camera → Submit) */}
+              {activeModule === 'FIELD_INSPECTION' && (
+                <FieldInspectionModule onNavigateToGisStudio={() => navigate('/field-gis-studio')} />
               )}
 
               {/* Cultivation & Inoculation */}
