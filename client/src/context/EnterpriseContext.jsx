@@ -303,6 +303,8 @@ export function EnterpriseProvider({ children }) {
     const saplingsCount = parseInt(appData.saplingsCount) || 0;
     const matureTreesCount = parseInt(appData.matureTreesCount) || 0;
     const estimatedTrees = saplingsCount + matureTreesCount || parseInt(appData.estimatedTrees) || 150;
+    const lat = parseFloat(appData.latitude) || (appData.coordinates ? appData.coordinates[0] : 26.5204);
+    const lng = parseFloat(appData.longitude) || (appData.coordinates ? appData.coordinates[1] : 93.9782);
 
     const newApp = {
       id,
@@ -318,6 +320,10 @@ export function EnterpriseProvider({ children }) {
       village: appData.village || 'Village Gaon',
       dagNumber: appData.dagNumber || 'Dag 100, Patta 25',
       landAreaAcres: parseFloat(appData.landAreaAcres) || 2.5,
+      latitude: lat,
+      longitude: lng,
+      coordinates: [lat, lng],
+      gpsAccuracyMeters: appData.gpsAccuracyMeters || appData.gpsAccuracy || '± 4.5m',
       jamabandiDoc: appData.jamabandiDoc || 'Jamabandi_Uploaded.pdf',
       jamabandiHash: appData.jamabandiHash || `sha256:${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`,
       bankName: appData.bankName || 'State Bank of India',
@@ -386,6 +392,9 @@ export function EnterpriseProvider({ children }) {
     const farmerPrefix = isTripura ? 'FRM-TR' : 'FRM-AS';
     const farmerId = `${farmerPrefix}-${String(farmers.length + 1).padStart(2, '0')}`;
 
+    const homeLat = app.latitude || (app.coordinates ? app.coordinates[0] : (app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[1] : 26.5204));
+    const homeLng = app.longitude || (app.coordinates ? app.coordinates[1] : (app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[0] : 93.9782));
+
     // 1. Create official Farmer record
     const newFarmer = {
       id: farmerId,
@@ -405,14 +414,17 @@ export function EnterpriseProvider({ children }) {
       status: 'ACTIVE',
       registrationDate: new Date().toISOString().split('T')[0],
       verifiedBy: approvalData.approvedBy || 'NERAMAC-MD-01 (Managing Director)',
-      coordinates: app.inspectionReport?.coordinates ? [app.inspectionReport.coordinates[1], app.inspectionReport.coordinates[0]] : [26.5204, 93.9782]
+      coordinates: [homeLat, homeLng],
+      latitude: homeLat,
+      longitude: homeLng,
+      gpsAccuracyMeters: app.gpsAccuracyMeters || '± 4.5m'
     };
 
     // 2. Create Plantation record
     const pltPrefix = isTripura ? 'PLT-TR' : 'PLT-AS';
     const pltId = `${pltPrefix}-${String(plantations.length + 1).padStart(2, '0')}`;
-    const lat = app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[1] : 26.5204;
-    const lng = app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[0] : 93.9782;
+    const lat = homeLat;
+    const lng = homeLng;
 
     const newPlantation = {
       id: pltId,
@@ -553,10 +565,19 @@ export function EnterpriseProvider({ children }) {
 
   // 1. Farmer Management
   const addFarmer = (farmerData) => {
-    const id = `FRM-AS-${String(farmers.length + 1).padStart(2, '0')}`;
+    const isTripura = farmerData.state === 'Tripura' || farmerData.cluster?.includes('Tripura');
+    const prefix = isTripura ? 'FRM-TR' : 'FRM-AS';
+    const id = `${prefix}-${String(farmers.length + 1).padStart(2, '0')}`;
+    const lat = parseFloat(farmerData.latitude || farmerData.lat) || (farmerData.coordinates ? farmerData.coordinates[0] : (isTripura ? 24.4632 : 26.5204));
+    const lng = parseFloat(farmerData.longitude || farmerData.lng) || (farmerData.coordinates ? farmerData.coordinates[1] : (isTripura ? 92.2144 : 93.9782));
+
     const newFarmer = {
       id,
       ...farmerData,
+      latitude: lat,
+      longitude: lng,
+      coordinates: [lat, lng],
+      gpsAccuracyMeters: farmerData.gpsAccuracyMeters || farmerData.gpsAccuracy || '± 4.5m',
       status: 'ACTIVE',
       registrationDate: new Date().toISOString().split('T')[0],
       verifiedBy: 'NERAMAC Field Officer'
@@ -976,10 +997,16 @@ export function EnterpriseProvider({ children }) {
     });
 
     const targetTree = trees.find(t => t.id === harvest.treeId);
+    const fellingOrderNo = harvest.dfoSanctionNumber ||
+      permits.find(p => (p.permitType?.toLowerCase().includes('felling') || p.permitNumber?.startsWith('DFO/')) && (p.treeId === harvest.treeId || p.authorisationId === harvestId))?.permitNumber ||
+      'DFO/GLT/2026/HARV-379';
+    const tpNumber = fellingData.transitPassNumber || harvest.transitPassNumber || `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`;
+
     const newBatch = {
       id: batchId,
       harvestAuthId: harvestId,
       treeId: harvest.treeId,
+      fellingOrderNumber: fellingOrderNo,
       plantingYear: harvest.plantingYear || targetTree?.plantingYear || 2014,
       treeAgeYears: harvest.treeAgeYears || targetTree?.ageYears || 12,
       farmerId: harvest.farmerId,
@@ -993,23 +1020,52 @@ export function EnterpriseProvider({ children }) {
       currentCustodian: 'FIELD_AGENT',
       status: 'READY_FOR_DISPATCH',
       parentOfAggregation: null,
-      transitPassNumber: `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`,
+      transitPassNumber: tpNumber,
       harvestTimestamp: new Date().toISOString(),
       stumpPhotoSha256: photoHash,
       portablePrinterTag: `BAR-${batchId}-QR`
     };
 
+    // Auto-create official State Forest Transit Pass (Form II) in permits repository
+    const newTransitPermit = {
+      id: `PMT-TP-${Date.now().toString().slice(-4)}`,
+      permitNumber: tpNumber,
+      permitType: 'State Forest Transit Pass (Form II)',
+      type: 'TRANSIT_PASS',
+      treeId: harvest.treeId,
+      batchId: batchId,
+      plantingYear: harvest.plantingYear || targetTree?.plantingYear || 2014,
+      treeAgeYears: harvest.treeAgeYears || targetTree?.ageYears || 12,
+      authorisationId: harvestId,
+      fellingOrderNumber: fellingOrderNo,
+      issuingAuthority: harvest.dfoDivision ? `Range Forest Officer, ${harvest.dfoDivision.replace('DFO', 'Range')}` : 'Forest Range Officer, Bokakhat/Golaghat Range, Assam',
+      officerName: 'M. C. Hazarika, AFS (Range Forest Officer)',
+      beneficiaryFarmerId: harvest.farmerId,
+      beneficiaryName: `${harvest.farmerName} (NERAMAC Logistics: AS-05-C-8812)`,
+      issueDate: new Date().toISOString().split('T')[0],
+      expiryDate: '2026-06-30',
+      consignmentWeightKg: cleanedKg,
+      destination: 'Golaghat Cluster Aggregation Depot',
+      status: 'ACTIVE',
+      sanctionedFileUrl: `/permits/TP_${batchId}.pdf`,
+      verificationHash: photoHash,
+      documentHash: photoHash,
+      linkedEntities: [harvest.treeId, batchId, harvestId]
+    };
+
     const updatedBatches = [newBatch, ...harvestBatches];
     const updatedTrees = trees.map(t => t.id === harvest.treeId ? { ...t, status: 'HARVESTED' } : t);
+    const updatedPermits = [newTransitPermit, ...permits];
 
     setHarvests(updatedHarvests);
     setHarvestBatches(updatedBatches);
     setTrees(updatedTrees);
+    setPermits(updatedPermits);
 
-    persistState({ harvests: updatedHarvests, harvestBatches: updatedBatches, trees: updatedTrees });
-    logAudit('FELL_AND_CREATE_BATCH', 'Harvest Recording', `Field Agent confirmed tree ${harvest.treeId}, felling weighment ${cleanedKg}kg. Minted Harvest Batch ${batchId}`, batchId);
-    addToast(`Tree ${harvest.treeId} felling confirmed! Harvest Batch ${batchId} generated (${cleanedKg} kg)`);
-    return { batch: newBatch, harvest: updatedHarvests.find(h => h.id === harvestId) };
+    persistState({ harvests: updatedHarvests, harvestBatches: updatedBatches, trees: updatedTrees, permits: updatedPermits });
+    logAudit('FELL_AND_CREATE_BATCH', 'Harvest Recording', `Field Agent confirmed tree ${harvest.treeId}, felling weighment ${cleanedKg}kg. Minted Harvest Batch ${batchId} and State Forest e-TP ${tpNumber}`, batchId);
+    addToast(`Tree ${harvest.treeId} felling confirmed! Harvest Batch ${batchId} & e-TP ${tpNumber} generated (${cleanedKg} kg)`);
+    return { batch: newBatch, harvest: updatedHarvests.find(h => h.id === harvestId), transitPermit: newTransitPermit };
   };
 
   const approveHarvestAndFell = (harvestId, dfoSanctionNumber, woodWeightKg, resinGrade = 'GRADE_A_DARK_RESIN') => {

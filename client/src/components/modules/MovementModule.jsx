@@ -116,21 +116,66 @@ export default function MovementModule() {
     resinGrade: 'GRADE_A_DARK_RESIN'
   });
 
+  // Available Form II State Transit Passes (filtered strictly for transit passes)
+  const availableTransitPasses = useMemo(() => {
+    const list = [];
+    const seen = new Set();
+
+    (permits || []).forEach(p => {
+      const pNum = p.permitNumber || p.number;
+      const isTransit = (p.permitType?.toLowerCase().includes('transit') || pNum?.startsWith('TP/')) && !pNum?.startsWith('DFO/');
+      if (isTransit && pNum && !seen.has(pNum)) {
+        seen.add(pNum);
+        list.push({
+          permitNumber: pNum,
+          batchId: p.batchId || null,
+          treeId: p.treeId || null,
+          status: p.status || 'ACTIVE',
+          farmerName: p.beneficiaryName || null
+        });
+      }
+    });
+
+    (harvestBatches || []).forEach(b => {
+      if (b.transitPassNumber && b.transitPassNumber.startsWith('TP/') && !seen.has(b.transitPassNumber)) {
+        seen.add(b.transitPassNumber);
+        list.push({
+          permitNumber: b.transitPassNumber,
+          batchId: b.id,
+          treeId: b.treeId,
+          status: 'ACTIVE',
+          farmerName: b.farmerName
+        });
+      }
+    });
+
+    return list;
+  }, [permits, harvestBatches]);
+
   // Open Modal Helpers
-  const openFarmDispatchModal = (preferredBatchId) => {
+  const openFarmDispatchModal = (preferredBatchId, intentDetails = {}) => {
     const b = (preferredBatchId && harvestBatches.find(x => x.id === preferredBatchId)) ||
       harvestBatches.find(x => x.status === 'IN_STOCK' || x.status === 'READY_FOR_DISPATCH') ||
       harvestBatches[0];
     const t = trees?.find(x => x.id === b?.treeId);
-    const linkedPermit = permits?.find(p => p.batchId === b?.id || p.treeId === b?.treeId);
+
+    const matchingTP = availableTransitPasses.find(p => p.batchId === b?.id || p.treeId === b?.treeId);
+    const linkedTransitPass = intentDetails.transitPassNumber || b?.transitPassNumber || matchingTP?.permitNumber || `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const linkedFellingPermit = permits?.find(p =>
+      (p.permitType?.toLowerCase().includes('felling') || p.permitNumber?.startsWith('DFO/')) &&
+      (p.batchId === b?.id || p.treeId === b?.treeId)
+    );
+    const linkedHarvest = harvests?.find(h => h.treeId === b?.treeId || h.id === b?.harvestAuthId);
+    const dfoSanction = intentDetails.fellingOrderNumber || b?.fellingOrderNumber || linkedFellingPermit?.permitNumber || linkedHarvest?.dfoSanctionNumber || 'DFO/GLT/2026/HARV-379';
 
     setFarmForm({
-      batchId: b ? b.id : 'HBT-AS-2026-003',
-      treeId: b?.treeId || t?.id || 'TRE-AS-001',
+      batchId: b ? b.id : (intentDetails.batchId || 'HBT-AS-2026-003'),
+      treeId: b?.treeId || t?.id || intentDetails.treeId || 'TRE-AS-001',
       plantingYear: b?.plantingYear || t?.plantingYear || 2014,
       treeAgeYears: b?.treeAgeYears || t?.ageYears || 12,
       variety: t?.variety || 'Aquilaria malaccensis',
-      fellingOrderNumber: b?.fellingOrderNumber || 'DFO/GLT/2026/HARV-379',
+      fellingOrderNumber: dfoSanction,
       resinGrade: b?.resinGrade || 'GRADE_A_DARK_RESIN',
       movementType: 'FARM_TO_AGGREGATOR',
       sourceType: 'Farmer Plot',
@@ -142,10 +187,10 @@ export default function MovementModule() {
       destinationName: 'Golaghat Cluster Aggregation Depot',
       destinationFacilityId: 'DEPOT-GLT-01',
       receivingCustodian: 'B. C. Kalita (Depot Superintendent)',
-      transitPassNumber: b?.transitPassNumber || linkedPermit?.permitNumber || `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`,
+      transitPassNumber: linkedTransitPass,
       vehicleNumber: 'AS-05-C-8812',
       driverName: 'Ramesh Gogoi',
-      dispatchWeightKg: b?.netWeightKg || 42.00
+      dispatchWeightKg: b?.netWeightKg || 38.5
     });
     setIsFarmModalOpen(true);
   };
@@ -177,7 +222,7 @@ export default function MovementModule() {
   useEffect(() => {
     if (dispatchIntent) {
       if (dispatchIntent.type === 'FARM_TO_AGGREGATOR') {
-        openFarmDispatchModal(dispatchIntent.batchId);
+        openFarmDispatchModal(dispatchIntent.batchId, dispatchIntent);
       } else if (dispatchIntent.type === 'AGGREGATOR_TO_DISTILLERY') {
         openDepotDispatchModal(dispatchIntent.batchId);
       }
@@ -207,7 +252,16 @@ export default function MovementModule() {
     const b = harvestBatches.find(x => x.id === batchId);
     if (!b) return;
     const t = trees?.find(x => x.id === b.treeId);
-    const linkedPermit = permits?.find(p => p.batchId === b.id || p.treeId === b.treeId);
+    const matchingTP = availableTransitPasses.find(p => p.batchId === b.id || p.treeId === b.treeId);
+    const linkedTransitPass = b.transitPassNumber || matchingTP?.permitNumber || `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const linkedFellingPermit = permits?.find(p =>
+      (p.permitType?.toLowerCase().includes('felling') || p.permitNumber?.startsWith('DFO/')) &&
+      (p.batchId === b.id || p.treeId === b.treeId)
+    );
+    const linkedHarvest = harvests?.find(h => h.treeId === b.treeId || h.id === b.harvestAuthId);
+    const dfoSanction = b.fellingOrderNumber || linkedFellingPermit?.permitNumber || linkedHarvest?.dfoSanctionNumber || 'DFO/GLT/2026/HARV-379';
+
     setFarmForm(prev => ({
       ...prev,
       batchId: b.id,
@@ -215,12 +269,12 @@ export default function MovementModule() {
       plantingYear: b.plantingYear || t?.plantingYear || 2014,
       treeAgeYears: b.treeAgeYears || t?.ageYears || 12,
       variety: t?.variety || 'Aquilaria malaccensis',
-      farmerName: b.farmerName || 'Bhaben Saikia',
-      farmerId: b.farmerId || 'FRM-AS-01',
-      sourceName: `${b.farmerName || 'Bhaben Saikia'} Homestead (${b.plantationId || 'PLT-AS-01'})`,
-      dispatchWeightKg: b.netWeightKg || 42.0,
-      transitPassNumber: b.transitPassNumber || linkedPermit?.permitNumber || `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`,
-      fellingOrderNumber: b.fellingOrderNumber || 'DFO/GLT/2026/HARV-379',
+      farmerName: b.farmerName || t?.farmerName || 'Registered Grower',
+      farmerId: b.farmerId || t?.farmerId || 'FRM-AS-01',
+      sourceName: `${b.farmerName || t?.farmerName || 'Registered Grower'} Homestead (${b.plantationId || t?.plantationId || 'PLT-AS-01'})`,
+      dispatchWeightKg: b.netWeightKg || 38.5,
+      transitPassNumber: linkedTransitPass,
+      fellingOrderNumber: dfoSanction,
       resinGrade: b.resinGrade || 'GRADE_A_DARK_RESIN'
     }));
   };
@@ -230,7 +284,16 @@ export default function MovementModule() {
     const t = trees?.find(x => x.id === treeId);
     if (!t) return;
     const matchingBatch = harvestBatches.find(b => b.treeId === treeId);
-    const linkedPermit = permits?.find(p => p.treeId === treeId);
+    const matchingTP = availableTransitPasses.find(p => p.treeId === treeId || (matchingBatch && p.batchId === matchingBatch.id));
+    const linkedTransitPass = matchingBatch?.transitPassNumber || matchingTP?.permitNumber || `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const linkedFellingPermit = permits?.find(p =>
+      (p.permitType?.toLowerCase().includes('felling') || p.permitNumber?.startsWith('DFO/')) &&
+      (p.treeId === treeId || (matchingBatch && p.batchId === matchingBatch.id))
+    );
+    const linkedHarvest = harvests?.find(h => h.treeId === treeId || (matchingBatch && h.id === matchingBatch.harvestAuthId));
+    const dfoSanction = matchingBatch?.fellingOrderNumber || linkedFellingPermit?.permitNumber || linkedHarvest?.dfoSanctionNumber || 'DFO/GLT/2026/HARV-379';
+
     setFarmForm(prev => ({
       ...prev,
       treeId: t.id,
@@ -238,12 +301,12 @@ export default function MovementModule() {
       plantingYear: t.plantingYear || 2014,
       treeAgeYears: t.ageYears || 12,
       variety: t.variety || 'Aquilaria malaccensis',
-      farmerName: t.farmerName || 'Bhaben Saikia',
+      farmerName: t.farmerName || 'Registered Grower',
       farmerId: t.farmerId || 'FRM-AS-01',
-      sourceName: `${t.farmerName || 'Bhaben Saikia'} Homestead (${t.plantationId || 'PLT-AS-01'})`,
+      sourceName: `${t.farmerName || 'Registered Grower'} Homestead (${t.plantationId || 'PLT-AS-01'})`,
       dispatchWeightKg: matchingBatch?.netWeightKg || 38.5,
-      transitPassNumber: matchingBatch?.transitPassNumber || linkedPermit?.permitNumber || `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`,
-      fellingOrderNumber: matchingBatch?.fellingOrderNumber || 'DFO/GLT/2026/HARV-379',
+      transitPassNumber: linkedTransitPass,
+      fellingOrderNumber: dfoSanction,
       resinGrade: matchingBatch?.resinGrade || 'GRADE_A_DARK_RESIN'
     }));
   };
@@ -1369,9 +1432,28 @@ export default function MovementModule() {
           {/* Transit Pass and Vehicle Details */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] font-bold text-slate-700">Transit Pass (e-TP) *</label>
-                {permits && permits.some(p => p.permitType?.toLowerCase().includes('transit') || p.permitNumber?.startsWith('TP/')) && (
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                State Transit Pass (Form II e-TP) *
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  value={farmForm.transitPassNumber}
+                  onChange={(e) => setFarmForm({ ...farmForm, transitPassNumber: e.target.value })}
+                  className="w-full px-3 py-2 pr-20 border rounded-lg font-mono bg-white font-black text-emerald-950 text-xs border-emerald-400 focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                  placeholder="TP/FOR/GLT/2026/..."
+                />
+                {farmForm.transitPassNumber?.startsWith('TP/') && (
+                  <span className="absolute right-1.5 top-1.5 text-[9px] font-black uppercase px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded border border-emerald-300">
+                    Form II Active
+                  </span>
+                )}
+              </div>
+
+              {availableTransitPasses.length > 0 && (
+                <div className="mt-1 flex items-center gap-1">
+                  <span className="text-[10px] text-slate-500 font-bold shrink-0">Available e-TP:</span>
                   <select
                     onChange={(e) => {
                       if (e.target.value) {
@@ -1379,28 +1461,20 @@ export default function MovementModule() {
                       }
                     }}
                     value={farmForm.transitPassNumber}
-                    className="text-[10px] font-mono border rounded px-1.5 py-0.5 bg-slate-50 text-slate-700 hover:bg-white"
+                    className="w-full text-[10px] font-mono border border-slate-300 rounded px-1.5 py-0.5 bg-slate-50 text-slate-700 hover:bg-white truncate"
                     title="Select State Forest e-Transit Pass"
                   >
-                    <option value="">Choose e-TP...</option>
-                    {permits.filter(p => p.permitType?.toLowerCase().includes('transit') || p.permitNumber?.startsWith('TP/')).map(p => (
-                      <option key={p.id || p.permitNumber} value={p.permitNumber}>
-                        {p.permitNumber} ({p.status || 'ACTIVE'})
+                    <option value="">Choose active e-TP...</option>
+                    {availableTransitPasses.map(p => (
+                      <option key={p.permitNumber} value={p.permitNumber}>
+                        {p.permitNumber} {p.batchId ? `• ${p.batchId}` : ''}
                       </option>
                     ))}
                   </select>
-                )}
-              </div>
-              <input
-                type="text"
-                required
-                value={farmForm.transitPassNumber}
-                onChange={(e) => setFarmForm({ ...farmForm, transitPassNumber: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-mono bg-white font-bold text-emerald-900"
-                placeholder="TP/FOR/GLT/2026/..."
-              />
-              <span className="text-[10px] text-slate-500 block mt-0.5">
-                Form II Forest Transit Pass for legal road transport
+                </div>
+              )}
+              <span className="text-[10px] text-slate-500 block mt-1">
+                Mandatory under Assam Forest Reg. 1891 for legal road transport
               </span>
             </div>
             <div>

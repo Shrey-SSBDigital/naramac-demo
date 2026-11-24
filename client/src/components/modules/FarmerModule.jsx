@@ -20,7 +20,10 @@ import {
   CheckCircle2,
   Calendar,
   Tag,
-  Camera
+  Camera,
+  Crosshair,
+  Navigation,
+  ExternalLink
 } from 'lucide-react';
 
 export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
@@ -60,8 +63,41 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
     dagNumber: '',
     landAreaAcres: 2.5,
     treeCount: 200,
-    coordinates: [26.5204, 93.9782]
+    latitude: '26.520412',
+    longitude: '93.978245',
+    gpsAccuracy: '± 4.5m',
+    coordinates: [26.520412, 93.978245]
   });
+
+  const [isLocatingModal, setIsLocatingModal] = useState(false);
+
+  const handleCaptureModalLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsLocatingModal(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude.toFixed(6);
+        const lng = position.coords.longitude.toFixed(6);
+        const acc = Math.round(position.coords.accuracy);
+        setFarmerFormData(prev => ({
+          ...prev,
+          latitude: lat,
+          longitude: lng,
+          coordinates: [parseFloat(lat), parseFloat(lng)],
+          gpsAccuracy: `± ${acc}m`
+        }));
+        setIsLocatingModal(false);
+      },
+      (error) => {
+        setIsLocatingModal(false);
+        console.warn('Geolocation error:', error);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
+  };
 
   const [plantationForm, setPlantationForm] = useState({
     name: '',
@@ -100,7 +136,15 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
   const handleRegisterSubmit = (e) => {
     e.preventDefault();
     if (!farmerFormData.name || !farmerFormData.village) return;
-    const newF = addFarmer(farmerFormData);
+    const lat = parseFloat(farmerFormData.latitude) || 26.520412;
+    const lng = parseFloat(farmerFormData.longitude) || 93.978245;
+    const newF = addFarmer({
+      ...farmerFormData,
+      latitude: lat,
+      longitude: lng,
+      coordinates: [lat, lng],
+      gpsAccuracyMeters: farmerFormData.gpsAccuracy || '± 4.5m'
+    });
     setIsRegisterModalOpen(false);
     setSelectedFarmer(newF);
     setActiveTab('HIERARCHY');
@@ -118,7 +162,10 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
       dagNumber: '',
       landAreaAcres: 2.5,
       treeCount: 200,
-      coordinates: [26.5204, 93.9782]
+      latitude: '26.520412',
+      longitude: '93.978245',
+      coordinates: [26.520412, 93.978245],
+      gpsAccuracy: '± 4.5m'
     });
   };
 
@@ -827,7 +874,7 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
                     <Building className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Statutory Land Ownership & Revenue Title</span>
                   </h4>
-                  <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                     <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
                       <span className="text-[10px] text-slate-500 font-semibold uppercase">Revenue Records</span>
                       <div className="font-bold text-slate-900">{selectedFarmer.dagNumber}</div>
@@ -837,6 +884,30 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
                       <span className="text-[10px] text-slate-500 font-semibold uppercase">Total Plantation Holding</span>
                       <div className="font-bold text-slate-900">{selectedFarmer.landAreaAcres} Acres</div>
                       <div className="text-[11px] text-emerald-700 font-semibold">{selectedFarmer.treeCount} Agarwood Trees</div>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                      <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center justify-between">
+                        <span>Home Location (GPS)</span>
+                        {selectedFarmer.coordinates && (
+                          <a
+                            href={`https://www.google.com/maps?q=${selectedFarmer.coordinates[0]},${selectedFarmer.coordinates[1]}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-emerald-800 font-bold hover:underline flex items-center gap-0.5"
+                          >
+                            <ExternalLink className="w-2.5 h-2.5" />
+                            <span>Map</span>
+                          </a>
+                        )}
+                      </span>
+                      <div className="font-mono font-bold text-slate-900 text-xs">
+                        {selectedFarmer.coordinates
+                          ? `${Number(selectedFarmer.coordinates[0]).toFixed(4)}°N, ${Number(selectedFarmer.coordinates[1]).toFixed(4)}°E`
+                          : '26.5204°N, 93.9782°E'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-mono">
+                        {selectedFarmer.cluster}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1216,6 +1287,91 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
                 onChange={(e) => setFarmerFormData({ ...farmerFormData, dagNumber: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg"
               />
+            </div>
+          </div>
+
+          {/* Home Geolocation (Lat, Lng) */}
+          <div className="p-3 bg-emerald-50/60 border border-emerald-300 rounded-xl space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-[11px] font-black text-emerald-950 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Home Location (GPS Coordinates) *</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleCaptureModalLocation}
+                disabled={isLocatingModal}
+                className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-2xs"
+              >
+                <Crosshair className={`w-3 h-3 ${isLocatingModal ? 'animate-spin' : ''}`} />
+                <span>{isLocatingModal ? 'Locating...' : 'Take Current Location'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <span className="text-[10px] text-slate-700 font-bold block mb-0.5">Latitude (Lat) *</span>
+                <input
+                  type="number"
+                  step="0.000001"
+                  required
+                  placeholder="e.g. 26.520412"
+                  value={farmerFormData.latitude}
+                  onChange={(e) => setFarmerFormData({ ...farmerFormData, latitude: e.target.value })}
+                  className="w-full px-2.5 py-1.5 text-xs font-mono font-bold border rounded-lg bg-white text-slate-900 border-slate-300"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-700 font-bold block mb-0.5">Longitude (Lng) *</span>
+                <input
+                  type="number"
+                  step="0.000001"
+                  required
+                  placeholder="e.g. 93.978245"
+                  value={farmerFormData.longitude}
+                  onChange={(e) => setFarmerFormData({ ...farmerFormData, longitude: e.target.value })}
+                  className="w-full px-2.5 py-1.5 text-xs font-mono font-bold border rounded-lg bg-white text-slate-900 border-slate-300"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1 text-[10px]">
+              <div className="flex items-center gap-1.5 text-slate-600 font-semibold">
+                <span>Presets:</span>
+                <button
+                  type="button"
+                  onClick={() => setFarmerFormData(prev => ({ ...prev, latitude: '26.520412', longitude: '93.978245', gpsAccuracy: '± 4.0m' }))}
+                  className="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono font-bold text-emerald-900 hover:bg-emerald-50"
+                >
+                  Golaghat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFarmerFormData(prev => ({ ...prev, latitude: '26.001240', longitude: '92.854210', gpsAccuracy: '± 4.0m' }))}
+                  className="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono font-bold text-teal-900 hover:bg-teal-50"
+                >
+                  Hojai
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFarmerFormData(prev => ({ ...prev, latitude: '24.463215', longitude: '92.214430', gpsAccuracy: '± 4.0m' }))}
+                  className="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono font-bold text-blue-900 hover:bg-blue-50"
+                >
+                  Kadamtala
+                </button>
+              </div>
+
+              {farmerFormData.latitude && farmerFormData.longitude && (
+                <a
+                  href={`https://www.google.com/maps?q=${farmerFormData.latitude},${farmerFormData.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-800 font-bold hover:underline flex items-center gap-0.5"
+                >
+                  <ExternalLink className="w-2.5 h-2.5" />
+                  <span>Map</span>
+                </a>
+              )}
             </div>
           </div>
 

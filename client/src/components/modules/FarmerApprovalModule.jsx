@@ -279,29 +279,51 @@ export default function FarmerApprovalModule({ onNavigate }) {
               </div>
 
               {/* Revenue Title & Farmer Profile Details */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Revenue Title</span>
-                  <span className="font-bold text-slate-800">{selectedApp.dagNumber}</span>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-500 block">Revenue Title</span>
+                  <span className="font-bold text-slate-900">{selectedApp.dagNumber}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Homestead Area</span>
-                  <span className="font-bold text-slate-800">{selectedApp.landAreaAcres} Acres</span>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-500 block">Homestead Area</span>
+                  <span className="font-bold text-slate-900">{selectedApp.landAreaAcres} Acres</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Grower Verification</span>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-500 block">Home Coordinates (GPS)</span>
+                  <div className="flex items-center gap-1 font-mono font-bold text-emerald-950">
+                    <MapPin className="w-3 h-3 text-emerald-700 flex-shrink-0" />
+                    <span className="text-[11px]">
+                      {selectedApp.latitude
+                        ? `${Number(selectedApp.latitude).toFixed(4)}°N, ${Number(selectedApp.longitude).toFixed(4)}°E`
+                        : '26.5204°N, 93.9782°E'}
+                    </span>
+                    {(selectedApp.latitude || selectedApp.coordinates) && (
+                      <a
+                        href={`https://www.google.com/maps?q=${selectedApp.latitude || (selectedApp.coordinates ? selectedApp.coordinates[0] : 26.5204)},${selectedApp.longitude || (selectedApp.coordinates ? selectedApp.coordinates[1] : 93.9782)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-800 hover:text-emerald-950 font-bold ml-0.5"
+                        title="View on Google Maps"
+                      >
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-500 block">Grower Verification</span>
                   <span className="font-mono font-bold text-emerald-800">Verified Producer</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Jamabandi Document</span>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-500 block">Jamabandi Document</span>
                   <span className="font-mono text-emerald-700 font-semibold truncate block">{selectedApp.jamabandiDoc}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block">DBT Bank Account</span>
-                  <span className="font-bold text-slate-800">{selectedApp.bankName}</span>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-500 block">DBT Bank Account</span>
+                  <span className="font-bold text-slate-900">{selectedApp.bankName}</span>
                 </div>
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Declared Trees</span>
+                <div className="sm:col-span-2">
+                  <span className="text-[10px] font-extrabold uppercase text-slate-500 block">Declared Trees</span>
                   <span className="font-bold text-emerald-800">{selectedApp.estimatedTrees} ({selectedApp.saplingsCount} young / {selectedApp.matureTreesCount} mature)</span>
                 </div>
               </div>

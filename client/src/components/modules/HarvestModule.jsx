@@ -52,6 +52,7 @@ export default function HarvestModule() {
     plantations,
     pologens,
     inoculations,
+    permits,
     activeRole,
     setDispatchIntent,
     rearmFarmerTrees,
@@ -299,6 +300,20 @@ export default function HarvestModule() {
       isMature: ageYears >= 7,
       label: `Planted in ${plantingYear} • ${ageYears} yrs old`
     };
+  };
+
+  // Resolves official DFO Felling Sanction Order for any harvest batch or linked tree
+  const resolveBatchFellingOrder = (batch) => {
+    if (!batch) return 'DFO/GLT/2026/HARV-379';
+    if (batch.fellingOrderNumber) return batch.fellingOrderNumber;
+    const linkedPermit = permits?.find(p =>
+      (p.permitType?.toLowerCase().includes('felling') || p.permitNumber?.startsWith('DFO/')) &&
+      (p.batchId === batch.id || p.treeId === batch.treeId)
+    );
+    if (linkedPermit?.permitNumber) return linkedPermit.permitNumber;
+    const linkedHarvest = harvests?.find(h => h.treeId === batch.treeId || h.id === batch.harvestAuthId);
+    if (linkedHarvest?.dfoSanctionNumber) return linkedHarvest.dfoSanctionNumber;
+    return 'DFO/GLT/2026/HARV-379';
   };
 
   // Clean up app webcam
@@ -1807,7 +1822,7 @@ export default function HarvestModule() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">DFO Felling Sanction:</span>
-                  <span className="font-mono text-slate-800 font-bold">{batch.fellingOrderNumber || 'DFO/GLT/2026/HARV-379'}</span>
+                  <span className="font-mono text-slate-800 font-bold">{resolveBatchFellingOrder(batch)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">Transit Pass (e-TP):</span>
@@ -1835,7 +1850,14 @@ export default function HarvestModule() {
                   <button
                     type="button"
                     onClick={() => {
-                      setDispatchIntent({ type: 'FARM_TO_AGGREGATOR', batchId: batch.id });
+                      const fellingNo = resolveBatchFellingOrder(batch);
+                      setDispatchIntent({
+                        type: 'FARM_TO_AGGREGATOR',
+                        batchId: batch.id,
+                        transitPassNumber: batch.transitPassNumber,
+                        fellingOrderNumber: fellingNo,
+                        treeId: batch.treeId
+                      });
                       navigate('/movement');
                     }}
                     className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-center text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
@@ -2648,7 +2670,7 @@ export default function HarvestModule() {
                     <div>
                       <span className="text-slate-600 block text-[10px] font-bold">DFO Felling Sanction Order:</span>
                       <span className="font-mono font-black text-teal-900">
-                        {selectedBatchForPass.fellingOrderNumber || 'DFO/GLT/2026/HARV-379'}
+                        {resolveBatchFellingOrder(selectedBatchForPass)}
                       </span>
                     </div>
                     <div>
@@ -2699,8 +2721,16 @@ export default function HarvestModule() {
                   type="button"
                   onClick={() => {
                     const batchId = selectedBatchForPass.id;
+                    const tpNumber = selectedBatchForPass.transitPassNumber;
+                    const fellingNo = resolveBatchFellingOrder(selectedBatchForPass);
                     setSelectedBatchForPass(null);
-                    setDispatchIntent({ type: 'FARM_TO_AGGREGATOR', batchId });
+                    setDispatchIntent({
+                      type: 'FARM_TO_AGGREGATOR',
+                      batchId,
+                      transitPassNumber: tpNumber,
+                      fellingOrderNumber: fellingNo,
+                      treeId: selectedBatchForPass.treeId
+                    });
                     navigate('/movement');
                   }}
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black shadow-xs transition flex items-center gap-1.5"

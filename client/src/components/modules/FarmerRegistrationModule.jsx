@@ -15,7 +15,10 @@ import {
   ArrowRight,
   AlertCircle,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Crosshair,
+  Navigation,
+  Compass
 } from 'lucide-react';
 
 export default function FarmerRegistrationModule({ onNavigate }) {
@@ -29,6 +32,9 @@ export default function FarmerRegistrationModule({ onNavigate }) {
     age: '',
     phone: '',
     residentialAddress: '',
+    latitude: '',
+    longitude: '',
+    gpsAccuracy: '',
     state: 'Assam',
     cluster: 'Golaghat Cluster',
     district: 'Golaghat',
@@ -47,7 +53,54 @@ export default function FarmerRegistrationModule({ onNavigate }) {
     declarationAccepted: false
   });
 
+  const [isLocating, setIsLocating] = useState(false);
   const [submittedApp, setSubmittedApp] = useState(null);
+
+  const handleCaptureLocation = () => {
+    if (!navigator.geolocation) {
+      addToast('Geolocation is not supported by your browser.', 'error');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude.toFixed(6);
+        const lng = position.coords.longitude.toFixed(6);
+        const accuracy = Math.round(position.coords.accuracy);
+
+        setFormData(prev => ({
+          ...prev,
+          latitude: lat,
+          longitude: lng,
+          gpsAccuracy: `± ${accuracy}m`
+        }));
+        setIsLocating(false);
+        addToast(`Captured GPS location: ${lat}, ${lng} (±${accuracy}m)`, 'success');
+      },
+      (error) => {
+        setIsLocating(false);
+        let msg = 'Unable to capture GPS coordinates.';
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = 'Location access denied. You can enter lat/lng manually or click a cluster preset.';
+        } else if (error.code === error.TIMEOUT) {
+          msg = 'Location request timed out. Please try again or click a cluster preset.';
+        }
+        addToast(msg, 'warning');
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
+  };
+
+  const applyCoordinatePreset = (clusterName, lat, lng) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6),
+      gpsAccuracy: '± 3.5m (Cluster Preset)'
+    }));
+    addToast(`Applied ${clusterName} Homestead coordinates: ${lat}, ${lng}`, 'info');
+  };
 
   const handleQuickPreFill = () => {
     setFormData({
@@ -57,6 +110,9 @@ export default function FarmerRegistrationModule({ onNavigate }) {
       age: '49',
       phone: '+91 94351 77201',
       residentialAddress: 'Mohuramukh Gaon, Bokakhat Circle',
+      latitude: '26.520412',
+      longitude: '93.978245',
+      gpsAccuracy: '± 4.2m',
       state: 'Assam',
       cluster: 'Golaghat Cluster',
       district: 'Golaghat',
@@ -74,7 +130,7 @@ export default function FarmerRegistrationModule({ onNavigate }) {
       plantationName: 'Mohuramukh Agarwood Estate',
       declarationAccepted: true
     });
-    addToast('Pre-filled fresh applicant data (Deepak Borah)', 'info');
+    addToast('Pre-filled fresh applicant data with GPS coordinates (Deepak Borah)', 'info');
   };
 
   const handleSubmit = (e) => {
@@ -92,8 +148,15 @@ export default function FarmerRegistrationModule({ onNavigate }) {
       return;
     }
 
+    const latNum = parseFloat(formData.latitude) || 26.520412;
+    const lngNum = parseFloat(formData.longitude) || 93.978245;
+
     const application = submitFarmerApplication({
       ...formData,
+      latitude: latNum,
+      longitude: lngNum,
+      coordinates: [latNum, lngNum],
+      gpsAccuracyMeters: formData.gpsAccuracy || '± 4.5m',
       jamabandiHash: `sha256:${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`
     });
 
@@ -283,6 +346,99 @@ export default function FarmerRegistrationModule({ onNavigate }) {
               />
             </div>
           </div>
+        </div>
+
+        {/* Section 1B: Farmer Homestead Geolocation (Lat, Lng) */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 bg-emerald-100 text-emerald-800 rounded-lg">
+                <Navigation className="w-4 h-4" />
+              </span>
+              <div>
+                <h2 className="text-sm font-black text-slate-900">
+                  Home Location Geotagging (Latitude &amp; Longitude) *
+                </h2>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Capture device GPS or enter homestead coordinates for statutory land plot registration and supply chain verification.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCaptureLocation}
+              disabled={isLocating}
+              className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs whitespace-nowrap self-start sm:self-auto"
+            >
+              <Crosshair className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
+              <span>{isLocating ? 'Capturing Device GPS...' : 'Take Current GPS Location'}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Homestead Latitude (Lat) *
+              </label>
+              <input
+                type="number"
+                step="0.000001"
+                required
+                placeholder="e.g. 26.520412"
+                value={formData.latitude}
+                onChange={e => setFormData({ ...formData, latitude: e.target.value })}
+                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white text-slate-900"
+              />
+              <span className="text-[10px] text-slate-500 font-medium mt-0.5 block">
+                Assam / NE region range: ~24.0° to 28.0° N
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Homestead Longitude (Lng) *
+              </label>
+              <input
+                type="number"
+                step="0.000001"
+                required
+                placeholder="e.g. 93.978245"
+                value={formData.longitude}
+                onChange={e => setFormData({ ...formData, longitude: e.target.value })}
+                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white text-slate-900"
+              />
+              <span className="text-[10px] text-slate-500 font-medium mt-0.5 block">
+                Assam / Tripura region range: ~91.0° to 95.0° E
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                GPS Accuracy &amp; Verification
+              </label>
+              <div className="px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 flex items-center justify-between text-xs min-h-[38px]">
+                <span className="font-mono text-slate-800 font-black text-xs">
+                  {formData.gpsAccuracy || (formData.latitude ? '± 5.0m (Manual)' : 'Awaiting GPS')}
+                </span>
+                {formData.latitude && formData.longitude && (
+                  <a
+                    href={`https://www.google.com/maps?q=${formData.latitude},${formData.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 underline"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span>View Map</span>
+                  </a>
+                )}
+              </div>
+              <span className="text-[10px] text-slate-500 font-medium mt-0.5 block">
+                Live browser GNSS / Mobile satellite fix
+              </span>
+            </div>
+          </div>
+
         </div>
 
         {/* Section 2: Land Revenue & Title Details */}
