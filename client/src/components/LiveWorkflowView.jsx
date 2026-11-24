@@ -57,7 +57,7 @@ export default function LiveWorkflowView({
           Farmer Self-Registration & Homestead Declaration
         </h3>
         <p className="text-xs text-slate-600 leading-relaxed">
-          The grower registers on the NERAMAC portal. In accordance with the Digital Personal Data Protection (DPDP) Act 2023, the Farmer ID is internal to NERAMAC and <strong>never derived from Aadhaar</strong>.
+          The grower registers on the NERAMAC portal. The Farmer ID is internal to NERAMAC and cryptographically isolated.
         </p>
       </div>
 
@@ -129,7 +129,7 @@ export default function LiveWorkflowView({
             className="rounded text-emerald-500 mt-0.5"
           />
           <span>
-            Grower Consent: I hereby register my agarwood plantation under the NERAMAC Traceability Scheme. I confirm that no Aadhaar data is stored on public registers.
+            Grower Consent: I hereby register my agarwood plantation under the NERAMAC Traceability Scheme.
           </span>
         </div>
 
@@ -388,7 +388,7 @@ export default function LiveWorkflowView({
           Grower Harvest Authorisation Application to DFO
         </h3>
         <p className="text-xs text-slate-600 leading-relaxed">
-          The farmer applies through the system to the <strong>Divisional Forest Officer (DFO)</strong> for felling sanction. The platform compiles verified tree age (11.4 yrs) and inoculation maturity (3 yrs) into a statutory verification dossier.
+          The farmer applies through the system to the <strong>Divisional Forest Officer (DFO)</strong> for felling sanction. The platform compiles verified tree age (11.4 yrs) and inoculation maturity (3 yrs) into a statutory verification file.
         </p>
       </div>
 
@@ -811,7 +811,7 @@ export default function LiveWorkflowView({
           </div>
 
           <div className="p-3 bg-white rounded-xl shadow-lg ring-2 ring-emerald-500/40">
-            <QRCodeSVG value="https://trace.neramac.gov.in/verify/PCK-AS-2026-0042" size={120} />
+            <QRCodeSVG value={typeof window !== 'undefined' ? `${window.location.origin}/traceability?batch=PCK-AS-2026-0042` : "https://trace.neramac.gov.in/verify/PCK-AS-2026-0042"} size={120} />
           </div>
         </div>
 
@@ -888,7 +888,7 @@ export default function LiveWorkflowView({
           Buyer Smartphone Scan & Verified Provenance Claim
         </h3>
         <p className="text-xs text-slate-600 leading-relaxed">
-          The international buyer in Dubai scans the QR code on the bottle. The system returns the authentic provenance view while <strong>masking personal farmer details and satellite coordinates</strong> under the DPDP Act 2023.
+          The international buyer in Dubai scans the QR code on the bottle. The system returns the authentic provenance view while <strong>protecting personal grower phone and exact residential coordinates</strong>.
         </p>
       </div>
 
@@ -898,7 +898,7 @@ export default function LiveWorkflowView({
           <div className="w-20 h-3 bg-slate-200 rounded-full mb-4"></div>
           
           <div className="p-3 bg-white rounded-xl shadow ring-4 ring-emerald-500/20 mb-3">
-            <QRCodeSVG value="https://trace.neramac.gov.in/verify/PCK-AS-2026-0042" size={130} />
+            <QRCodeSVG value={typeof window !== 'undefined' ? `${window.location.origin}/traceability?batch=PCK-AS-2026-0042` : "https://trace.neramac.gov.in/verify/PCK-AS-2026-0042"} size={130} />
           </div>
 
           <span className="font-mono text-emerald-400 font-bold text-xs">PCK-AS-2026-0042</span>
@@ -959,7 +959,7 @@ export default function LiveWorkflowView({
           </div>
 
           <div className="p-3 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600">
-            <strong className="text-slate-200">DPDP Act 2023 Masking Note:</strong> Smallholder farmer personal telephone numbers, national identities, and precise cadastral home GPS coordinates are masked to safeguard grower privacy while assuring 100% legal authenticity.
+            <strong className="text-slate-200">Privacy Protection Note:</strong> Smallholder farmer personal telephone numbers and precise cadastral home GPS coordinates are redacted to safeguard grower privacy while assuring 100% legal authenticity.
           </div>
         </div>
       </div>

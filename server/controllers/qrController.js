@@ -26,7 +26,7 @@ exports.verifyPackQR = (req, res) => {
       });
     }
 
-    // Public buyer view with DPDP Act masking
+    // Public buyer view with privacy protection
     res.json({
       success: true,
       view: 'PUBLIC_BUYER_PROVENANCE',

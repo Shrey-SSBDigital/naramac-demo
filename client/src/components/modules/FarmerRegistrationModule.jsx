@@ -28,8 +28,7 @@ export default function FarmerRegistrationModule({ onNavigate }) {
     gender: 'Male',
     age: '',
     phone: '',
-    aadhaarRaw: '',
-    aadhaarMasked: '',
+    residentialAddress: '',
     state: 'Assam',
     cluster: 'Golaghat Cluster',
     district: 'Golaghat',
@@ -48,48 +47,34 @@ export default function FarmerRegistrationModule({ onNavigate }) {
     declarationAccepted: false
   });
 
-  const [showAadhaar, setShowAadhaar] = useState(false);
   const [submittedApp, setSubmittedApp] = useState(null);
-
-  // Mask Aadhaar according to DPDP Act 2023 (only last 4 digits visible)
-  const handleAadhaarChange = (e) => {
-    const raw = e.target.value.replace(/\D/g, '').slice(0, 12);
-    const last4 = raw.slice(-4);
-    const masked = raw.length >= 4 ? `XXXX-XXXX-${last4}` : raw;
-    setFormData(prev => ({
-      ...prev,
-      aadhaarRaw: raw,
-      aadhaarMasked: masked
-    }));
-  };
 
   const handleQuickPreFill = () => {
     setFormData({
-      farmerName: 'Tarun Chandra Das',
-      fatherName: 'Late Bipin Chandra Das',
+      farmerName: 'Deepak Borah',
+      fatherName: 'Late Khagen Borah',
       gender: 'Male',
-      age: '51',
-      phone: '+91 94355 62810',
-      aadhaarRaw: '584192038412',
-      aadhaarMasked: 'XXXX-XXXX-8412',
+      age: '49',
+      phone: '+91 94351 77201',
+      residentialAddress: 'Mohuramukh Gaon, Bokakhat Circle',
       state: 'Assam',
       cluster: 'Golaghat Cluster',
       district: 'Golaghat',
-      subdivision: 'Golaghat Sadar',
-      village: 'Habigaon, Mouza Moukhowa',
-      dagNumber: 'Dag 245, Patta 61',
-      landAreaAcres: '3.8',
-      jamabandiDoc: 'Jamabandi_GLT_Dag245_Patta61.pdf',
+      subdivision: 'Bokakhat',
+      village: 'Mohuramukh Gaon, Mouza Bokakhat',
+      dagNumber: 'Dag 388, Patta 72',
+      landAreaAcres: '3.5',
+      jamabandiDoc: 'Jamabandi_GLT_Dag388_Patta72.pdf',
       bankName: 'State Bank of India',
-      bankAccountNumber: '30981245671',
+      bankAccountNumber: '30981249910',
       ifscCode: 'SBIN0000083',
-      plantingYear: '2019',
-      saplingsCount: '320',
-      matureTreesCount: '140',
-      plantationName: 'Habigaon Homestead Agarwood Parcel',
+      plantingYear: '2015',
+      saplingsCount: '240',
+      matureTreesCount: '120',
+      plantationName: 'Mohuramukh Agarwood Estate',
       declarationAccepted: true
     });
-    addToast('Pre-filled sample compliant farmer application data', 'info');
+    addToast('Pre-filled fresh applicant data (Deepak Borah)', 'info');
   };
 
   const handleSubmit = (e) => {
@@ -109,7 +94,6 @@ export default function FarmerRegistrationModule({ onNavigate }) {
 
     const application = submitFarmerApplication({
       ...formData,
-      aadhaarLast4: formData.aadhaarRaw ? formData.aadhaarRaw.slice(-4) : '8412',
       jamabandiHash: `sha256:${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`
     });
 
@@ -133,7 +117,7 @@ export default function FarmerRegistrationModule({ onNavigate }) {
             Farmer & Homestead Plantation Registration Form
           </h1>
           <p className="text-xs text-slate-500">
-            Assam Agarwood Policy 2020 • Land Revenue Jamabandi Title & DPDP Act 2023 Masked Aadhaar Onboarding
+            Assam Agarwood Policy 2020 • Land Revenue Jamabandi Title & Farmer Profile Onboarding
           </p>
         </div>
 
@@ -201,7 +185,7 @@ export default function FarmerRegistrationModule({ onNavigate }) {
                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5"
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Go to NERAMAC Maker-Checker Approvals</span>
+                <span>Go to NERAMAC Farmer Approvals</span>
               </button>
             </div>
           </div>
@@ -215,7 +199,7 @@ export default function FarmerRegistrationModule({ onNavigate }) {
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <User className="w-4 h-4 text-emerald-700" />
             <h2 className="text-sm font-black text-slate-900">
-              Section 1: Farmer Personal & Identity Information (DPDP Act 2023)
+              Section 1: Farmer Personal & Contact Information
             </h2>
           </div>
 
@@ -288,34 +272,15 @@ export default function FarmerRegistrationModule({ onNavigate }) {
 
             <div className="sm:col-span-2">
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Aadhaar Number (DPDP Act 2023 Masked Redaction) *
+                Residential Village / Landmark Address
               </label>
-              <div className="relative">
-                <input
-                  type={showAadhaar ? 'text' : 'password'}
-                  required
-                  placeholder="Enter 12-digit Aadhaar UID"
-                  value={formData.aadhaarRaw}
-                  onChange={handleAadhaarChange}
-                  className="w-full text-xs px-3 py-2 pr-28 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-mono"
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setShowAadhaar(!showAadhaar)}
-                    className="p-1 text-slate-400 hover:text-slate-700"
-                    title={showAadhaar ? 'Mask Aadhaar' : 'Unmask Aadhaar'}
-                  >
-                    {showAadhaar ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
-                  <span className="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200">
-                    {formData.aadhaarMasked || 'XXXX-XXXX-XXXX'}
-                  </span>
-                </div>
-              </div>
-              <p className="text-[10px] text-slate-500 mt-1">
-                Encrypted in vault storage; public trace queries will show only masked token: {formData.aadhaarMasked || 'XXXX-XXXX-8412'}.
-              </p>
+              <input
+                type="text"
+                placeholder="e.g. Habigaon, Near Namghar, Bokakhat"
+                value={formData.residentialAddress}
+                onChange={e => setFormData({ ...formData, residentialAddress: e.target.value })}
+                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+              />
             </div>
           </div>
         </div>
@@ -571,13 +536,13 @@ export default function FarmerRegistrationModule({ onNavigate }) {
             />
             <label htmlFor="declarationAccepted" className="text-xs text-slate-700 leading-relaxed">
               <span className="font-bold text-slate-900">Statutory Declaration under Assam Agarwood Policy 2020:</span>
-              {' '}I hereby declare that the Agarwood trees entered above are grown exclusively on my homestead / private revenue land (Dag & Patta specified above) and are not extracted from Reserve Forests or Protected Areas. I consent to NERAMAC Field Agent inspection, POLOGEN perimeter walk, and mature tree RFID tagging under DPDP Act 2023 guidelines.
+              {' '}I hereby declare that the Agarwood trees entered above are grown exclusively on my homestead / private revenue land (Dag & Patta specified above) and are not extracted from Reserve Forests or Protected Areas. I consent to NERAMAC Field Agent inspection, POLOGEN perimeter walk, and mature tree RFID tagging under Assam Agarwood Policy 2020 guidelines.
             </label>
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-xs text-slate-500">
-              * Required fields. All submissions undergo Maker-Checker verification by NERAMAC and Forest Dept.
+              * Required fields. All submissions undergo official verification and approval by NERAMAC and Forest Dept.
             </div>
 
             <button

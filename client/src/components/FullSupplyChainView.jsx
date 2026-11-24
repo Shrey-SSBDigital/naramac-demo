@@ -25,7 +25,7 @@ export default function FullSupplyChainView({ onSelectRole }) {
     { step: 12, roleId: "NERAMAC_ADMIN", title: "Statutory Permits Linkage", id: "PMT", action: "CITES export certificate and transit clearances bound to batch." },
     { step: 13, roleId: "PACKAGING_OFFICER", title: "Finished Goods & Serialized QR", id: "PCK", action: "12ml crystal bottles packaged; cryptographically signed QR printed." },
     { step: 14, roleId: "EXPORTER_LOGISTICS", title: "Export Batch Consolidation", id: "EBT / ELT", action: "Carton aggregation; customs shipping bill and Airway Bill linked." },
-    { step: 15, roleId: "BUYER_PUBLIC", title: "Global Delivery & Buyer Scan", id: "PCK Scan", action: "Buyer scans QR; verified provenance displayed with DPDP Act masking." }
+    { step: 15, roleId: "BUYER_PUBLIC", title: "Global Delivery & Buyer Scan", id: "PCK Scan", action: "Buyer scans QR; verified provenance displayed with consumer privacy protection." }
   ];
 
   return (
@@ -53,8 +53,8 @@ export default function FullSupplyChainView({ onSelectRole }) {
             <span className="text-slate-400 text-[11px]">NERAMAC verifies technical data; DFO holds sole statutory felling authority.</span>
           </div>
           <div className="bg-slate-850 p-3 rounded-xl border border-slate-750">
-            <span className="text-cyan-400 font-bold block">3. DPDP Act Privacy</span>
-            <span className="text-slate-400 text-[11px]">Public QR scans mask smallholder phone numbers and exact cadastral house coordinates.</span>
+            <span className="text-cyan-400 font-bold block">3. Data Privacy Protection</span>
+            <span className="text-slate-400 text-[11px]">Public QR scans protect smallholder phone numbers and exact cadastral house coordinates.</span>
           </div>
         </div>
       </div>

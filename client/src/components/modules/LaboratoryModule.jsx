@@ -11,12 +11,12 @@ export default function LaboratoryModule() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [form, setForm] = useState({
-    distillationRunId: 'DST-AS-2026-02',
-    sourceBatchId: 'AGG-AS-2026-02',
+    distillationRunId: 'DST-AS-2026-01',
+    sourceBatchId: 'AGG-AS-2026-01',
     laboratoryName: 'NERAMAC Central Quality Assurance & NABL Analytical Facility, Jorhat',
     testingOfficer: 'Dr. Ananya Sarmah, Chief Analytical Chemist',
-    agarospirolPercent: 13.90,
-    jinkohEremolPercent: 5.80,
+    agarospirolPercent: 14.82,
+    jinkohEremolPercent: 6.24,
     specificGravity25C: 0.961,
     refractiveIndex20C: 1.507,
     opticalRotation: '+15.2°',
@@ -213,6 +213,23 @@ export default function LaboratoryModule() {
               <p className="text-[11px] leading-relaxed">
                 Wood-anatomy and chromatographic markers match <strong>Aquilaria malaccensis</strong>. Synthetic mineral oil and phthalate DEP adulterants are strictly negative.
               </p>
+            </div>
+
+            {/* Geo-Spatial Sample Draw Event Stamp */}
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 font-mono text-[11px]">
+              <div className="flex items-center justify-between text-slate-500 font-bold uppercase text-[10px]">
+                <span>Sample Draw Event &amp; Timestamp</span>
+                <span className="text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Geo-Referenced Sample</span>
+              </div>
+              <div className="text-slate-800 font-semibold">
+                Location: {selectedTest.samplingLocation || 'NERAMAC Central QA Facility Receiver Vessel'}
+              </div>
+              <div className="flex items-center justify-between text-slate-600">
+                <span>
+                  Coordinates: {selectedTest.sampleCoordinates ? `${selectedTest.sampleCoordinates[0]}°N, ${selectedTest.sampleCoordinates[1]}°E` : '26.5890°N, 93.5980°E'} (±{selectedTest.sampleAccuracyM || 1.2}m)
+                </span>
+                <span>Sampled: {selectedTest.sampledAt ? new Date(selectedTest.sampledAt).toLocaleString() : '2026-02-04 10:15 AM'}</span>
+              </div>
             </div>
 
             <div className="pt-2 flex justify-end">

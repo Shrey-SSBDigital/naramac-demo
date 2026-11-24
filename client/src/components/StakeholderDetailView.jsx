@@ -163,7 +163,7 @@ export default function StakeholderDetailView({
             title: "Smartphone QR Provenance Verification",
             idGenerated: "PCK-AS-2026-0042",
             status: "GENUINE_NERAMAC_CERTIFIED",
-            details: "Consumer scan verified authentic Assam Oud Oil. Origin: Golaghat, Assam. CITES Appendix II certified. Farmer personal phone and homestead GPS masked under DPDP Act 2023.",
+            details: "Consumer scan verified authentic Assam Oud Oil. Origin: Golaghat, Assam. CITES Appendix II certified. Complete legal origin provenance verified.",
             badge: "PROVENANCE CONFIRMED"
           });
           break;

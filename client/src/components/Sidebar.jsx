@@ -246,7 +246,7 @@ export default function Sidebar({
               <p className="text-[11px] text-slate-600 leading-relaxed">
                 {viewMode === 'GEO_STUDIO' && 'Demonstrate boundary perimeter walking for <7 yr saplings (POLOGEN) vs point geo-pinning for ≥7 yr mature trees with offline SQLite sync.'}
                 {viewMode === 'TRACEABILITY' && 'Explore the single unbroken 15-identity graph from farmer homestead to international consumer flacon (RFP Section 3.2).'}
-                {viewMode === 'QR_PORTAL' && 'Scan bottle QR code to inspect authentic provenance, NABL GC-MS purity certificate, and DPDP Act 2023 privacy protection.'}
+                {viewMode === 'QR_PORTAL' && 'Scan bottle QR code to inspect authentic provenance, NABL GC-MS purity certificate, and verified supply chain audit.'}
               </p>
             </div>
 

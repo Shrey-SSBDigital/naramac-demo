@@ -1,17 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useEnterprise } from '../../context/EnterpriseContext';
 import DataTable from '../common/DataTable';
 import StatusBadge from '../common/StatusBadge';
 import Modal from '../common/Modal';
-import { PlaneTakeoff, Plus, Globe2, FileCheck2, ShieldCheck } from 'lucide-react';
+import { PlaneTakeoff, Plus, Globe2, FileCheck2, ShieldCheck, Boxes, Check, PackageCheck } from 'lucide-react';
 
 export default function ExportModule() {
-  const { exportBatches, createExportBatch, finishedProducts } = useEnterprise();
+  const { exportBatches, createExportBatch, finishedProducts, addToast } = useEnterprise();
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Available finished products in stock
-  const availablePacks = finishedProducts.filter(p => p.status === 'IN_VAULT_STOCK');
+  // Available finished products in stock (not yet in an export batch)
+  const availablePacks = useMemo(() => {
+    const vault = finishedProducts.filter(p => p.status === 'IN_VAULT_STOCK' || p.channel === 'INVENTORY' || !p.exportBatchId);
+    return vault.length ? vault : finishedProducts;
+  }, [finishedProducts]);
+
+  const [selectedPackIds, setSelectedPackIds] = useState(() => {
+    return availablePacks.slice(0, 2).map(p => p.serialNumber);
+  });
+
+  const selectedPackObjects = useMemo(() => {
+    return availablePacks.filter(p => selectedPackIds.includes(p.serialNumber));
+  }, [availablePacks, selectedPackIds]);
+
+  const calculatedTotalVolume = useMemo(() => {
+    return selectedPackObjects.reduce((acc, p) => acc + (p.volumeMl || 12.0), 0);
+  }, [selectedPackObjects]);
+
+  const calculatedTotalValueUSD = useMemo(() => {
+    return selectedPackObjects.reduce((acc, p) => acc + Math.round((p.volumeMl || 12.0) * 375), 0);
+  }, [selectedPackObjects]);
+
+  const togglePack = (sNo) => {
+    setSelectedPackIds(prev =>
+      prev.includes(sNo) ? prev.filter(id => id !== sNo) : [...prev, sNo]
+    );
+  };
 
   const [form, setForm] = useState({
     batchCode: `EXP/NER/2026/DXB-${Math.floor(10 + Math.random() * 90)}`,
@@ -22,16 +47,22 @@ export default function ExportModule() {
     citesPermitNumber: 'CITES/IN/2026/EXP-441',
     dgftLicenseNumber: 'DGFT/0588019234/EXP/2026',
     customsShippingBillNo: `SB-${Math.floor(1000000 + Math.random() * 9000000)}-CC-KOL`,
-    totalPackCount: 4,
-    packSerialNumbers: ['PCK-NER-2026-017', 'PCK-NER-2026-018'],
-    totalVolumeMl: 48.0,
-    commercialInvoiceValueUSD: 18000.0,
     exporterEntity: 'North Eastern Regional Agricultural Marketing Corporation Ltd (NERAMAC)'
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    createExportBatch(form);
+    if (selectedPackIds.length === 0) {
+      addToast?.('Please select at least one finished product flacon for export', 'warning');
+      return;
+    }
+    createExportBatch({
+      ...form,
+      totalPackCount: selectedPackIds.length,
+      packSerialNumbers: selectedPackIds,
+      totalVolumeMl: calculatedTotalVolume,
+      commercialInvoiceValueUSD: calculatedTotalValueUSD
+    });
     setIsModalOpen(false);
   };
 
@@ -188,6 +219,7 @@ export default function ExportModule() {
         onClose={() => setIsModalOpen(false)}
         title="Form Export Batch (CITES Allocation)"
         subtitle="Consolidate serialized vault flacons into an approved export consignment"
+        maxWidth="max-w-2xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -196,12 +228,12 @@ export default function ExportModule() {
               <select
                 value={form.destinationCountry}
                 onChange={(e) => setForm({ ...form, destinationCountry: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-semibold"
+                className="w-full px-3 py-2 border rounded-lg font-semibold bg-white"
               >
-                <option value="United Arab Emirates">United Arab Emirates (Dubai)</option>
-                <option value="France">France (Paris)</option>
-                <option value="Saudi Arabia">Saudi Arabia (Riyadh)</option>
-                <option value="Japan">Japan (Tokyo)</option>
+                <option value="United Arab Emirates">United Arab Emirates (Dubai - DXB)</option>
+                <option value="France">France (Paris - CDG)</option>
+                <option value="Saudi Arabia">Saudi Arabia (Riyadh - RUH)</option>
+                <option value="Japan">Japan (Tokyo - HND)</option>
               </select>
             </div>
             <div>
@@ -211,7 +243,7 @@ export default function ExportModule() {
                 required
                 value={form.consigneeName}
                 onChange={(e) => setForm({ ...form, consigneeName: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-bold"
+                className="w-full px-3 py-2 border rounded-lg font-bold bg-white"
               />
             </div>
           </div>
@@ -224,19 +256,132 @@ export default function ExportModule() {
                 required
                 value={form.citesPermitNumber}
                 onChange={(e) => setForm({ ...form, citesPermitNumber: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-mono font-bold"
+                className="w-full px-3 py-2 border rounded-lg font-mono font-bold bg-white"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Invoice Value (USD) *</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Customs Shipping Bill No. *</label>
               <input
-                type="number"
-                step="500"
+                type="text"
                 required
-                value={form.commercialInvoiceValueUSD}
-                onChange={(e) => setForm({ ...form, commercialInvoiceValueUSD: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border rounded-lg font-bold text-emerald-800"
+                value={form.customsShippingBillNo}
+                onChange={(e) => setForm({ ...form, customsShippingBillNo: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg font-mono font-bold bg-white"
               />
+            </div>
+          </div>
+
+          {/* Select Finished Products from Vault Stock */}
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-[11px] font-black text-slate-900 flex items-center gap-1.5">
+                  <Boxes className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Select Finished Products / Flacons from Vault Stock *</span>
+                </label>
+                <span className="text-[10px] text-slate-500">
+                  Choose serialized 12ml / 24ml flacons to consolidate into this export lot
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPackIds(availablePacks.map(p => p.serialNumber))}
+                  className="px-2 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 transition"
+                >
+                  Select All ({availablePacks.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPackIds([])}
+                  className="px-2 py-0.5 text-[10px] font-bold text-slate-600 bg-white hover:bg-slate-100 rounded border border-slate-200 transition"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            {/* Product Selection Table */}
+            <div className="max-h-52 overflow-y-auto border border-slate-200 rounded-lg bg-white">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-50 sticky top-0 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                  <tr>
+                    <th className="py-2 px-3 w-8">Select</th>
+                    <th className="py-2 px-3">Pack Serial</th>
+                    <th className="py-2 px-3">Grade & Oil Spec</th>
+                    <th className="py-2 px-3 text-right">Volume</th>
+                    <th className="py-2 px-3 text-right">Unit Value</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[11px]">
+                  {availablePacks.map((pack) => {
+                    const isSelected = selectedPackIds.includes(pack.serialNumber);
+                    const vol = pack.volumeMl || 12.0;
+                    const valUsd = Math.round(vol * 375);
+                    return (
+                      <tr
+                        key={pack.serialNumber}
+                        onClick={() => togglePack(pack.serialNumber)}
+                        className={`cursor-pointer transition hover:bg-slate-50 ${
+                          isSelected ? 'bg-emerald-50/70 font-semibold text-emerald-950' : 'text-slate-700'
+                        }`}
+                      >
+                        <td className="py-2 px-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => togglePack(pack.serialNumber)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="rounded text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5"
+                          />
+                        </td>
+                        <td className="py-2 px-3 font-mono font-bold text-slate-900">
+                          {pack.serialNumber}
+                        </td>
+                        <td className="py-2 px-3">
+                          <div>{pack.productName || 'Assam Organic Oud Oil'}</div>
+                          <div className="text-[10px] text-slate-500">Grade: {pack.resinGrade || 'Royal Super Triple-A'}</div>
+                        </td>
+                        <td className="py-2 px-3 text-right font-mono font-bold">
+                          {vol.toFixed(1)} ml
+                        </td>
+                        <td className="py-2 px-3 text-right font-mono font-bold text-emerald-800">
+                          ${valUsd.toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {availablePacks.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-6 text-center text-slate-500 italic">
+                        No finished product flacons currently in vault stock. Bottle oil in Module 12 first.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Selected Summary HUD */}
+            <div className="p-2.5 bg-emerald-50/80 rounded-lg border border-emerald-200 grid grid-cols-3 gap-2 text-center">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">Selected Flacons</span>
+                <span className="text-sm font-black text-emerald-900 font-mono">
+                  {selectedPackIds.length} <span className="text-[10px] font-normal">units</span>
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">Consignment Volume</span>
+                <span className="text-sm font-black text-emerald-900 font-mono">
+                  {calculatedTotalVolume.toFixed(1)} <span className="text-[10px] font-normal">ml</span>
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">Export Invoice Value</span>
+                <span className="text-sm font-black text-emerald-900 font-mono">
+                  ${calculatedTotalValueUSD.toLocaleString()} <span className="text-[10px] font-normal">USD</span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -250,9 +395,15 @@ export default function ExportModule() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-xs"
+              disabled={selectedPackIds.length === 0}
+              className={`px-4 py-2 rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 ${
+                selectedPackIds.length > 0
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+              }`}
             >
-              Create Export Batch
+              <PackageCheck className="w-4 h-4" />
+              <span>Create Export Batch ({selectedPackIds.length} Flacons)</span>
             </button>
           </div>
         </form>

@@ -13,7 +13,7 @@ This full-stack application models the complete digital traceability system defi
 ### 🎯 Dual-Mode Sidebar Architecture
 - **Mode 1: Interactive Live Workflow (14 Real-World Stages)**
   - Fully functional end-to-end interactive journey starting with the farmer's self-registration portal.
-  - Interactive forms for all 14 stages: Field Agent offline geo-pinning, plantation age rule verification, inoculation logging with SHA-256 photo hash, farmer harvest application, DFO & Maker-Checker felling sanction, harvest scale weighing, movement tolerance checking (≤ 1.5%), aggregation depot pooling, CPC distillation mass balance, NABL lab GC-MS release, packaging serialized QR code, export customs dispatch, and buyer smartphone verification with DPDP Act 2023 masking.
+  - Interactive forms for all 14 stages: Field Agent offline geo-pinning, plantation age rule verification, inoculation logging with SHA-256 photo hash, farmer harvest application, DFO & Maker-Checker felling sanction, harvest scale weighing, movement tolerance checking (≤ 1.5%), aggregation depot pooling, CPC distillation mass balance, NABL lab GC-MS release, packaging serialized QR code, export customs dispatch, and buyer smartphone verification with consumer privacy protection.
   - Interactive buttons to advance step-by-step, reset to Step 1, or jump to "Load Full Demo".
 - **Mode 2: Stakeholder Roles Directory (11 Roles)**
   - Clear, isolated responsibility breakdown for every participant in the agarwood value chain:
@@ -58,14 +58,14 @@ This full-stack application models the complete digital traceability system defi
     - Inspects the unbroken 15-identity graph; validates SHA-256 photograph hashes against camera buffers; checks system access trails.
 11. **11. Approved Buyer & Public Verifier (`BUYER_PUBLIC`)**
     - *Perfumery Houses & Consumers*
-    - Scans pack QR code with any smartphone to inspect verified provenance, CITES origin, and GC-MS purity with **DPDP Act privacy protection** (grower personal data masked).
+    - Scans pack QR code with any smartphone to inspect verified provenance, CITES origin, and GC-MS purity with **consumer privacy protection** (grower personal data protected).
 
 ---
 
 ## 🏷️ The 15 Mandatory Digital Identifiers (RFP Section 3.2)
 | Code | Identity Name | Parent Link | Downward Link | Mandatory Geospatial / Control Requirement |
 |:---:|:---|:---|:---|:---|
-| **`FRM`** | Farmer Identity | Root (None) | `PLT` | Homestead geo-pinned; strictly decoupled from Aadhaar (DPDP Act) |
+| **`FRM`** | Farmer Identity | Root (None) | `PLT` | Homestead geo-pinned; digital producer identifier |
 | **`PLT`** | Plantation Identity | `FRM` | `PLG`, `TRE` | Geo-referenced boundary, computed area, verified land tenure |
 | **`PLG`** | POLOGEN Identity | `PLT` | `TRE`, `HBT` | Closed polygon for trees < 7 yrs; walked boundary vertices |
 | **`TRE`** | Tree Identity | `PLT` / `PLG` | `INO`, `HAU`, `HBT` | Individual mature tree ≥ 7 yrs; point geo-pinned coordinate & tag photo |

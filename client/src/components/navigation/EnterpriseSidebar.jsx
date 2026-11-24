@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from '@tanstack/react-router';
 import { useEnterprise } from '../../context/EnterpriseContext';
-import { isModuleAllowedForRole, ROLE_PERMISSIONS } from '../../utils/rbacConfig';
+import { isModuleAllowedForRole, ROLE_PERMISSIONS, getDefaultRouteForRole } from '../../utils/rbacConfig';
 import { USER_ROLES } from '../../data/mockEnterpriseData';
 import {
   LayoutDashboard,
@@ -24,6 +25,7 @@ import {
   QrCode,
   FileSpreadsheet,
   GitFork,
+  Compass,
   MapPin,
   Footprints,
   ChevronRight,
@@ -51,32 +53,73 @@ export default function EnterpriseSidebar({
     distillations,
     labTests,
     finishedProducts,
-    exportBatches
+    exportBatches,
+    plantations
   } = useEnterprise();
 
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
-  const [showAllModules, setShowAllModules] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const currentRoleConfig = ROLE_PERMISSIONS[activeRole] || ROLE_PERMISSIONS.NERAMAC_ADMIN;
+
+  const ROLE_DASHBOARD_LABELS = {
+    FARMER: 'Farmer Dashboard',
+    FIELD_AGENT: 'Field Operations Desk',
+    FOREST_DEPT: 'DFO Statutory Desk',
+    COLLECTION_OPERATOR: 'Depot Intake Desk',
+    CPC_OPERATOR: 'Distillery Operations',
+    LAB_OFFICER: 'NABL Quality Lab Desk',
+    EXPORTER: 'Export & Logistics Desk',
+    BUYER_PUBLIC: 'Consumer Provenance Portal',
+    NERAMAC_ADMIN: 'Executive Control Room',
+    SUPER_ADMIN: 'Super Admin Command'
+  };
 
   // Master Navigation Groups with All Enterprise Routes
   const ALL_NAV_GROUPS = [
     {
-      group: 'Overview & Architecture',
+      group: 'Role Workspace',
       items: [
-        { id: 'HOME', name: 'Home • Workflow & Roles', icon: Home, badge: '10 Stages', path: '/' },
-        { id: 'DASHBOARD', name: 'Executive Dashboard', icon: LayoutDashboard, badge: null, path: '/dashboard' }
+        {
+          id: 'DASHBOARD',
+          name: ROLE_DASHBOARD_LABELS[activeRole] || 'Executive Dashboard',
+          icon: LayoutDashboard,
+          badge: 'Live',
+          highlight: true,
+          path: '/dashboard'
+        }
       ]
     },
     {
-      group: 'Origin & Forestry',
+      group: 'Farmer Governance',
       items: [
         { id: 'FARMERS', name: 'Farmer Registry', icon: Users, badge: farmers.length, path: '/farmer' },
         { id: 'FARMER_REGISTER', name: 'Farmer Registration Form', icon: UserPlus, badge: 'New', highlight: true, path: '/farmer/register' },
-        { id: 'FARMER_APPROVALS', name: 'Maker-Checker Approvals', icon: ShieldCheck, badge: farmerApplications.filter(a => a.status !== 'APPROVED').length || null, highlight: true, path: '/farmer/approvals' },
-        { id: 'PLANTATIONS', name: 'Plantations & Parcels', icon: Trees, badge: (trees?.length || 0) + (pologens?.length || 0), path: '/plantations' },
-        { id: 'FIELD_INSPECTION', name: 'Field Inspection (Geo-Tag)', icon: MapPin, badge: 'GPS+Photo', highlight: true, path: '/field-inspection' },
-        { id: 'GEO_STUDIO', name: 'Field GIS & SHA-256 Studio', icon: GitFork, badge: 'GIS Map', path: '/field-gis-studio' },
+        { id: 'FARMER_APPROVALS', name: 'Farmer Approvals', icon: ShieldCheck, badge: farmerApplications.filter(a => a.status !== 'APPROVED').length || null, highlight: true, path: '/farmer/approvals' }
+      ]
+    },
+    {
+      group: 'Plantation',
+      items: [
+        { id: 'PLANTATIONS', name: 'Plantation', icon: Trees, badge: plantations.length, path: '/plantation' }
+      ]
+    },
+    {
+      group: 'Field Agent Inspection',
+      items: [
+        { id: 'FIELD_INSPECTION', name: 'Field Inspection (Geo-Tag)', icon: MapPin, badge: 'GPS+Photo', highlight: true, path: '/field-inspection' }
+      ]
+    },
+    {
+      group: 'Field GIS Studio',
+      items: [
+        { id: 'GEO_STUDIO', name: 'Field GIS Studio', icon: Compass, badge: 'GIS Map', highlight: true, path: '/field-gis-studio' }
+      ]
+    },
+    {
+      group: 'Tree Cultivation & Inoculation',
+      items: [
         { id: 'INOCULATION', name: 'Cultivation & Inoculation', icon: Syringe, badge: null, path: '/inoculation' }
       ]
     },
@@ -90,8 +133,15 @@ export default function EnterpriseSidebar({
     {
       group: 'Depot & Movement',
       items: [
-        { id: 'MOVEMENT', name: 'Material Movement (≤1.5%)', icon: Truck, badge: movements.length, path: '/movement' },
-        { id: 'AGGREGATION', name: 'Depot Aggregation Pooling', icon: Boxes, badge: aggregations.length, path: '/aggregation' },
+        {
+          id: 'MOVEMENT',
+          name: 'Movement & Weight Recon',
+          icon: Truck,
+          badge: movements.filter(m => m.status === 'IN_TRANSIT').length ? `${movements.filter(m => m.status === 'IN_TRANSIT').length} In Transit` : movements.length,
+          highlight: movements.some(m => m.status === 'IN_TRANSIT'),
+          path: '/movement'
+        },
+        { id: 'AGGREGATION', name: 'Depot Batch Collection (Pooling)', icon: Boxes, badge: aggregations.length, path: '/aggregation' },
         { id: 'INVENTORY', name: 'Inventory & Vault Stock', icon: Warehouse, badge: null, path: '/inventory' }
       ]
     },
@@ -99,8 +149,8 @@ export default function EnterpriseSidebar({
       group: 'CPC Processing & Lab',
       items: [
         { id: 'PROCESSING', name: 'Distillation Stills & Oil', icon: Factory, badge: distillations.length, path: '/processing' },
-        { id: 'LABORATORY', name: 'NABL Lab & GC-MS Purity', icon: FlaskConical, badge: labTests.length, path: '/laboratory' },
-        { id: 'FINISHED_PRODUCTS', name: 'Finished Flacons & Laser QR', icon: PackageCheck, badge: finishedProducts.length, path: '/finished-products' }
+        { id: 'LABORATORY', name: 'Lab Quality & Purity Testing', icon: FlaskConical, badge: labTests.length, path: '/laboratory' },
+        { id: 'FINISHED_PRODUCTS', name: 'Bottled Oil & Packaging', icon: PackageCheck, badge: finishedProducts.length, path: '/finished-products' }
       ]
     },
     {
@@ -115,13 +165,13 @@ export default function EnterpriseSidebar({
       group: 'Trust & Governance',
       items: [
         { id: 'TRACEABILITY', name: 'Traceability & QR Scan', icon: QrCode, badge: 'Live', highlight: true, path: '/traceability' },
-        { id: 'AUDIT_REPORTS', name: 'Audit Logs & Mass Balance', icon: FileSpreadsheet, badge: null, path: '/audit-reports' }
+        { id: 'AUDIT_REPORTS', name: 'Reports & Audit History', icon: FileSpreadsheet, badge: null, path: '/audit-reports' }
       ]
     }
   ];
 
-  // Dynamically filter navigation items based on active role RBAC permissions
-  const filteredNavGroups = ALL_NAV_GROUPS.map(grp => {
+  // Strictly filter navigation items based on active role RBAC permissions
+  const displayedNavGroups = ALL_NAV_GROUPS.map(grp => {
     const visibleItems = grp.items.filter(item => isModuleAllowedForRole(activeRole, item.id));
     return {
       ...grp,
@@ -129,14 +179,15 @@ export default function EnterpriseSidebar({
     };
   }).filter(grp => grp.items.length > 0);
 
-  const displayedNavGroups = showAllModules ? ALL_NAV_GROUPS : filteredNavGroups;
-
   return (
     <aside className="w-72 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0 flex-shrink-0 z-30 shadow-xs">
       {/* Brand Header */}
       <div className="p-3 border-b border-slate-200">
         <button
-          onClick={() => onSelectModule('HOME')}
+          onClick={() => {
+            if (onSelectModule) onSelectModule('HOME');
+            navigate({ to: '/' });
+          }}
           className="w-full text-left brand-header p-3 rounded-xl shadow-xs text-white space-y-1 transition hover:opacity-95"
         >
           <div className="flex items-center gap-2.5">
@@ -191,6 +242,9 @@ export default function EnterpriseSidebar({
                   onClick={() => {
                     setActiveRole(r.id);
                     setRoleSwitcherOpen(false);
+                    const targetRoute = getDefaultRouteForRole(r.id);
+                    navigate({ to: targetRoute });
+                    if (onSelectModule) onSelectModule(targetRoute);
                   }}
                   className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition ${
                     activeRole === r.id
@@ -209,25 +263,6 @@ export default function EnterpriseSidebar({
             </div>
           )}
         </div>
-
-        {/* Toggle between Role Filtered & All Modules */}
-        <div className="mt-2 flex items-center justify-between px-1 text-[11px]">
-          <span className="text-slate-500 font-medium">Show all modules</span>
-          <button
-            type="button"
-            onClick={() => setShowAllModules(!showAllModules)}
-            className={`relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              showAllModules ? 'bg-emerald-600' : 'bg-slate-300'
-            }`}
-            title="Toggle between Role-Filtered view and All System Modules"
-          >
-            <span
-              className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                showAllModules ? 'translate-x-4' : 'translate-x-0'
-              }`}
-            />
-          </button>
-        </div>
       </div>
 
       {/* Navigation Group Items */}
@@ -239,12 +274,16 @@ export default function EnterpriseSidebar({
             </div>
             {grp.items.map((item) => {
               const Icon = item.icon;
-              const isActive = activeModule === item.id;
+              const currentPath = location.pathname;
+              const isActive = currentPath === item.path || (activeModule && activeModule === item.id);
 
               return (
                 <button
                   key={item.id}
-                  onClick={() => onSelectModule(item.id)}
+                  onClick={() => {
+                    if (onSelectModule) onSelectModule(item.id, item.path);
+                    navigate({ to: item.path });
+                  }}
                   className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition group ${
                     isActive
                       ? 'bg-emerald-600 text-white shadow-xs font-bold'
@@ -283,7 +322,10 @@ export default function EnterpriseSidebar({
               Step-by-Step Flow
             </div>
             <button
-              onClick={onOpenLegacyFlow}
+              onClick={() => {
+                if (onOpenLegacyFlow) onOpenLegacyFlow();
+                navigate({ to: '/flow' });
+              }}
               className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-bold flex items-center justify-between text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 transition"
             >
               <div className="flex items-center gap-2">

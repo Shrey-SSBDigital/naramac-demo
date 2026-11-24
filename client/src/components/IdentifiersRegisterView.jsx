@@ -75,9 +75,9 @@ export default function IdentifiersRegisterView({ translations }) {
           <div className="bg-slate-850 p-3.5 rounded-xl border border-slate-750 flex items-start gap-3">
             <Lock className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="text-xs font-bold text-white">Aadhaar Decoupled (DPDP Act)</h4>
+              <h4 className="text-xs font-bold text-white">Independent Digital ID</h4>
               <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                No identifier is derived from Aadhaar. Farmer ID is internal to NERAMAC; any Aadhaar link is strictly optional and off-chain.
+                Farmer ID is internal to NERAMAC and cryptographically isolated from personal government registries.
               </p>
             </div>
           </div>

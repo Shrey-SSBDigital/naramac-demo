@@ -6,19 +6,24 @@ import Modal from '../common/Modal';
 import { FileBadge2, ShieldCheck, Plus, ExternalLink, Calendar, CheckCircle2 } from 'lucide-react';
 
 export default function PermitModule() {
-  const { permits, addPermit } = useEnterprise();
+  const { permits, addPermit, trees, harvestBatches, harvests, farmers, activeRole } = useEnterprise();
   const [selectedPermit, setSelectedPermit] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [linkMode, setLinkMode] = useState('BY_BATCH'); // 'BY_BATCH' | 'BY_TREE'
 
   const [form, setForm] = useState({
     permitNumber: 'DFO/GLT/2026/HARV-215',
     permitType: 'DFO Tree Felling Sanction Order',
+    batchId: '',
+    treeId: 'TRE-AS-001',
+    plantingYear: 2014,
+    treeAgeYears: 12,
     issuingAuthority: 'Divisional Forest Officer, Golaghat Forest Division, Assam',
     officerName: 'S. K. Bordoloi, IFS',
     beneficiaryName: 'Bhaben Saikia',
     beneficiaryFarmerId: 'FRM-AS-01',
     expiryDate: '2026-04-15',
-    quotaApprovedTrees: 4,
+    quotaApprovedTrees: 1,
     approvedSpecies: 'Aquilaria malaccensis'
   });
 
@@ -42,32 +47,79 @@ export default function PermitModule() {
     {
       header: 'Permit Classification',
       accessor: 'permitType',
-      render: (p) => (
-        <div>
-          <span className="font-bold text-slate-800">{p.permitType}</span>
-          <div className="text-[11px] text-slate-500">{p.approvedSpecies}</div>
-        </div>
-      )
+      render: (p) => {
+        const type = p.permitType || (p.type === 'FELLING' ? 'DFO Tree Felling Sanction Order' : p.type || 'DFO Tree Felling Sanction Order');
+        const species = p.approvedSpecies || 'Aquilaria malaccensis';
+        return (
+          <div>
+            <span className="font-bold text-slate-800">{type}</span>
+            <div className="text-[11px] text-slate-500">{species}</div>
+          </div>
+        );
+      }
+    },
+    {
+      header: 'Linked Tree & Harvest Batch',
+      accessor: 'treeId',
+      render: (p) => {
+        const batch = harvestBatches.find(b => b.id === p.batchId || b.harvestAuthId === p.authorisationId || (p.linkedEntities && p.linkedEntities.includes(b.id)));
+        const targetTreeId = p.treeId || batch?.treeId || (p.linkedEntities ? p.linkedEntities.find(e => typeof e === 'string' && e.startsWith('TRE-')) : null) || 'TRE-AS-001';
+        const targetTree = trees.find(t => t.id === targetTreeId);
+        const batchId = p.batchId || batch?.id || (p.linkedEntities ? p.linkedEntities.find(e => typeof e === 'string' && e.startsWith('HBT-')) : null);
+        const plantingYear = p.plantingYear || batch?.plantingYear || targetTree?.plantingYear || 2014;
+        const treeAge = p.treeAgeYears || batch?.treeAgeYears || targetTree?.ageYears || 12;
+
+        return (
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-mono font-extrabold text-emerald-900 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-xs">
+                🌲 {targetTreeId}
+              </span>
+              <span className="text-[10px] text-slate-600 font-semibold">
+                (Planted {plantingYear} • {treeAge} yrs)
+              </span>
+            </div>
+            {batchId ? (
+              <div className="flex items-center gap-1 text-[10px] text-slate-500 font-mono">
+                <span>Batch:</span>
+                <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.2 rounded">{batchId}</span>
+              </div>
+            ) : (
+              <div className="text-[9px] text-slate-400 font-mono">
+                {p.authorisationId ? `Auth: ${p.authorisationId}` : 'Felling Sanction Block'}
+              </div>
+            )}
+          </div>
+        );
+      }
     },
     {
       header: 'Issuing Authority',
       accessor: 'issuingAuthority',
-      render: (p) => (
-        <div>
-          <span className="font-semibold text-slate-700">{p.issuingAuthority}</span>
-          <div className="text-[10px] text-slate-500 font-medium">{p.officerName}</div>
-        </div>
-      )
+      render: (p) => {
+        const auth = p.issuingAuthority || p.issuedBy || 'Divisional Forest Officer, Golaghat Forest Division, Assam';
+        const officer = p.officerName || 'S. K. Bordoloi, IFS (DFO)';
+        return (
+          <div>
+            <span className="font-semibold text-slate-700">{auth}</span>
+            <div className="text-[10px] text-slate-500 font-medium">{officer}</div>
+          </div>
+        );
+      }
     },
     {
       header: 'Beneficiary Entity',
       accessor: 'beneficiaryName',
-      render: (p) => (
-        <div>
-          <span className="font-bold text-emerald-800">{p.beneficiaryName}</span>
-          <div className="text-[10px] text-slate-400 font-mono">{p.beneficiaryFarmerId}</div>
-        </div>
-      )
+      render: (p) => {
+        const name = p.beneficiaryName || p.holderName || 'Registered Grower';
+        const id = p.beneficiaryFarmerId || p.holderId || 'FRM-AS-01';
+        return (
+          <div>
+            <span className="font-bold text-emerald-800">{name}</span>
+            <div className="text-[10px] text-slate-400 font-mono">{id}</div>
+          </div>
+        );
+      }
     },
     {
       header: 'Validity Expiry',
@@ -100,29 +152,64 @@ export default function PermitModule() {
     }
   ];
 
+  const isDfoRole = activeRole === 'FOREST_DEPT';
+  const isFarmerRole = activeRole === 'FARMER';
+  const isCollectionRole = activeRole === 'COLLECTION_OPERATOR';
+  const isAdminRole = activeRole === 'NERAMAC_ADMIN' || activeRole === 'SUPER_ADMIN';
+
   return (
     <div className="space-y-5">
+      {/* Role-Specific Separation of Concerns Banner */}
+      <div className="p-4 bg-slate-900 text-white rounded-xl shadow-xs border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+            <FileBadge2 className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-white text-sm">
+                {isDfoRole && 'DFO Forest Authority • Statutory Certificates & Orders Registry'}
+                {isFarmerRole && 'Farmer View • Issued Felling Orders & State Forest e-Transit Passes'}
+                {isCollectionRole && 'Depot Intake • Transit Pass & Quota Verification'}
+                {!isDfoRole && !isFarmerRole && !isCollectionRole && 'Statutory Permits, DFO Sanctions & CITES Certificates'}
+              </span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Persona: {activeRole}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 mt-0.5">
+              <strong>Workflow Distinction:</strong> Harvest Management handles physical field tasks (application, inspection, felling, weighing), whereas Permits &amp; DFO Orders serves as the official legal certificate repository (DFO Tree Felling Sanctions, State Forest e-TP Form II, and CITES export quotas).
+            </p>
+          </div>
+        </div>
+
+        {isDfoRole || isAdminRole ? (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Record Statutory Permit</span>
+          </button>
+        ) : null}
+      </div>
+
       {/* Title Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
         <div>
           <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Statutory Permits & DFO Sanctions</span>
+            <span>Statutory Permits &amp; DFO Sanctions</span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
               Module 06
             </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+              Assam Forest Dept
+            </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            DFO tree felling permissions, State Forest Transit Passes (Form II), and CITES Appendix II Export Authorizations.
+            Official certificate repository: DFO Tree Felling Sanction Orders, State Forest Transit Passes (Form II), and CITES Appendix II Export Authorizations.
           </p>
         </div>
-
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Record Statutory Permit</span>
-        </button>
       </div>
 
       {/* Main Table */}
@@ -140,23 +227,35 @@ export default function PermitModule() {
           isOpen={!!selectedPermit}
           onClose={() => setSelectedPermit(null)}
           title={`Permit Certificate: ${selectedPermit.permitNumber}`}
-          subtitle={selectedPermit.permitType}
+          subtitle={selectedPermit.permitType || (selectedPermit.type === 'FELLING' ? 'DFO Tree Felling Sanction Order' : selectedPermit.type || 'DFO Felling Sanction')}
           maxWidth="max-w-xl"
         >
           <div className="space-y-4 text-xs">
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 grid grid-cols-2 gap-3">
               <div>
                 <span className="text-[10px] text-slate-500 font-semibold uppercase">Permit Type</span>
-                <div className="font-extrabold text-slate-900">{selectedPermit.permitType}</div>
+                <div className="font-extrabold text-slate-900">{selectedPermit.permitType || (selectedPermit.type === 'FELLING' ? 'DFO Tree Felling Sanction Order' : selectedPermit.type || 'DFO Felling Sanction')}</div>
               </div>
               <div>
                 <span className="text-[10px] text-slate-500 font-semibold uppercase">Statutory Status</span>
                 <div><StatusBadge status={selectedPermit.status} /></div>
               </div>
               <div>
+                <span className="text-[10px] text-slate-500 font-semibold uppercase">Linked Tree & Age</span>
+                <div className="font-mono font-bold text-emerald-800">
+                  {selectedPermit.treeId || 'TRE-AS-001'} (Planted {selectedPermit.plantingYear || 2014} • {selectedPermit.treeAgeYears || 12} yrs)
+                </div>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 font-semibold uppercase">Linked Harvest Batch</span>
+                <div className="font-mono font-bold text-slate-800">
+                  {selectedPermit.batchId || selectedPermit.linkedEntities?.find(e => typeof e === 'string' && e.startsWith('HBT-')) || 'HBT-AS-2026-001'}
+                </div>
+              </div>
+              <div>
                 <span className="text-[10px] text-slate-500 font-semibold uppercase">Issuing Authority</span>
-                <div className="font-semibold text-slate-800">{selectedPermit.issuingAuthority}</div>
-                <div className="text-[11px] text-slate-500">Signatory: {selectedPermit.officerName}</div>
+                <div className="font-semibold text-slate-800">{selectedPermit.issuingAuthority || selectedPermit.issuedBy || 'Divisional Forest Officer, Assam'}</div>
+                <div className="text-[11px] text-slate-500">Signatory: {selectedPermit.officerName || 'S. K. Bordoloi, IFS'}</div>
               </div>
               <div>
                 <span className="text-[10px] text-slate-500 font-semibold uppercase">Validity Timeline</span>
@@ -169,7 +268,7 @@ export default function PermitModule() {
                 Statutory Verification Hash (MoEFCC & Forest Dept)
               </span>
               <div className="p-2.5 rounded-lg bg-slate-100 font-mono text-[11px] text-slate-700 break-all border border-slate-200">
-                {selectedPermit.verificationHash}
+                {selectedPermit.verificationHash || selectedPermit.documentHash || 'sha256:f12a8849102eacb920198421b8c09182374'}
               </div>
             </div>
 
@@ -193,6 +292,137 @@ export default function PermitModule() {
         subtitle="Upload signed order reference issued by Forest Department or MoEFCC"
       >
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {/* Quick Option to Select / Link to Harvest Batch & Tree */}
+          <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-[11px] font-black text-emerald-950">
+                Option: Link to Target Tree or Harvest Batch (Auto-Fill & Link)
+              </label>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setLinkMode('BY_BATCH')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition ${
+                    linkMode === 'BY_BATCH'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  By Harvest Batch
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLinkMode('BY_TREE')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition ${
+                    linkMode === 'BY_TREE'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  By Registered Tree
+                </button>
+              </div>
+            </div>
+
+            {linkMode === 'BY_BATCH' ? (
+              <div>
+                <span className="text-[10px] text-slate-500 block mb-1">
+                  Select Harvest Batch (For Transit Pass / Transport Permit):
+                </span>
+                <select
+                  value={form.batchId || ''}
+                  onChange={(e) => {
+                    const selectedBatchId = e.target.value;
+                    if (!selectedBatchId) {
+                      setForm({ ...form, batchId: '', treeId: '' });
+                      return;
+                    }
+                    const b = harvestBatches.find(x => x.id === selectedBatchId);
+                    const t = trees.find(x => x.id === b?.treeId);
+                    setForm({
+                      ...form,
+                      batchId: b.id,
+                      treeId: b.treeId,
+                      plantingYear: b.plantingYear || t?.plantingYear || 2014,
+                      treeAgeYears: b.treeAgeYears || t?.ageYears || 12,
+                      beneficiaryName: b.farmerName || form.beneficiaryName,
+                      beneficiaryFarmerId: b.farmerId || form.beneficiaryFarmerId,
+                      quotaApprovedTrees: 1,
+                      quotaKg: b.netWeightKg || 38.5,
+                      permitType: 'State Forest Transit Pass (Form II)',
+                      permitNumber: b.transitPassNumber || `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`
+                    });
+                  }}
+                  className="w-full text-xs px-3 py-2 border rounded-lg font-mono font-bold bg-white"
+                >
+                  <option value="">-- Manual Entry / General Quota --</option>
+                  {harvestBatches.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.id} • Tree {b.treeId} (Planted {b.plantingYear || 2014}, {b.treeAgeYears || 12} yrs) • {b.farmerName} ({b.netWeightKg} kg)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div>
+                <span className="text-[10px] text-slate-500 block mb-1">
+                  Select Registered Tree (For Pre-Felling Sanction Order):
+                </span>
+                <select
+                  value={form.treeId || ''}
+                  onChange={(e) => {
+                    const selectedTreeId = e.target.value;
+                    if (!selectedTreeId) return;
+                    const t = trees.find(x => x.id === selectedTreeId);
+                    const matchingBatch = harvestBatches.find(b => b.treeId === selectedTreeId);
+                    setForm({
+                      ...form,
+                      treeId: t.id,
+                      batchId: matchingBatch ? matchingBatch.id : '',
+                      plantingYear: t.plantingYear || 2014,
+                      treeAgeYears: t.ageYears || 12,
+                      beneficiaryName: t.farmerName || form.beneficiaryName,
+                      beneficiaryFarmerId: t.farmerId || form.beneficiaryFarmerId,
+                      quotaApprovedTrees: 1,
+                      approvedSpecies: t.variety || 'Aquilaria malaccensis',
+                      permitType: 'DFO Tree Felling Sanction Order',
+                      permitNumber: `DFO/GLT/2026/HARV-${Math.floor(200 + Math.random() * 800)}`
+                    });
+                  }}
+                  className="w-full text-xs px-3 py-2 border rounded-lg font-mono font-bold bg-white"
+                >
+                  <option value="">-- Select Registered Tree --</option>
+                  {(trees || []).map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.id} • Grower: {t.farmerName || 'Bhaben Saikia'} • Planted {t.plantingYear || 2014} ({t.ageYears || 12} yrs) • {t.variety || 'Aquilaria'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {(form.treeId || form.batchId) && (
+              <div className="p-2 bg-white rounded-lg border border-emerald-200 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] font-mono">
+                <div>
+                  <span className="text-slate-400 block font-sans font-semibold">Linked Tree:</span>
+                  <span className="font-bold text-emerald-800">{form.treeId || 'TRE-AS-001'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-sans font-semibold">Planting Year:</span>
+                  <span className="font-bold text-blue-900">{form.plantingYear || 2014}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-sans font-semibold">Tree Age:</span>
+                  <span className="font-bold text-emerald-900">{form.treeAgeYears || 12} Years</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-sans font-semibold">{form.batchId ? 'Harvest Batch:' : 'Species:'}</span>
+                  <span className="font-bold text-slate-800 truncate block">{form.batchId || form.approvedSpecies || 'Aquilaria'}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">Permit Number *</label>

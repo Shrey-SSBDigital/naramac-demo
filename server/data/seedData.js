@@ -63,7 +63,6 @@ const TRACEABILITY_CHAIN = {
     verifiedBy: "FA-ARUP-BORAH (NERAMAC Field Agent)",
     status: "ACTIVE",
     consentRecorded: true,
-    aadhaarMapped: false, // Per RFP: strictly optional, off-chain
     producerGroup: "Golaghat Agar Growers Cooperative (GAGC)",
     photoHash: "7d4a2f8c5b9e1a3d6f0c8e2b4a7d9f1e3c5a7b9d0e2f4a6c8e0b2d4f6a8c0e2b"
   },

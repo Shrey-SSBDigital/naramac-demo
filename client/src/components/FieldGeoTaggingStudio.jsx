@@ -444,9 +444,9 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
   const [activeTool, setActiveTool] = useState('INSPECT');
   const [exactGpsView, setExactGpsView] = useState(true);
 
-  // Layer Visibility
+  // Layer Visibility (Plantation excluded - dedicated to Plantation Module)
   const [layers, setLayers] = useState({
-    plantations: true,
+    plantations: false,
     pologens: true,
     trees: true,
     facilities: true,
@@ -485,12 +485,9 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
 
   // Live device webcam stream state
   const videoRef = useRef(null);
+  const geoStreamRef = useRef(null);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
 
-  // Offline Simulation
-  const [isOffline, setIsOffline] = useState(false);
-  const [offlineQueue, setOfflineQueue] = useState([]);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [bannerMsg, setBannerMsg] = useState(null);
 
   const showToast = (text, tone = 'success') => {
@@ -772,21 +769,26 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
   // Toggle Live Webcam
   const toggleWebcam = async () => {
     if (isWebcamActive) {
-      if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      if (geoStreamRef.current) {
+        geoStreamRef.current.getTracks().forEach(t => t.stop());
+        geoStreamRef.current = null;
+      }
+      if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
       setIsWebcamActive(false);
     } else {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
-          setIsWebcamActive(true);
+        let stream = null;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+          });
+        } catch (e1) {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
         }
+        geoStreamRef.current = stream;
+        setIsWebcamActive(true);
       } catch (err) {
         showToast('Webcam not accessible or permission denied. Using high-precision AR simulation.', 'warning');
         setIsWebcamActive(false);
@@ -1117,7 +1119,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             }`}
           >
             {exactGpsView ? <Eye className="w-3.5 h-3.5 text-slate-600" /> : <EyeOff className="w-3.5 h-3.5 text-amber-700" />}
-            <span>{exactGpsView ? 'Exact GPS View' : 'DPDP Masked'}</span>
+            <span>{exactGpsView ? 'Exact GPS View' : 'Redacted GPS View'}</span>
           </button>
 
           <button
@@ -1188,12 +1190,8 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
           {/* GIS Action Tools */}
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {[
-              { id: 'INSPECT', label: 'Inspect', icon: MousePointer2 },
-              { id: 'SELECT_AREA', label: 'Select Area', icon: SquareDashed },
-              { id: 'WALK_POLOGEN', label: 'Walk POLOGEN (<7y)', icon: Footprints, highlight: true },
-              { id: 'GEO_PIN_TREE', label: 'Geo-Pin Tree (≥7y)', icon: MapPin, highlight: true },
-              { id: 'REGISTER_PLANTATION', label: 'Register Plantation', icon: Tag },
-              { id: 'DISTANCE', label: 'Distance', icon: Ruler }
+              { id: 'INSPECT', label: 'Inspect Cadastral Entity', icon: MousePointer2 },
+              { id: 'DISTANCE', label: 'Measure Distance', icon: Ruler }
             ].map((t) => {
               const Icon = t.icon;
               const isActive = activeTool === t.id;
@@ -1205,8 +1203,6 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
                     isActive
                       ? 'gis-btn-dark shadow-2xs'
-                      : t.highlight
-                      ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
@@ -1243,81 +1239,26 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            {activeTool === 'WALK_POLOGEN' && (
+            {activeTool === 'DISTANCE' && draftPoints.length > 0 && (
               <>
                 <button
                   type="button"
-                  onClick={handleSimulatePologenWalk}
-                  disabled={isWalkingSim}
-                  className="px-2.5 py-1 rounded-md gis-btn-emerald disabled:opacity-50 font-semibold flex items-center gap-1"
+                  onClick={() => setDraftPoints((p) => p.slice(0, -1))}
+                  className="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold flex items-center gap-1"
                 >
-                  <Footprints className="w-3 h-3" />
-                  <span>{isWalkingSim ? 'Walking Perimeter...' : 'Simulate GPS Walk'}</span>
+                  <Undo2 className="w-3 h-3" />
+                  Undo Point
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleOpenCamera('POLOGEN')}
-                  className="px-2.5 py-1 rounded-md bg-teal-700 hover:bg-teal-800 text-white font-bold flex items-center gap-1"
+                  onClick={() => setDraftPoints([])}
+                  className="px-2 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold flex items-center gap-1"
                 >
-                  <Camera className="w-3 h-3" />
-                  <span>{draftPologenPhoto ? 'Retake Sapling Photo' : 'Capture Sapling Photo'}</span>
+                  <Trash2 className="w-3 h-3" />
+                  Clear Distance
                 </button>
               </>
             )}
-
-            {activeTool === 'GEO_PIN_TREE' && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleQuickPinTree}
-                  className="px-2.5 py-1 rounded-md gis-btn-amber font-semibold flex items-center gap-1"
-                >
-                  <MapPin className="w-3 h-3" />
-                  <span>Quick Pin Inside Plantation</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleOpenCamera('TREE')}
-                  className="px-2.5 py-1 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-bold flex items-center gap-1"
-                >
-                  <Camera className="w-3 h-3" />
-                  <span>{draftTreePhoto ? 'Retake Trunk Photo' : 'Capture Trunk Photo & Hash'}</span>
-                </button>
-              </>
-            )}
-
-            {activeTool === 'REGISTER_PLANTATION' && (
-              <button
-                type="button"
-                onClick={handleSamplePlantationPlot}
-                className="px-2.5 py-1 rounded-md gis-btn-emerald font-semibold flex items-center gap-1"
-              >
-                <Sparkles className="w-3 h-3" />
-                <span>Auto-Plot Sample Holding</span>
-              </button>
-            )}
-
-            {['SELECT_AREA', 'REGISTER_PLANTATION', 'WALK_POLOGEN', 'GEO_PIN_TREE', 'DISTANCE'].includes(activeTool) &&
-              draftPoints.length > 0 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setDraftPoints((p) => p.slice(0, -1))}
-                    className="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold flex items-center gap-1"
-                  >
-                    <Undo2 className="w-3 h-3" />
-                    Undo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDraftPoints([])}
-                    className="px-2 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold flex items-center gap-1"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    Clear
-                  </button>
-                </>
-              )}
           </div>
         </div>
       </div>
@@ -1350,7 +1291,6 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
               </span>
 
               {[
-                { key: 'plantations', label: 'Plantations', accent: 'accent-emerald-700' },
                 { key: 'pologens', label: 'POLOGENs (<7y)', accent: 'accent-amber-500' },
                 { key: 'trees', label: 'Mature Trees (≥7y)', accent: 'accent-emerald-600' },
                 { key: 'facilities', label: 'CPC / Labs / Ports', accent: 'accent-slate-900' },
@@ -1380,7 +1320,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             <h2 className="text-sm font-bold text-slate-900 flex items-center justify-between">
               <span>Spatial Registry</span>
               <span className="text-[11px] font-mono font-normal text-slate-500">
-                {totalPLT} PLT · {totalPLG} PLG · {totalTRE} TRE
+                {totalPLG} PLG · {totalTRE} TRE
               </span>
             </h2>
             <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
@@ -1493,49 +1433,12 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                 </div>
               );
             })}
-
-            {/* Plantations List */}
-            {(registry.plantations || []).map((plt) => {
-              const m = computePolygonMeasurements(plt.coordinates);
-              const isSelected = selectedEntity?.id === plt.id;
-              return (
-                <div
-                  key={plt.id}
-                  onClick={() => handleSelectEntity({ type: 'PLANTATION', ...plt })}
-                  className={`py-3 px-2 rounded-lg transition cursor-pointer flex items-center justify-between gap-2 ${
-                    isSelected ? 'bg-emerald-50/80 ring-1 ring-emerald-300 my-1' : 'hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <div className="font-mono text-xs font-bold text-slate-900 truncate">{plt.id}</div>
-                    <div className="text-xs font-medium text-slate-700 truncate mt-0.5">{plt.name}</div>
-                    <div className="text-[11px] text-slate-500">
-                      Farmer: <b className="text-slate-800">{plt.farmerName}</b>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectEntity({ type: 'PLANTATION', ...plt });
-                    }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex-shrink-0 transition ${
-                      isSelected
-                        ? 'gis-btn-emerald'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {isSelected ? 'Selected' : 'Select'}
-                  </button>
-                </div>
-              );
-            })}
           </div>
         </div>
       </div>
 
-      {/* 4. ACTIVE DRAFT REGISTRATION & IMAGE CAPTURE CARD */}
-      {['WALK_POLOGEN', 'GEO_PIN_TREE', 'REGISTER_PLANTATION'].includes(activeTool) && (
+      {/* 4. ACTIVE DRAFT REGISTRATION (Removed - handled via Field Inspection) */}
+      {false && (
         <div className="bg-white border-2 border-emerald-600/40 rounded-xl p-4 shadow-sm space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
@@ -1807,8 +1710,9 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             <button
               type="button"
               onClick={handleSaveDraft}
-              disabled={!draftAnalysis}
-              className="px-4 py-2 rounded-xl gis-btn-emerald disabled:opacity-40 font-extrabold text-xs flex items-center gap-1.5 shadow-xs"
+              disabled={!draftAnalysis || (draftAnalysis.overlap && !draftAnalysis.overlap.valid)}
+              className="px-4 py-2 rounded-xl gis-btn-emerald disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-xs flex items-center gap-1.5 shadow-xs"
+              title={draftAnalysis?.overlap && !draftAnalysis.overlap.valid ? 'Boundary overlap detected. Drag vertices to resolve before saving.' : 'Commit & Attach to Farmer'}
             >
               <Check className="w-4 h-4" />
               <span>Commit &amp; Attach to Farmer</span>
@@ -1875,7 +1779,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                     {selectedEntity.ageYears} Yrs • {selectedEntity.gbhCm} cm
                   </div>
                   <div className="text-[10px] text-slate-500 font-mono">
-                    Plot: {selectedEntity.parentPlantationId}
+                    Cluster: {selectedEntity.cluster || 'GOLAGHAT'}
                   </div>
                 </>
               ) : selectedMeasurements ? (
@@ -1965,8 +1869,11 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
               <button
                 type="button"
                 onClick={() => {
-                  if (videoRef.current?.srcObject) {
-                    videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+                  if (geoStreamRef.current) {
+                    geoStreamRef.current.getTracks().forEach(t => t.stop());
+                    geoStreamRef.current = null;
+                  }
+                  if (videoRef.current) {
                     videoRef.current.srcObject = null;
                   }
                   setIsWebcamActive(false);
@@ -1982,7 +1889,13 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
             <div className="relative h-80 bg-stone-950 overflow-hidden flex items-center justify-center">
               {/* Optional Real Video Stream */}
               <video
-                ref={videoRef}
+                ref={(el) => {
+                  if (el && geoStreamRef.current && el.srcObject !== geoStreamRef.current) {
+                    el.srcObject = geoStreamRef.current;
+                    el.play().catch(e => console.warn(e));
+                  }
+                  videoRef.current = el;
+                }}
                 autoPlay
                 playsInline
                 muted

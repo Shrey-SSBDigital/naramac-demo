@@ -39,7 +39,6 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
   const [selectedFarmer, setSelectedFarmer] = useState(null);
   const [activeTab, setActiveTab] = useState('HIERARCHY'); // 'HIERARCHY' | 'PLANTATIONS' | 'POLOGENS' | 'TREES' | 'DETAILS'
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [showAadhaarUnmasked, setShowAadhaarUnmasked] = useState(false);
 
   // Quick Action Sub-Modals from Farmer Profile
   const [isAttachPlantationModalOpen, setIsAttachPlantationModalOpen] = useState(false);
@@ -328,69 +327,6 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
         </div>
       </div>
 
-      {/* Asset Hierarchy Explanation Banner */}
-      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 text-white p-4 sm:p-5 rounded-2xl border border-emerald-800/40 shadow-xs space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-800/40 pb-2.5">
-          <div className="flex items-center gap-2">
-            <GitFork className="w-4 h-4 text-emerald-400" />
-            <span className="font-extrabold text-xs tracking-wide uppercase text-emerald-300">
-              Traceability Asset Structure: Farmer &rarr; Plantation &rarr; POLOGEN & Trees
-            </span>
-          </div>
-          <span className="text-[11px] text-slate-300 font-mono">
-            RFP Statutory Framework: 10 Farmers • {totalPlantationsCount} Plantations • {totalPologensCount} POLOGENs ({totalSaplingsCount} Saplings) • {totalTreesCount} Mature Trees
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          {/* Level 1: Farmer */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-emerald-600/30 text-emerald-300 flex items-center justify-center font-bold text-[11px]">
-                1
-              </div>
-              <span className="font-extrabold text-white text-xs">Farmer (FRM)</span>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
-              Root legal entity holding revenue Dag/Patta title, Aadhaar DPDP privacy identity, and territorial cluster allocation.
-            </p>
-          </div>
-
-          {/* Level 2: Plantation */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-blue-600/30 text-blue-300 flex items-center justify-center font-bold text-[11px]">
-                2
-              </div>
-              <span className="font-extrabold text-white text-xs">Plantation Plots (PLT)</span>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
-              Georeferenced spatial land parcels owned by the farmer, recording soil type, elevation, and verified boundary polygon.
-            </p>
-          </div>
-
-          {/* Level 3: Two-Tier Trees */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-teal-600/30 text-teal-300 flex items-center justify-center font-bold text-[11px]">
-                3
-              </div>
-              <span className="font-extrabold text-white text-xs">Two-Tier Forestry Assets</span>
-            </div>
-            <div className="space-y-1 text-[10px]">
-              <div className="flex items-center gap-1.5 text-teal-300 font-semibold">
-                <Sprout className="w-3 h-3 text-teal-400" />
-                <span>&lt;7 Yrs: <b>POLOGEN (PLG)</b> walked perimeter polygon (sapling count)</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-emerald-300 font-semibold">
-                <Trees className="w-3 h-3 text-emerald-400" />
-                <span>&ge;7 Yrs: <b>Mature Tree (TRE)</b> individual GPS point pin & QR tag</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Data Table */}
       <DataTable
         columns={columns}
@@ -556,7 +492,7 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
                 }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>DPDP & Land Title</span>
+                <span>Land Revenue Title</span>
               </button>
             </div>
 
@@ -882,7 +818,7 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
               </div>
             )}
 
-            {/* TAB 5: DPDP & LAND TITLE */}
+            {/* TAB 5: LAND REVENUE TITLE */}
             {activeTab === 'DETAILS' && (
               <div className="space-y-4 pt-1">
                 {/* Land Ownership */}
@@ -905,25 +841,17 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
                   </div>
                 </div>
 
-                {/* DPDP Act 2023 Masking Toggle */}
-                <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-amber-700" />
-                      <span className="font-extrabold text-amber-900">DPDP Act 2023 Privacy Masking</span>
-                    </div>
-                    <button
-                      onClick={() => setShowAadhaarUnmasked(!showAadhaarUnmasked)}
-                      className="text-[11px] font-bold text-amber-900 underline hover:text-amber-950"
-                    >
-                      {showAadhaarUnmasked ? 'Mask Identity' : 'View Authorized Unmasked'}
-                    </button>
+                {/* Farmer Status */}
+                <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                    <span className="font-extrabold text-emerald-900">Verified Producer Status</span>
                   </div>
-                  <p className="text-[11px] text-amber-800/90 leading-tight">
-                    In public QR verification scans, the grower personal phone and Aadhaar are strictly decoupled to safeguard privacy.
+                  <p className="text-[11px] text-emerald-800 leading-tight">
+                    Registered under Assam Agarwood Policy 2020. Land tenure and tree assets certified by NERAMAC field inspection.
                   </p>
-                  <div className="font-mono text-xs font-bold text-amber-950 bg-white/80 p-2 rounded border border-amber-200">
-                    Aadhaar Reference: {showAadhaarUnmasked ? '4412-8921-9011 (Verified UIDAI)' : selectedFarmer.aadhaarMasked}
+                  <div className="font-mono text-xs font-bold text-emerald-950 bg-white/80 p-2 rounded border border-emerald-200">
+                    Grower ID: {selectedFarmer.id} • Status: {selectedFarmer.status}
                   </div>
                 </div>
               </div>
@@ -1200,7 +1128,7 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
         isOpen={isRegisterModalOpen}
         onClose={() => setIsRegisterModalOpen(false)}
         title="Register New Agarwood Grower"
-        subtitle="Generates FRM Authoritative Digital Identity with DPDP protection"
+        subtitle="Generates FRM Authoritative Digital Identity"
       >
         <form onSubmit={handleRegisterSubmit} className="space-y-4 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

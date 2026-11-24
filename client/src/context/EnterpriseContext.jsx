@@ -21,12 +21,13 @@ import {
   MOCK_AUDIT_LOGS,
   MOCK_COLLECTION_CENTRES,
   MOCK_PROCESSING_CENTRES,
+  MOCK_FACILITIES,
   MOCK_FARMER_APPLICATIONS
 } from '../data/mockEnterpriseData';
 
 const EnterpriseContext = createContext(null);
 
-const STORAGE_KEY = 'NERAMAC_ASCTS_DATA_V2';
+const STORAGE_KEY = 'NERAMAC_ASCTS_DATA_V7';
 
 export function EnterpriseProvider({ children }) {
   // Current Active User Role (starts as NERAMAC_ADMIN for rich overview)
@@ -36,6 +37,9 @@ export function EnterpriseProvider({ children }) {
 
   // Global search query
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Cross-module dispatch intent (e.g. from HarvestModule batch -> Leg 1, or from AggregationModule lot -> Leg 2)
+  const [dispatchIntent, setDispatchIntent] = useState(null);
 
   // Toast notifications
   const [toasts, setToasts] = useState([]);
@@ -69,26 +73,118 @@ export function EnterpriseProvider({ children }) {
   const [inventory, setInventory] = useState(MOCK_INVENTORY);
   const [auditLogs, setAuditLogs] = useState(MOCK_AUDIT_LOGS);
 
-  // Load from localStorage on mount if available
+
+  // Load state from localStorage on mount if available
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.farmers) setFarmers(parsed.farmers);
+        if (parsed.farmers) {
+          const existingIds = new Set(parsed.farmers.map(f => f.id));
+          const missingBaselines = MOCK_FARMERS.filter(bf => !existingIds.has(bf.id));
+          setFarmers([...parsed.farmers, ...missingBaselines]);
+        }
         if (parsed.farmerApplications) setFarmerApplications(parsed.farmerApplications);
-        if (parsed.plantations) setPlantations(parsed.plantations);
+        if (parsed.plantations) {
+          const existingPltIds = new Set(parsed.plantations.map(p => p.id));
+          const missingPlts = MOCK_PLANTATIONS.filter(bp => !existingPltIds.has(bp.id));
+          setPlantations([...parsed.plantations, ...missingPlts]);
+        }
         if (parsed.pologens) setPologens(parsed.pologens);
-        if (parsed.trees) setTrees(parsed.trees);
+        if (parsed.trees) {
+          const existingTreeIds = new Set(parsed.trees.map(t => t.id));
+          const missingTrees = MOCK_TREES.filter(bt => !existingTreeIds.has(bt.id));
+          setTrees([...parsed.trees, ...missingTrees]);
+        }
         if (parsed.inoculations) setInoculations(parsed.inoculations);
-        if (parsed.harvests) setHarvests(parsed.harvests);
-        if (parsed.harvestBatches) setHarvestBatches(parsed.harvestBatches);
-        if (parsed.permits) setPermits(parsed.permits);
+        if (parsed.harvests) {
+          const updatedHarvests = parsed.harvests.map(h => {
+            if (h.id === 'HAU-2026-002') {
+              return {
+                ...h,
+                farmerId: 'FRM-AS-02',
+                farmerName: 'Tarun Chandra Das',
+                treeId: 'TRE-AS-007',
+                plantationId: 'PLT-AS-02',
+                dfoSanctionNumber: 'DFO/GLT/2026/HARV-215'
+              };
+            }
+            return h;
+          });
+          setHarvests(updatedHarvests);
+        }
+        if (parsed.harvestBatches) {
+          const updatedBatches = parsed.harvestBatches.map(b => {
+            if (b.id === 'HBT-AS-2026-002') {
+              return {
+                ...b,
+                farmerId: 'FRM-AS-02',
+                farmerName: 'Tarun Chandra Das',
+                treeId: 'TRE-AS-007',
+                plantationId: 'PLT-AS-02',
+                fellingOrderNumber: 'DFO/GLT/2026/HARV-215'
+              };
+            }
+            return b;
+          });
+          setHarvestBatches(updatedBatches);
+        }
+        if (parsed.permits) {
+          const normalizedPermits = parsed.permits.map(p => ({
+            ...p,
+            permitType: p.permitType || (p.type === 'FELLING' ? 'DFO Tree Felling Sanction Order' : p.type || 'DFO Tree Felling Sanction Order'),
+            issuingAuthority: p.issuingAuthority || p.issuedBy || 'Divisional Forest Officer, Golaghat Forest Division, Assam',
+            officerName: p.officerName || 'S. K. Bordoloi, IFS (DFO Golaghat)',
+            beneficiaryName: p.beneficiaryName || p.holderName || 'Bhaben Saikia',
+            beneficiaryFarmerId: p.beneficiaryFarmerId || p.holderId || 'FRM-AS-01',
+            approvedSpecies: p.approvedSpecies || 'Aquilaria malaccensis',
+            verificationHash: p.verificationHash || p.documentHash || 'sha256:f12a8849102eacb920198421b8c09182374'
+          }));
+          setPermits(normalizedPermits);
+        }
         if (parsed.movements) setMovements(parsed.movements);
-        if (parsed.aggregations) setAggregations(parsed.aggregations);
-        if (parsed.distillations) setDistillations(parsed.distillations);
+        if (parsed.aggregations) {
+          const updatedAggs = parsed.aggregations.map(a => {
+            if (a.id === 'AGG-AS-2026-01' && a.parentDetails) {
+              return {
+                ...a,
+                parentDetails: a.parentDetails.map(pd =>
+                  pd.batchId === 'HBT-AS-2026-002' ? { ...pd, farmer: 'Tarun Chandra Das' } : pd
+                )
+              };
+            }
+            return a;
+          });
+          setAggregations(updatedAggs);
+        }
+        if (parsed.distillations) {
+          const updatedDistills = parsed.distillations.map(d => {
+            if (d.id === 'DST-AS-2026-01') {
+              return {
+                ...d,
+                parentFarmers: ['Bhaben Saikia', 'Tarun Chandra Das']
+              };
+            }
+            return d;
+          });
+          setDistillations(updatedDistills);
+        }
         if (parsed.labTests) setLabTests(parsed.labTests);
-        if (parsed.finishedProducts) setFinishedProducts(parsed.finishedProducts);
+        if (parsed.finishedProducts) {
+          const updatedPacks = parsed.finishedProducts.map(p => {
+            if (p.serialNumber === 'PCK-NER-2026-001' || p.serialNumber === 'PCK-NER-2026-013') {
+              return {
+                ...p,
+                originFarmerMasked: 'B***n S***a (51.3%) + T***n C***a D*s (48.7%) [Pooled Homesteads]',
+                originFarmerFull: 'Bhaben Saikia (Homestead Plot 182, Patta 44) + Tarun Chandra Das (Homestead Plot 245, Patta 61)',
+                isPooledConsignment: true
+              };
+            }
+            return p;
+          });
+          setFinishedProducts(updatedPacks);
+        }
         if (parsed.exportBatches) setExportBatches(parsed.exportBatches);
         if (parsed.shipmentLots) setShipmentLots(parsed.shipmentLots);
         if (parsed.domesticSales) setDomesticSales(parsed.domesticSales);
@@ -162,6 +258,21 @@ export function EnterpriseProvider({ children }) {
     addToast('Demo database restored to default initial state', 'info');
   };
 
+  // Re-arm unharvested trees for a grower so the demo can be re-run indefinitely
+  const rearmFarmerTrees = (farmerId) => {
+    setTrees(prev => {
+      const updated = prev.map(t => {
+        if (!farmerId || t.farmerId === farmerId) {
+          return { ...t, status: 'MATURE_GROWING' };
+        }
+        return t;
+      });
+      persistState({ trees: updated });
+      return updated;
+    });
+    addToast(`Trees re-armed to MATURE_GROWING for repeat testing (${farmerId || 'All Growers'})`, 'success');
+  };
+
   // Helper to record an audit log event
   const logAudit = (action, module, details, entityId) => {
     const roleObj = USER_ROLES.find(r => r.id === activeRole);
@@ -181,6 +292,7 @@ export function EnterpriseProvider({ children }) {
     persistState({ auditLogs: updated });
   };
 
+
   // --- Actions ---
 
   // 0. Farmer Onboarding & Maker-Checker Workflow
@@ -199,7 +311,6 @@ export function EnterpriseProvider({ children }) {
       gender: appData.gender || 'Male',
       age: parseInt(appData.age) || 45,
       phone: appData.phone || '+91 94350 00000',
-      aadhaarMasked: appData.aadhaarMasked || `XXXX-XXXX-${appData.aadhaarLast4 || '4921'}`,
       state: isTripura ? 'Tripura' : 'Assam',
       cluster: appData.cluster || (isTripura ? 'Kadamtala Cluster' : 'Golaghat Cluster'),
       district: appData.district || (isTripura ? 'North Tripura' : 'Golaghat'),
@@ -283,7 +394,6 @@ export function EnterpriseProvider({ children }) {
       gender: app.gender,
       age: app.age,
       phone: app.phone,
-      aadhaarMasked: app.aadhaarMasked,
       state: app.state,
       cluster: app.cluster,
       district: app.district,
@@ -373,6 +483,8 @@ export function EnterpriseProvider({ children }) {
         inoculationStatus: 'NOT_INOCULATED',
         healthStatus: 'HEALTHY',
         coordinates: [lat, lng],
+        gpsLatitude: lat,
+        gpsLongitude: lng,
         geoVerified: true,
         tagDate: new Date().toISOString().split('T')[0]
       };
@@ -528,7 +640,8 @@ export function EnterpriseProvider({ children }) {
       species: 'Aquilaria malaccensis',
       fieldAgent: pologenData.fieldAgent || 'NERAMAC Field Officer',
       walkedDate: new Date().toISOString().split('T')[0],
-      status: 'WALKED_VERIFIED'
+      status: pologenData.status || (pologenData.overlapConflict ? 'DISPUTE_OVERLAP_HELD' : 'WALKED_VERIFIED'),
+      overlapConflict: pologenData.overlapConflict || null
     };
 
     const updatedPologens = [newPologen, ...pologens];
@@ -549,8 +662,18 @@ export function EnterpriseProvider({ children }) {
     setPlantations(updatedPlantations);
 
     persistState({ pologens: updatedPologens, plantations: updatedPlantations });
-    logAudit('CREATE_POLOGEN', 'Plantation & Forestry', `Walked sapling boundary polygon ${id} (${saplingCount} saplings, <7 yrs) attached to Farmer ${newPologen.farmerName}`, id);
-    addToast(`POLOGEN ${id} (${saplingCount} saplings) recorded under Farmer ${newPologen.farmerName}`);
+    if (newPologen.overlapConflict) {
+      logAudit(
+        'CADASTRAL_OVERLAP_FLAGGED',
+        'Plantation & Forestry',
+        `⚠ OVERLAP CONFLICT: POLOGEN ${id} intersects ${newPologen.overlapConflict.overlappingId} by ${newPologen.overlapConflict.overlapAreaSqM} m². Title clearance held; routed to DFO & Revenue Dispute Queue per Scenario (ii).`,
+        id
+      );
+      addToast(`⚠ POLOGEN ${id} flagged with ${newPologen.overlapConflict.overlapAreaSqM} m² overlap! Routed to DFO Dispute Queue.`, 'warning');
+    } else {
+      logAudit('CREATE_POLOGEN', 'Plantation & Forestry', `Walked sapling boundary polygon ${id} (${saplingCount} saplings, <7 yrs, Clean 0.0% overlap) attached to Farmer ${newPologen.farmerName}`, id);
+      addToast(`POLOGEN ${id} (${saplingCount} saplings, Clean Cadastral Boundary) recorded under Farmer ${newPologen.farmerName}`);
+    }
     return newPologen;
   };
 
@@ -558,6 +681,8 @@ export function EnterpriseProvider({ children }) {
     const id = `TRE-AS-${String(trees.length + 1).padStart(3, '0')}`;
     const plantation = plantations.find(p => p.id === treeData.plantationId);
     const farmer = farmers.find(f => f.id === (treeData.farmerId || plantation?.farmerId));
+    const lat = typeof treeData.gpsLatitude === 'number' ? treeData.gpsLatitude : (treeData.coordinates ? treeData.coordinates[0] : 26.5208);
+    const lng = typeof treeData.gpsLongitude === 'number' ? treeData.gpsLongitude : (treeData.coordinates ? treeData.coordinates[1] : 93.9790);
 
     const newTree = {
       id,
@@ -573,6 +698,9 @@ export function EnterpriseProvider({ children }) {
       qrTagCode: `TAG-AGY-${id}`,
       status: 'MATURE_GROWING',
       inoculationStatus: 'NOT_INOCULATED',
+      coordinates: [lat, lng],
+      gpsLatitude: lat,
+      gpsLongitude: lng,
       ...treeData
     };
     const updated = [newTree, ...trees];
@@ -601,8 +729,10 @@ export function EnterpriseProvider({ children }) {
   // 3. Cultivation & Inoculation
   const addInoculation = (inocData) => {
     const id = `INO-2026-${String(inoculations.length + 1).padStart(3, '0')}`;
+    const targetType = inocData.targetType || 'TREE';
     const newInoc = {
       id,
+      targetType,
       inoculationDate: new Date().toISOString().split('T')[0],
       status: 'MATURING',
       photoHash: `sha256:${Math.random().toString(16).slice(2)}`,
@@ -611,33 +741,71 @@ export function EnterpriseProvider({ children }) {
     const updatedInocs = [newInoc, ...inoculations];
     setInoculations(updatedInocs);
 
-    // Update tree status
-    const updatedTrees = trees.map(t => t.id === newInoc.treeId ? { ...t, inoculationStatus: 'INOCULATED', status: 'INOCULATED' } : t);
-    setTrees(updatedTrees);
+    let updatedTrees = trees;
+    let updatedPologens = pologens;
 
-    persistState({ inoculations: updatedInocs, trees: updatedTrees });
-    logAudit('LOG_INOCULATION', 'Cultivation & Inoculation', `Applied ${newInoc.method} on tree ${newInoc.treeId}`, id);
-    addToast(`Inoculation logged for Tree ${newInoc.treeId} with hash verification`);
+    if (targetType === 'POLOGEN' && newInoc.pologenId) {
+      updatedPologens = pologens.map(p =>
+        p.id === newInoc.pologenId
+          ? { ...p, inoculationStatus: 'INOCULATED', inoculatedTreeCount: newInoc.treeCount || p.saplingCount }
+          : p
+      );
+      setPologens(updatedPologens);
+    } else if (newInoc.treeId) {
+      updatedTrees = trees.map(t =>
+        t.id === newInoc.treeId ? { ...t, inoculationStatus: 'INOCULATED', status: 'INOCULATED' } : t
+      );
+      setTrees(updatedTrees);
+    }
+
+    persistState({ inoculations: updatedInocs, trees: updatedTrees, pologens: updatedPologens });
+    const targetDesc = targetType === 'POLOGEN'
+      ? `POLOGEN Block ${newInoc.pologenId} (${newInoc.treeCount || 'All'} saplings/trees)`
+      : `Mature Tree ${newInoc.treeId}`;
+    logAudit('LOG_INOCULATION', 'Cultivation & Inoculation', `Applied ${newInoc.method} on ${targetDesc}`, id);
+    addToast(`Inoculation logged for ${targetDesc} with cryptographic hash verification`);
     return newInoc;
   };
 
-  // 4. Harvest Management (Farmer Apply -> NERAMAC Verification -> DFO Approval -> Approved? Yes -> Authorisation ID / No -> Back to Harvest Application)
+  // 4. Harvest Management (Farmer/Field Agent Apply -> NERAMAC Verification -> DFO Approval -> Approved? Yes -> Authorisation ID / No -> Back to Harvest Application)
   const applyHarvest = (harvestData) => {
     const id = `HAU-2026-${String(harvests.length + 1).padStart(3, '0')}`;
+    const windowText = harvestData.harvestWindowText || (harvestData.harvestWindowStart && harvestData.harvestWindowEnd ? `${harvestData.harvestWindowStart} – ${harvestData.harvestWindowEnd}` : 'Next 15 Days');
     const newHarvest = {
       id,
       applicationDate: new Date().toISOString().split('T')[0],
       status: 'SUBMITTED_AWAITING_NERAMAC',
       makerCheckerApproved: false,
-      estimatedWeightKg: harvestData.estimatedWeightKg || 38.0,
-      reasonForHarvest: harvestData.reasonForHarvest || 'Resin maturity reached 24 months post-inoculation',
+      applicantMode: harvestData.applicantMode || 'FIELD_AGENT',
+      fieldAgent: harvestData.fieldAgent || 'NERAMAC-FA-04 (Dipankar Neog)',
+      dfoDivision: harvestData.dfoDivision || 'DFO Golaghat Forest Division, Assam',
+      targetAssetType: harvestData.targetAssetType || 'TREE',
+      treeCount: harvestData.treeCount || 1,
+      estimatedWeightKg: parseFloat(harvestData.estimatedWeightKg || harvestData.estimatedQuantity) || 38.0,
+      estimatedQuantity: parseFloat(harvestData.estimatedQuantity || harvestData.estimatedWeightKg) || 38.0,
+      quantityUnit: harvestData.quantityUnit || 'kg (Cleaned Heartwood)',
+      harvestWindowStart: harvestData.harvestWindowStart || new Date().toISOString().split('T')[0],
+      harvestWindowEnd: harvestData.harvestWindowEnd || new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
+      harvestWindowText: windowText,
+      reasonForHarvest: harvestData.reasonForHarvest || 'Resin maturity reached 24 months post-inoculation. Core drill test reveals dense oleoresin heartwood saturation.',
+      inoculationHistory: harvestData.inoculationHistory || {
+        eventId: 'INO-2024-032',
+        date: '2024-01-15',
+        method: 'Spiral Drill Inoculation',
+        compound: 'Bio-Inoculant Formulation AS-9 (CSIR-NEIST licensed)',
+        supplier: 'NERAMAC Approved Bio-Inputs Ltd.',
+        verificationStatus: 'Verified by Field Agent (Dense dark oleoresin confirmed)'
+      },
+      statutoryPermissionRef: harvestData.statutoryPermissionRef || 'REV/GLT/PATTA-78/NOC-2025/112',
+      photoSha256: harvestData.photoSha256 || '9a3ecbe5ed12ab4d8e11ba873c2f11161202b945e3b0c44298fc1c149afbf4c8',
+      photoUrl: harvestData.photoUrl || null,
       ...harvestData
     };
     const updated = [newHarvest, ...harvests];
     setHarvests(updated);
     persistState({ harvests: updated });
-    logAudit('APPLY_HARVEST', 'Harvest Management', `Farmer ${newHarvest.farmerName} submitted harvest application ${id} for tree ${newHarvest.treeId}`, id);
-    addToast(`Harvest application ${id} submitted. Awaiting NERAMAC field verification!`);
+    logAudit('APPLY_HARVEST', 'Harvest Management', `${newHarvest.applicantMode === 'FIELD_AGENT' ? 'Field Agent ' + newHarvest.fieldAgent + ' (on behalf of grower)' : 'Farmer ' + newHarvest.farmerName} submitted harvest application ${id} addressed to ${newHarvest.dfoDivision}`, id);
+    addToast(`Harvest application ${id} addressed to ${newHarvest.dfoDivision} submitted. Awaiting NERAMAC field verification!`);
     return newHarvest;
   };
 
@@ -694,21 +862,29 @@ export function EnterpriseProvider({ children }) {
       return h;
     });
 
-    // Auto-create official Permit record in permits state
+    // Auto-create official Permit record in permits state with standard schema
     const newPermit = {
       id: permitId,
       permitNumber: sanctionNo,
       authorisationId: authId,
+      permitType: 'DFO Tree Felling Sanction Order',
       type: 'FELLING',
-      issuedBy: 'Divisional Forest Officer (Golaghat)',
+      issuingAuthority: harvest.dfoDivision || 'Divisional Forest Officer, Golaghat Forest Division, Assam',
+      issuedBy: harvest.dfoDivision || 'Divisional Forest Officer, Golaghat Forest Division, Assam',
+      officerName: approvalData.dfoOfficerName || 'S. K. Bordoloi, IFS (DFO Golaghat)',
+      beneficiaryName: harvest.farmerName,
+      beneficiaryFarmerId: harvest.farmerId,
+      holderName: harvest.farmerName,
+      holderId: harvest.farmerId,
       issueDate: new Date().toISOString().split('T')[0],
       expiryDate: '2026-06-30',
-      holderId: harvest.farmerId,
-      holderName: harvest.farmerName,
+      quotaApprovedTrees: harvest.treeCount || 1,
+      approvedSpecies: 'Aquilaria malaccensis',
       status: 'ACTIVE',
       quotaKg: harvest.estimatedWeightKg || 45.0,
       usedKg: 0,
-      documentHash: `sha256:${Math.random().toString(16).slice(2)}`,
+      verificationHash: `sha256:${Math.random().toString(16).slice(2)}${Date.now().toString(16)}`,
+      documentHash: `sha256:${Math.random().toString(16).slice(2)}${Date.now().toString(16)}`,
       linkedEntities: [harvest.treeId, harvestId, authId]
     };
     const updatedPermits = [newPermit, ...permits];
@@ -799,10 +975,13 @@ export function EnterpriseProvider({ children }) {
       return h;
     });
 
+    const targetTree = trees.find(t => t.id === harvest.treeId);
     const newBatch = {
       id: batchId,
       harvestAuthId: harvestId,
       treeId: harvest.treeId,
+      plantingYear: harvest.plantingYear || targetTree?.plantingYear || 2014,
+      treeAgeYears: harvest.treeAgeYears || targetTree?.ageYears || 12,
       farmerId: harvest.farmerId,
       farmerName: harvest.farmerName,
       plantationId: harvest.plantationId,
@@ -860,6 +1039,7 @@ export function EnterpriseProvider({ children }) {
   // 6. Material Movement & Tolerance Check
   const createMovement = (dispatchData) => {
     const id = `MOV-2026-${String(movements.length + 1).padStart(3, '0')}`;
+    const matchedBatch = harvestBatches.find(b => b.id === dispatchData.batchId);
     const newMovement = {
       id,
       dispatchTimestamp: new Date().toISOString(),
@@ -869,17 +1049,39 @@ export function EnterpriseProvider({ children }) {
       varianceKg: null,
       variancePercent: null,
       receiptTimestamp: null,
+      grnNumber: null,
+      treeId: dispatchData.treeId || matchedBatch?.treeId || 'TRE-AS-001',
+      plantingYear: dispatchData.plantingYear || matchedBatch?.plantingYear || 2014,
+      treeAgeYears: dispatchData.treeAgeYears || matchedBatch?.treeAgeYears || 12,
+      movementType: dispatchData.movementType || (dispatchData.destinationType?.includes('Processing') ? 'AGGREGATOR_TO_DISTILLERY' : 'FARM_TO_AGGREGATOR'),
       ...dispatchData
     };
     const updated = [newMovement, ...movements];
     setMovements(updated);
-    persistState({ movements: updated });
-    logAudit('DISPATCH_MATERIAL', 'Material Movement', `Dispatched consignment ${id} from ${newMovement.sourceName}`, id);
-    addToast(`Movement record ${id} dispatched in transit`);
+
+    // If dispatching a specific harvest batch, mark it IN_TRANSIT
+    let updatedBatches = harvestBatches;
+    if (dispatchData.batchId) {
+      updatedBatches = harvestBatches.map(b => {
+        if (dispatchData.batchId.includes(b.id)) {
+          return {
+            ...b,
+            status: 'IN_TRANSIT',
+            currentLocation: `In Transit to ${dispatchData.destinationName || 'Aggregation Depot'}`
+          };
+        }
+        return b;
+      });
+      setHarvestBatches(updatedBatches);
+    }
+
+    persistState({ movements: updated, harvestBatches: updatedBatches });
+    logAudit('DISPATCH_MATERIAL', 'Material Movement', `Dispatched consignment ${id} (${newMovement.movementType}) from ${newMovement.sourceName} to ${newMovement.destinationName}`, id);
+    addToast(`Consignment ${id} dispatched in transit (${newMovement.dispatchWeightKg} kg)`);
     return newMovement;
   };
 
-  const receiveMovement = (movementId, receivedWeightKg, receivingCustodian) => {
+  const receiveMovement = (movementId, receivedWeightKg, receivingCustodian, grnNotes = '') => {
     const movement = movements.find(m => m.id === movementId);
     if (!movement) return;
 
@@ -888,6 +1090,8 @@ export function EnterpriseProvider({ children }) {
     const diff = parseFloat((recv - disp).toFixed(2));
     const pct = parseFloat(((diff / disp) * 100).toFixed(2));
     const passed = Math.abs(pct) <= 1.5;
+    const destCode = movement.destinationFacilityId || 'DEPOT-GLT';
+    const grnId = `GRN-${destCode.replace('FAC-', '')}-${new Date().getFullYear()}-${String(Math.floor(100 + Math.random() * 900))}`;
 
     const updated = movements.map(m => {
       if (m.id === movementId) {
@@ -898,26 +1102,47 @@ export function EnterpriseProvider({ children }) {
           variancePercent: pct,
           toleranceStatus: passed ? 'PASSED' : 'TOLERANCE_EXCEEDED',
           status: 'RECEIVED_VERIFIED',
-          receivingCustodian,
+          grnNumber: grnId,
+          receivingCustodian: receivingCustodian || m.receivingCustodian || 'Depot Superintendent',
           receiptTimestamp: new Date().toISOString(),
-          notes: passed
-            ? `Variance ${pct}% is within statutory 1.5% gate tolerance.`
-            : `WARNING: Variance ${pct}% exceeds maximum permitted 1.5% limit!`
+          receiptCoordinates: m.destinationName?.includes('Golaghat') ? [26.5912, 93.6021] : [24.4640, 92.2150],
+          notes: grnNotes || (passed
+            ? `Gate tolerance verified (${pct}% variance within statutory ±1.5% moisture allowance). Issued Goods Receipt Note ${grnId}. Farmer procurement credit approved.`
+            : `WARNING: Gate tolerance exceeded (${pct}% variance > ±1.5% limit). Consignment placed on statutory hold for joint survey.`)
         };
       }
       return m;
     });
 
+    // If batch received at Depot, update Harvest Batch location to Depot stock
+    let updatedBatches = harvestBatches;
+    if (movement.batchId) {
+      updatedBatches = harvestBatches.map(b => {
+        if (movement.batchId.includes(b.id)) {
+          return {
+            ...b,
+            currentLocation: movement.destinationName,
+            currentCustodian: movement.destinationType?.includes('Processing') ? 'CPC_OPERATOR' : 'COLLECTION_OPERATOR',
+            status: movement.destinationType?.includes('Processing') ? 'AT_CPC_DISTILLERY' : 'IN_STOCK'
+          };
+        }
+        return b;
+      });
+      setHarvestBatches(updatedBatches);
+    }
+
     setMovements(updated);
-    persistState({ movements: updated });
+    persistState({ movements: updated, harvestBatches: updatedBatches });
     logAudit(
-      'RECEIVE_MATERIAL',
+      'RECEIPT_AND_WEIGHT_RECONCILIATION',
       'Material Movement',
-      `Received consignment ${movementId}: ${recv}kg (Variance: ${pct}%, ${passed ? 'PASSED' : 'FLAGGED'})`,
+      `Gate weighment verified for ${movementId}: Received ${recv}kg vs Dispatched ${disp}kg. Variance: ${pct}% (${passed ? 'PASSED ≤ ±1.5%' : 'FLAGGED > ±1.5%'}). Generated GRN: ${grnId}`,
       movementId
     );
     addToast(
-      `Received ${movementId}: ${recv} kg. Tolerance status: ${passed ? 'PASSED (≤1.5%)' : 'FLAGGED (>1.5%)'}`,
+      passed
+        ? `Gate Recon Complete: Consignment ${movementId} verified! GRN ${grnId} generated (${pct}% variance PASS)`
+        : `Gate Recon Alert: Consignment ${movementId} flagged! Variance (${pct}%) exceeds ±1.5% tolerance`,
       passed ? 'success' : 'warning'
     );
   };
@@ -1057,6 +1282,22 @@ export function EnterpriseProvider({ children }) {
   // 10. Finished Product Packaging
   const packageFinishedProducts = (distillationRunId, flaconCount = 10, volumeMl = 12.0) => {
     const distill = distillations.find(d => d.id === distillationRunId);
+    const agg = aggregations.find(a => a.id === distill?.sourceBatchId);
+    const contributingFarmers = agg?.parentDetails?.length
+      ? [...new Set(agg.parentDetails.map(p => p.farmer))]
+      : (distill?.parentFarmers?.length ? distill.parentFarmers : ['Bhaben Saikia']);
+
+    const isPooled = contributingFarmers.length > 1;
+    const originFarmerMasked = isPooled
+      ? contributingFarmers.map(name => {
+          const parts = name.trim().split(' ');
+          return parts.map(p => p.length <= 2 ? p : p[0] + '*'.repeat(Math.max(1, p.length - 2)) + p[p.length - 1]).join(' ');
+        }).join(' + ') + ` [Pooled Charge]`
+      : `${contributingFarmers[0]} (Homestead Plot)`;
+    const originFarmerFull = isPooled
+      ? `Consolidated Pool: ${contributingFarmers.join(' + ')}`
+      : contributingFarmers[0];
+
     const startIdx = finishedProducts.length + 1;
     const newPacks = [];
 
@@ -1072,8 +1313,9 @@ export function EnterpriseProvider({ children }) {
         packagingDate: new Date().toISOString().split('T')[0],
         expiryDate: new Date(Date.now() + 10 * 365 * 86400000).toISOString().split('T')[0],
         originCluster: 'Golaghat Cluster (Assam)',
-        originFarmerMasked: 'B***n S***a (Homestead Plot 182)',
-        originFarmerFull: distill?.parentFarmers?.[0] || 'Bhaben Saikia',
+        originFarmerMasked,
+        originFarmerFull,
+        isPooledConsignment: isPooled,
         citesSpecies: 'Aquilaria malaccensis',
         citesPermitNo: 'CITES/IN/2026/EXP-441',
         qrCodeString: `https://trace.neramac.gov.in/verify/${sNo}`,
@@ -1203,10 +1445,30 @@ export function EnterpriseProvider({ children }) {
       });
       const harvestIds = hbtBatches.map(b => b.harvestAuthId);
       const harvestOps = harvests.filter(h => harvestIds.includes(h.id));
-      const treeIds = hbtBatches.map(b => b.treeId);
+      const treeIds = [...new Set(hbtBatches.map(b => b.treeId))];
       const matchedTrees = trees.filter(t => treeIds.includes(t.id));
-      const farmerIds = [...new Set(matchedTrees.map(t => t.farmerId))];
-      const matchedFarmers = farmers.filter(f => farmerIds.includes(f.id));
+      
+      const farmerIds = [...new Set([...matchedTrees.map(t => t.farmerId), ...hbtBatches.map(b => b.farmerId)].filter(Boolean))];
+      let matchedFarmers = farmers.filter(f => farmerIds.includes(f.id) || hbtBatches.some(b => b.farmerName === f.name));
+      
+      // Also look up contributing farmers from aggBatch.parentDetails
+      if (aggBatch?.parentDetails) {
+        aggBatch.parentDetails.forEach(pd => {
+          const f = farmers.find(farm => farm.name === pd.farmer || farm.id === pd.farmerId);
+          if (f && !matchedFarmers.some(mf => mf.id === f.id)) {
+            matchedFarmers.push(f);
+          }
+        });
+      }
+      if (distillation?.parentFarmers) {
+        distillation.parentFarmers.forEach(pName => {
+          const f = farmers.find(farm => farm.name === pName);
+          if (f && !matchedFarmers.some(mf => mf.id === f.id)) {
+            matchedFarmers.push(f);
+          }
+        });
+      }
+
       const matchedPlantations = plantations.filter(p => matchedFarmers.some(f => f.id === p.farmerId));
       const matchedInocs = inoculations.filter(i => treeIds.includes(i.treeId));
       const matchedMovements = movements.filter(m => m.batchId?.includes(product.exportBatchId) || m.batchId?.includes('AGG-AS-2026-01'));
@@ -1220,11 +1482,15 @@ export function EnterpriseProvider({ children }) {
         distillation,
         labTest,
         aggBatch,
+        aggregation: aggBatch,
         harvestBatches: hbtBatches,
         harvestOps,
         trees: matchedTrees,
+        tree: matchedTrees[0],
         farmers: matchedFarmers,
+        farmer: matchedFarmers[0],
         plantations: matchedPlantations,
+        plantation: matchedPlantations[0],
         inoculations: matchedInocs,
         movements: matchedMovements,
         exportBatch,
@@ -1233,11 +1499,47 @@ export function EnterpriseProvider({ children }) {
       };
     }
 
+    // Check if query matches an aggregation batch ID
+    const agg = aggregations.find(a => a.id.toUpperCase() === cleanQuery);
+    if (agg) {
+      const hbtBatches = harvestBatches.filter(h => agg.parentBatchIds.includes(h.id));
+      const treeIds = [...new Set(hbtBatches.map(b => b.treeId))];
+      const matchedTrees = trees.filter(t => treeIds.includes(t.id));
+      const farmerIds = [...new Set([...matchedTrees.map(t => t.farmerId), ...hbtBatches.map(b => b.farmerId)].filter(Boolean))];
+      let matchedFarmers = farmers.filter(f => farmerIds.includes(f.id) || hbtBatches.some(b => b.farmerName === f.name));
+      if (agg.parentDetails) {
+        agg.parentDetails.forEach(pd => {
+          const f = farmers.find(farm => farm.name === pd.farmer || farm.id === pd.farmerId);
+          if (f && !matchedFarmers.some(mf => mf.id === f.id)) {
+            matchedFarmers.push(f);
+          }
+        });
+      }
+      const distill = distillations.find(d => d.sourceBatchId === agg.id);
+      const lab = distill ? labTests.find(l => l.distillationRunId === distill.id) : null;
+      const prods = distill ? finishedProducts.filter(p => p.distillationRunId === distill.id) : [];
+
+      return {
+        targetType: 'AGGREGATION_BATCH',
+        aggBatch: agg,
+        aggregation: agg,
+        harvestBatches: hbtBatches,
+        trees: matchedTrees,
+        tree: matchedTrees[0],
+        farmers: matchedFarmers,
+        farmer: matchedFarmers[0],
+        distillation: distill,
+        labTest: lab,
+        products: prods,
+        product: prods[0]
+      };
+    }
+
     // Check if query matches a harvest batch ID
     const batch = harvestBatches.find(b => b.id.toUpperCase() === cleanQuery);
     if (batch) {
       const tree = trees.find(t => t.id === batch.treeId);
-      const farmer = farmers.find(f => f.id === batch.farmerId);
+      const farmer = farmers.find(f => f.id === batch.farmerId) || farmers.find(f => f.name === batch.farmerName);
       const plantation = plantations.find(p => p.id === batch.plantationId);
       const harvestOp = harvests.find(h => h.id === batch.harvestAuthId);
       const inoc = inoculations.find(i => i.treeId === batch.treeId);
@@ -1249,32 +1551,86 @@ export function EnterpriseProvider({ children }) {
       return {
         targetType: 'HARVEST_BATCH',
         harvestBatch: batch,
+        harvestBatches: [batch],
         tree,
+        trees: tree ? [tree] : [],
         farmer,
+        farmers: farmer ? [farmer] : [],
         plantation,
+        plantations: plantation ? [plantation] : [],
         harvestOp,
         inoculation: inoc,
         aggregation: agg,
+        aggBatch: agg,
         distillation: distill,
         labTest: lab,
-        products: prods
+        products: prods,
+        product: prods[0]
       };
     }
 
-    // Fallback: check farmer ID
-    const farmer = farmers.find(f => f.id.toUpperCase() === cleanQuery);
+    // Check if query matches a tree ID (e.g. TRE-AS-001 or TRE-AS-007)
+    const tree = trees.find(t => t.id.toUpperCase() === cleanQuery);
+    if (tree) {
+      const farmer = farmers.find(f => f.id === tree.farmerId) || farmers.find(f => f.name === tree.farmerName);
+      const plantation = plantations.find(p => p.id === tree.plantationId);
+      const hbtBatch = harvestBatches.find(b => b.treeId === tree.id);
+      const inoc = inoculations.find(i => i.treeId === tree.id);
+      const agg = hbtBatch ? aggregations.find(a => a.parentBatchIds.includes(hbtBatch.id)) : null;
+      const distill = agg ? distillations.find(d => d.sourceBatchId === agg.id) : null;
+      const lab = distill ? labTests.find(l => l.distillationRunId === distill.id) : null;
+      const prods = distill ? finishedProducts.filter(p => p.distillationRunId === distill.id) : [];
+
+      return {
+        targetType: 'TREE',
+        tree,
+        trees: [tree],
+        farmer,
+        farmers: farmer ? [farmer] : [],
+        plantation,
+        plantations: plantation ? [plantation] : [],
+        harvestBatch: hbtBatch,
+        harvestBatches: hbtBatch ? [hbtBatch] : [],
+        inoculation: inoc,
+        aggregation: agg,
+        aggBatch: agg,
+        distillation: distill,
+        labTest: lab,
+        products: prods,
+        product: prods[0]
+      };
+    }
+
+    // Fallback: check farmer ID or Farmer Name (e.g. Tarun Chandra Das or Bhaben Saikia)
+    const farmer = farmers.find(f => f.id.toUpperCase() === cleanQuery || f.name.toUpperCase().includes(cleanQuery));
     if (farmer) {
       const farmerPlantations = plantations.filter(p => p.farmerId === farmer.id);
       const farmerPologens = pologens.filter(p => p.farmerId === farmer.id);
       const farmerTrees = trees.filter(t => t.farmerId === farmer.id);
-      const farmerBatches = harvestBatches.filter(b => b.farmerId === farmer.id);
+      const farmerBatches = harvestBatches.filter(b => b.farmerId === farmer.id || b.farmerName === farmer.name);
+      const batchIds = farmerBatches.map(b => b.id);
+      const agg = aggregations.find(a => a.parentBatchIds.some(pId => batchIds.includes(pId)));
+      const distill = agg ? distillations.find(d => d.sourceBatchId === agg.id) : null;
+      const lab = distill ? labTests.find(l => l.distillationRunId === distill.id) : null;
+      const prods = distill ? finishedProducts.filter(p => p.distillationRunId === distill.id) : [];
+
       return {
         targetType: 'FARMER',
         farmer,
+        farmers: [farmer],
         plantations: farmerPlantations,
+        plantation: farmerPlantations[0],
         pologens: farmerPologens,
         trees: farmerTrees,
-        harvestBatches: farmerBatches
+        tree: farmerTrees[0],
+        harvestBatches: farmerBatches,
+        harvestBatch: farmerBatches[0],
+        aggregation: agg,
+        aggBatch: agg,
+        distillation: distill,
+        labTest: lab,
+        products: prods,
+        product: prods[0]
       };
     }
 
@@ -1288,9 +1644,12 @@ export function EnterpriseProvider({ children }) {
         setActiveRole: handleSetRole,
         searchQuery,
         setSearchQuery,
+        dispatchIntent,
+        setDispatchIntent,
         toasts,
         addToast,
         resetToInitialData,
+        rearmFarmerTrees,
 
         // Data entities
         farmers,
@@ -1314,6 +1673,12 @@ export function EnterpriseProvider({ children }) {
         auditLogs,
         collectionCentres: MOCK_COLLECTION_CENTRES,
         processingCentres: MOCK_PROCESSING_CENTRES,
+        facilities: MOCK_FACILITIES,
+
+        // System status
+        isOfflineMode: false,
+        isAirplaneMode: false,
+        offlineQueue: [],
 
         // Actions
         submitFarmerApplication,

@@ -15,10 +15,7 @@ export const ROLE_PERMISSIONS = {
       'HOME',
       'DASHBOARD',
       'FARMERS',
-      'FARMER_REGISTER',
-      'FARMER_APPROVALS',
       'PLANTATIONS',
-      'FIELD_INSPECTION',
       'GEO_STUDIO',
       'INOCULATION',
       'HARVEST',
@@ -56,7 +53,6 @@ export const ROLE_PERMISSIONS = {
       'FARMERS',
       'FARMER_APPROVALS',
       'PLANTATIONS',
-      'FIELD_INSPECTION',
       'GEO_STUDIO',
       'HARVEST',
       'PERMITS',
@@ -90,13 +86,15 @@ export const ROLE_PERMISSIONS = {
       'PLANTATIONS',
       'INOCULATION',
       'HARVEST',
+      'MOVEMENT',
       'TRACEABILITY'
     ],
     responsibilities: [
       'On-site physical inspection of homestead land, Dag/Patta, and Lat Mandal revenue records',
       'Walking POLOGEN perimeter boundaries (< 7 yrs) and geo-pinning mature trees (≥ 7 yrs)',
       'Forensic photo capture stamped with Web Crypto SHA-256 buffer hashes and RTK GPS coordinates',
-      'Recording fungal drill inoculation interventions and felling supervision'
+      'Recording fungal drill inoculation interventions and felling supervision',
+      'Recording Farm-to-Aggregator dispatch transit manifest and felling net weighment on behalf of Farmer'
     ]
   },
 
@@ -110,15 +108,18 @@ export const ROLE_PERMISSIONS = {
     allowedModules: [
       'HOME',
       'FARMER_REGISTER',
-      'FARMERS',
+      //'FARMERS',
       'PLANTATIONS',
       'HARVEST',
+      'MOVEMENT',
       'TRACEABILITY'
     ],
     responsibilities: [
-      'Submission of formal farmer registration with masked DPDP Aadhaar & Jamabandi records',
+      'Submission of formal farmer registration with grower profile & Jamabandi records',
       'Declaration of homestead trees, saplings, and Dag/Patta land revenue titles',
-      'Submitting harvest permission applications and receiving digital procurement receipts'
+      'Submitting harvest permission applications and receiving digital procurement receipts',
+      'Dispatching felled wood to Cluster Aggregation Depot (Farm-to-Aggregator first-mile transit)',
+      'Tracking Gate Weighment Reconciliation (≤ ±1.5%) and receiving digital Goods Receipt Notes (GRN) with payment credit advice'
     ]
   },
 
@@ -252,7 +253,7 @@ export const ROLE_PERMISSIONS = {
     responsibilities: [
       'Instant smartphone scan of Laser QR codes etched on 12ml luxury attar crystal flacons',
       'Inspection of complete immutable supply chain timeline from farmer homestead to packaging',
-      'Verification of DPDP Act compliant masked origin data and NABL laboratory purity certificate'
+      'Verification of verified origin provenance data and NABL laboratory purity certificate'
     ]
   }
 };
@@ -262,10 +263,10 @@ export const ROLE_PERMISSIONS = {
  */
 export function isModuleAllowedForRole(roleId, moduleId) {
   if (!roleId || !moduleId) return false;
-  if (roleId === 'SUPER_ADMIN') return true;
+  if (moduleId === 'HOME' || moduleId === 'TRACEABILITY') return true;
   const config = ROLE_PERMISSIONS[roleId];
   if (!config) return false;
-  return config.allowedModules.includes(moduleId);
+  return config.allowedModules ? config.allowedModules.includes(moduleId) : false;
 }
 
 /**

@@ -60,7 +60,7 @@ export default function QRVerificationPortal({ chainData, translations }) {
               </h2>
             </div>
             <p className="text-xs text-slate-600 mt-1 max-w-2xl">
-              RFP Section 2.3 & 3.2: Scannable serialized QR code resolving genuine provenance from plantation to consumer flacon with statutory DPDP Act privacy masking.
+              RFP Section 2.3 & 3.2: Scannable serialized QR code resolving genuine provenance from plantation to consumer flacon with verified privacy protection.
             </p>
           </div>
 
@@ -245,7 +245,7 @@ export default function QRVerificationPortal({ chainData, translations }) {
                 </div>
               </div>
 
-              {/* Source Farmer Provenance (with DPDP Masking) */}
+              {/* Source Farmer Provenance */}
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
                 <span className="text-[10px] text-slate-600 uppercase font-bold block">
                   Smallholder Grower & Plantation Provenance:
@@ -269,11 +269,11 @@ export default function QRVerificationPortal({ chainData, translations }) {
                 </div>
               </div>
 
-              {/* DPDP Act 2023 Statutory Privacy Protection Notice */}
+              {/* Statutory Privacy Protection Notice */}
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3 text-xs text-slate-600">
                 <Lock className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
                 <p className="text-[11px] leading-relaxed">
-                  <strong className="text-slate-200">Statutory DPDP Act 2023 Privacy Notice:</strong> In compliance with the Digital Personal Data Protection Act, 2023, farmer residential telephone numbers, exact cadastral parcel coordinates, and factory commercial conversion costs are masked to prevent smallholder exploitation while ensuring 100% legal traceability.
+                  <strong className="text-slate-200">Statutory Privacy Notice:</strong> Farmer residential telephone numbers, exact cadastral parcel coordinates, and factory commercial conversion costs are redacted to protect smallholder security while ensuring 100% legal traceability.
                 </p>
               </div>
             </div>

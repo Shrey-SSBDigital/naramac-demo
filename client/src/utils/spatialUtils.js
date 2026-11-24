@@ -221,12 +221,12 @@ export function computePathDistance(pointsLngLat) {
   };
 }
 
-// Format GPS Coordinate respecting DPDP Act 2023 Exact vs Masked View
+// Format GPS Coordinate respecting Exact vs Redacted View
 export function formatCoordinate(lat, lng, exactView = true) {
   if (exactView) {
     return `${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`;
   }
-  return `${lat.toFixed(2)}***° N, ${lng.toFixed(2)}***° E (DPDP Masked)`;
+  return `${lat.toFixed(2)}***° N, ${lng.toFixed(2)}***° E (Redacted)`;
 }
 
 // Build RFC 7946 GeoJSON FeatureCollection for client-side download

@@ -14,14 +14,14 @@ export default function ProcessingModule() {
     cpcId: 'CPC-GLT-01',
     cpcName: 'NERAMAC Common Processing Centre, Golaghat',
     sourceBatchType: 'AGGREGATION_BATCH',
-    sourceBatchId: 'AGG-AS-2026-02',
+    sourceBatchId: 'AGG-AS-2026-01',
     stillId: 'STILL-01 (Copper Hydro-Distillation Unit)',
     operatorName: 'Dr. P. J. Mahanta (Chief Distiller)',
     distillationMethod: 'Traditional Deg-Bhapka Style Hydro-Distillation',
     soakingPeriodDays: 14,
     temperatureCelsius: 102.5,
-    inputWoodKg: 63.8,
-    outputPureOudOilMl: 195.0,
+    inputWoodKg: 75.0,
+    outputPureOudOilMl: 245.0,
     outputHydrosolLiters: 15.5,
     outputSpentBiomassKg: 57.2
   });
@@ -183,23 +183,27 @@ export default function ProcessingModule() {
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Method:</span>
-                <span className="font-bold text-slate-800">{selectedDistill.distillationMethod}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Soaking Duration:</span>
-                <span className="font-bold text-slate-800">{selectedDistill.soakingPeriodDays} Days in demineralized water</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Total Run Duration:</span>
-                <span className="font-bold text-slate-800">{selectedDistill.durationHours} Hours continuous steam/fire</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Laboratory Sample Reference:</span>
-                <span className="font-mono font-bold text-emerald-800">{selectedDistill.labSampleId}</span>
-              </div>
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <table className="w-full text-left text-xs divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100">
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-3 py-2 font-semibold text-slate-500 w-1/3">Distillation Method</td>
+                    <td className="px-3 py-2 font-bold text-slate-900">{selectedDistill.distillationMethod}</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-3 py-2 font-semibold text-slate-500">Soaking Duration</td>
+                    <td className="px-3 py-2 font-bold text-slate-900">{selectedDistill.soakingPeriodDays} Days in demineralized water</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-3 py-2 font-semibold text-slate-500">Total Run Duration</td>
+                    <td className="px-3 py-2 font-bold text-slate-900">{selectedDistill.durationHours} Hours continuous steam/fire</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-3 py-2 font-semibold text-slate-500">Laboratory Sample Reference</td>
+                    <td className="px-3 py-2 font-mono font-bold text-emerald-800">{selectedDistill.labSampleId}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <div className="pt-2 flex justify-end">

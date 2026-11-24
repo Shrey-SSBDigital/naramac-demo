@@ -92,7 +92,7 @@ export const STAKEHOLDERS_DATA = [
       "Maintains plantation records, land tenure documents, and tree planting years.",
       "Applies for Harvest Authorisation to the Divisional Forest Officer (DFO) via NERAMAC portal.",
       "Acknowledges harvest records and physically hands over harvested logs/chips to collection points.",
-      "Provides informed consent for optional agricultural registry/scheme linkage (DPDP Act compliant)."
+      "Provides informed consent for agricultural registry and scheme linkage."
     ],
     mandatoryIdentitiesHandled: [
       { code: "FRM", name: "Farmer Identity", action: "Owner / Subject" },
@@ -199,7 +199,7 @@ export const STAKEHOLDERS_DATA = [
       { toRole: "EXPORTER_LOGISTICS", item: "Export batch endorsement and buyer verification links" }
     ],
     relationshipWithOthers: {
-      FARMER: "Enrolls growers, guarantees data sovereignty under DPDP Act, ensures fair market linkage through digital GI traceability.",
+      FARMER: "Enrolls growers, guarantees data sovereignty, ensures fair market linkage through digital GI traceability.",
       FIELD_AGENT: "Directs field tasks (e.g. maturity transition tasks when trees turn 7 yrs), validates GPS accuracy tolerances.",
       DFO_FOREST_DEPT: "Facilitates statutory workflow: prepares verified verification summaries for DFO felling sanctions.",
       AGGREGATOR: "Monitors collection centre storage limits, enforces weighment variance thresholds (max 2% tolerance).",
@@ -476,7 +476,7 @@ export const STAKEHOLDERS_DATA = [
       "Audits cryptographic photograph hashes (SHA-256) to ensure no post-capture image substitution occurred.",
       "Scrutinizes material-balance reconciliation: logs vs chips vs distilled oil vs spent residue and losses.",
       "Reviews all system exception overrides, maker-checker logs, and manual administrative interventions.",
-      "Audits Service Level Agreements (SLAs), VAPT compliance, disaster recovery readiness, and DPDP Act privacy adherence."
+      "Audits Service Level Agreements (SLAs), VAPT compliance, disaster recovery readiness, and statutory security adherence."
     ],
     mandatoryIdentitiesHandled: [
       { code: "ALL_15", name: "All 15 Digital IDs", action: "Full read-only audit & verification" },
@@ -523,7 +523,7 @@ export const STAKEHOLDERS_DATA = [
       { code: "PCK", name: "Pack Identity", action: "Scans & verifies" },
       { code: "ELT", name: "Export Lot Identity", action: "Confirms legal commercial shipment" }
     ],
-    regulatoryBoundary: "Access limited strictly to approved public-facing fields. Confidential farmer personal data (Aadhaar, exact house GPS) and trade secrets are masked.",
+    regulatoryBoundary: "Access limited strictly to approved public-facing fields. Confidential farmer personal contact data and trade secrets are protected.",
     upstreamDependencies: [
       { fromRole: "PACKAGING_OFFICER", item: "High-resolution, scannable QR code on product label" },
       { fromRole: "NERAMAC_ADMIN", item: "Secure resolver service and verified provenance claim publication" }

@@ -4,12 +4,13 @@ import DataTable from '../common/DataTable';
 import StatusBadge from '../common/StatusBadge';
 import Modal from '../common/Modal';
 import { QRCodeSVG } from 'qrcode.react';
-import { PackageCheck, QrCode, Plus, ShieldCheck, Download, ExternalLink } from 'lucide-react';
+import { PackageCheck, QrCode, Plus, ShieldCheck, Download, ExternalLink, Copy, Check, Smartphone } from 'lucide-react';
 
 export default function FinishedProductModule({ onOpenTraceSearch }) {
-  const { finishedProducts, packageFinishedProducts, distillations } = useEnterprise();
+  const { finishedProducts, packageFinishedProducts, distillations, addToast } = useEnterprise();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isBottleModalOpen, setIsBottleModalOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const [bottleForm, setBottleForm] = useState({
     distillationRunId: 'DST-AS-2026-01',
@@ -125,7 +126,7 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Serialized 12ml / 25ml flacons with laser-etched QR codes linking to the complete 15-identity origin graph.
+            Serialized 12ml / 25ml bottles (flacons) with laser-etched QR codes linking to the complete 15-identity origin graph.
           </p>
         </div>
 
@@ -134,7 +135,7 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
           className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
         >
           <PackageCheck className="w-4 h-4" />
-          <span>Bottle Flacons (Generate QR)</span>
+          <span>Bottle Oil & Packaging (Generate QR)</span>
         </button>
       </div>
 
@@ -158,30 +159,64 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
         >
           <div className="space-y-4 text-xs text-center">
             {/* QR Card */}
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center space-y-3">
-              <div className="p-3 bg-white rounded-xl shadow-md border border-slate-200">
-                <QRCodeSVG
-                  value={selectedProduct.qrCodeString}
-                  size={180}
-                  level="H"
-                  includeMargin={true}
-                />
-              </div>
+            {(() => {
+              const liveQrUrl = typeof window !== 'undefined'
+                ? `${window.location.origin}/traceability?batch=${selectedProduct.serialNumber}`
+                : selectedProduct.qrCodeString;
 
-              <div className="space-y-1">
-                <span className="font-mono text-sm font-black text-slate-900 tracking-tight">
-                  {selectedProduct.serialNumber}
-                </span>
-                <p className="text-[11px] text-slate-500 font-mono">
-                  {selectedProduct.qrCodeString}
-                </p>
-              </div>
-            </div>
+              const handleCopy = () => {
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(liveQrUrl);
+                  setCopiedLink(true);
+                  setTimeout(() => setCopiedLink(false), 2000);
+                  addToast?.('Traceability link copied to clipboard!', 'info');
+                }
+              };
+
+              return (
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center space-y-3">
+                  <div className="p-3 bg-white rounded-xl shadow-md border border-slate-200 ring-4 ring-emerald-500/10">
+                    <QRCodeSVG
+                      value={liveQrUrl}
+                      size={180}
+                      level="H"
+                      includeMargin={true}
+                    />
+                  </div>
+
+                  <div className="space-y-1 w-full max-w-sm">
+                    <span className="font-mono text-sm font-black text-slate-900 tracking-tight block">
+                      {selectedProduct.serialNumber}
+                    </span>
+                    <p className="text-[10px] text-slate-500 font-mono truncate px-2 py-1 bg-white rounded border border-slate-200">
+                      {liveQrUrl}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-white text-slate-700 font-bold text-xs flex items-center gap-1.5 transition"
+                    >
+                      {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedLink ? 'Copied!' : 'Copy Link'}</span>
+                    </button>
+                    <div className="flex items-center gap-1 text-[11px] text-emerald-800 font-bold bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>Live Scannable by Any Phone</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-left space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Origin Grower (DPDP Masked):</span>
-                <span className="font-bold text-slate-900">{selectedProduct.originFarmerMasked}</span>
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-slate-500 font-semibold flex-shrink-0">
+                  {selectedProduct.isPooledConsignment ? 'Origin Pool:' : 'Origin Grower:'}
+                </span>
+                <span className="font-bold text-slate-900 text-right">{selectedProduct.originFarmerMasked}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-semibold">Distillation Charge:</span>
@@ -196,17 +231,18 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
             <div className="pt-2 flex justify-between gap-2">
               <button
                 onClick={() => {
+                  const serial = selectedProduct.serialNumber;
                   setSelectedProduct(null);
-                  onOpenTraceSearch(selectedProduct.serialNumber);
+                  onOpenTraceSearch(serial);
                 }}
-                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-xs"
+                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-xs transition"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>Verify Full Traceability</span>
+                <span>Open &amp; Verify Traceability Dossier</span>
               </button>
               <button
                 onClick={() => setSelectedProduct(null)}
-                className="px-4 py-2 bg-slate-800 text-white rounded-xl font-bold"
+                className="px-4 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition"
               >
                 Close
               </button>
@@ -238,7 +274,7 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Number of Flacons to Bottle *</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Number of Bottles to Fill *</label>
               <input
                 type="number"
                 min="1"
@@ -250,14 +286,14 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Flacon Volume (ml)</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Bottle Volume (ml)</label>
               <select
                 value={bottleForm.volumeMl}
                 onChange={(e) => setBottleForm({ ...bottleForm, volumeMl: parseFloat(e.target.value) || 12 })}
                 className="w-full px-3 py-2 border rounded-lg font-semibold"
               >
-                <option value="12">12 ml (Standard Flacon)</option>
-                <option value="25">25 ml (Collector Edition)</option>
+                <option value="12">12 ml (Standard Bottle / Flacon)</option>
+                <option value="25">25 ml (Collector Edition Bottle)</option>
               </select>
             </div>
           </div>
