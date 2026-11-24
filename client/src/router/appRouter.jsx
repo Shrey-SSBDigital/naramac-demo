@@ -17,6 +17,7 @@ import { ROUTE_MAP, MODULE_TO_ROUTE } from './routeConfig';
 import { isModuleAllowedForRole, getDefaultRouteForRole } from '../utils/rbacConfig';
 
 // Module Components
+import LoginPage from '../components/auth/LoginPage';
 import HomeWorkflowOverview from '../components/HomeWorkflowOverview';
 import FarmerRegistrationModule from '../components/modules/FarmerRegistrationModule';
 import FarmerApprovalModule from '../components/modules/FarmerApprovalModule';
@@ -124,7 +125,19 @@ function RootLayout() {
     appNavigate
   };
 
-  const isHome = location.pathname === '/' || location.pathname === '/home';
+  const isLogin = location.pathname === '/' || location.pathname === '/login';
+  const isHome = location.pathname === '/overview' || location.pathname === '/home';
+
+  if (isLogin) {
+    return (
+      <FlowDemonstratorContext.Provider value={flowContextValue}>
+        <div className="min-h-screen bg-slate-900 text-slate-100 font-sans antialiased selection:bg-emerald-600 selection:text-white">
+          <Outlet />
+          <Toast toasts={toasts} />
+        </div>
+      </FlowDemonstratorContext.Provider>
+    );
+  }
 
   if (isHome) {
     return (
@@ -181,6 +194,11 @@ const rootRoute = createRootRoute({
 });
 
 // ── Route Components with Role Guards ─────────────────────────────────────────
+
+function LoginRoute() {
+  const { appNavigate } = useFlowDemonstrator();
+  return <LoginPage onNavigate={appNavigate} />;
+}
 
 function HomeRoute() {
   const { appNavigate } = useFlowDemonstrator();
@@ -331,7 +349,9 @@ function FlowRoute() {
 
 // ── TanStack Route Declarations ───────────────────────────────────────────────
 
-const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: HomeRoute });
+const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: LoginRoute });
+const loginRoute = createRoute({ getParentRoute: () => rootRoute, path: '/login', component: LoginRoute });
+const overviewRoute = createRoute({ getParentRoute: () => rootRoute, path: '/overview', component: HomeRoute });
 const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/home', component: HomeRoute });
 
 // Dashboard
@@ -549,6 +569,8 @@ const flowRoute = createRoute({
 // ── Assemble Route Tree ───────────────────────────────────────────────────────
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  loginRoute,
+  overviewRoute,
   homeRoute,
   dashboardRoute,
   farmerRoute,

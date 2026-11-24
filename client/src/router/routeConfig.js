@@ -4,7 +4,9 @@
  */
 
 export const ROUTE_MAP = {
-  '/': 'HOME',
+  '/': 'LOGIN',
+  '/login': 'LOGIN',
+  '/overview': 'HOME',
   '/home': 'HOME',
   '/dashboard': 'DASHBOARD',
   '/farmer': 'FARMERS',
@@ -46,7 +48,8 @@ export const ROUTE_MAP = {
 };
 
 export const MODULE_TO_ROUTE = {
-  HOME: '/',
+  LOGIN: '/',
+  HOME: '/overview',
   DASHBOARD: '/dashboard',
   FARMERS: '/farmer',
   FARMER_REGISTER: '/farmer/register',

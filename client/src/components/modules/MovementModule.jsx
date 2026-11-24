@@ -123,7 +123,9 @@ export default function MovementModule() {
 
     (permits || []).forEach(p => {
       const pNum = p.permitNumber || p.number;
-      const isTransit = (p.permitType?.toLowerCase().includes('transit') || pNum?.startsWith('TP/')) && !pNum?.startsWith('DFO/');
+      const isTransit = (p.permitType?.toLowerCase().includes('transit') || pNum?.startsWith('TP/')) &&
+        !pNum?.startsWith('DFO/') &&
+        !p.permitType?.toLowerCase().includes('felling');
       if (isTransit && pNum && !seen.has(pNum)) {
         seen.add(pNum);
         list.push({
@@ -164,10 +166,10 @@ export default function MovementModule() {
 
     const linkedFellingPermit = permits?.find(p =>
       (p.permitType?.toLowerCase().includes('felling') || p.permitNumber?.startsWith('DFO/')) &&
-      (p.batchId === b?.id || p.treeId === b?.treeId)
+      (p.batchId === b?.id || p.treeId === b?.treeId || p.linkedEntities?.includes(b?.treeId) || p.beneficiaryFarmerId === b?.farmerId)
     );
     const linkedHarvest = harvests?.find(h => h.treeId === b?.treeId || h.id === b?.harvestAuthId);
-    const dfoSanction = intentDetails.fellingOrderNumber || b?.fellingOrderNumber || linkedFellingPermit?.permitNumber || linkedHarvest?.dfoSanctionNumber || 'DFO/GLT/2026/HARV-379';
+    const dfoSanction = intentDetails.fellingOrderNumber || b?.fellingOrderNumber || linkedFellingPermit?.permitNumber || linkedHarvest?.dfoSanctionNumber || 'DFO/GLT/2026/HARV-404';
 
     setFarmForm({
       batchId: b ? b.id : (intentDetails.batchId || 'HBT-AS-2026-003'),
@@ -257,10 +259,10 @@ export default function MovementModule() {
 
     const linkedFellingPermit = permits?.find(p =>
       (p.permitType?.toLowerCase().includes('felling') || p.permitNumber?.startsWith('DFO/')) &&
-      (p.batchId === b.id || p.treeId === b.treeId)
+      (p.batchId === b.id || p.treeId === b.treeId || p.linkedEntities?.includes(b.treeId) || p.beneficiaryFarmerId === b.farmerId)
     );
     const linkedHarvest = harvests?.find(h => h.treeId === b.treeId || h.id === b.harvestAuthId);
-    const dfoSanction = b.fellingOrderNumber || linkedFellingPermit?.permitNumber || linkedHarvest?.dfoSanctionNumber || 'DFO/GLT/2026/HARV-379';
+    const dfoSanction = b.fellingOrderNumber || linkedFellingPermit?.permitNumber || linkedHarvest?.dfoSanctionNumber || 'DFO/GLT/2026/HARV-404';
 
     setFarmForm(prev => ({
       ...prev,
@@ -1465,6 +1467,11 @@ export default function MovementModule() {
                     title="Select State Forest e-Transit Pass"
                   >
                     <option value="">Choose active e-TP...</option>
+                    {farmForm.transitPassNumber && !availableTransitPasses.some(p => p.permitNumber === farmForm.transitPassNumber) && (
+                      <option value={farmForm.transitPassNumber}>
+                        {farmForm.transitPassNumber} {farmForm.batchId ? `• ${farmForm.batchId}` : ''}
+                      </option>
+                    )}
                     {availableTransitPasses.map(p => (
                       <option key={p.permitNumber} value={p.permitNumber}>
                         {p.permitNumber} {p.batchId ? `• ${p.batchId}` : ''}

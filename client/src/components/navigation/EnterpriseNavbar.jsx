@@ -3,13 +3,15 @@ import { useNavigate } from '@tanstack/react-router';
 import { useEnterprise } from '../../context/EnterpriseContext';
 import { USER_ROLES } from '../../data/mockEnterpriseData';
 import { getDefaultRouteForRole } from '../../utils/rbacConfig';
-import { Search, RotateCcw, ShieldCheck, Bell, ChevronDown, Check, Sparkles, Building2 } from 'lucide-react';
+import { Search, RotateCcw, ShieldCheck, Bell, ChevronDown, Check, Sparkles, Building2, LogOut } from 'lucide-react';
 import FacilityRegistryModal from '../common/FacilityRegistryModal';
 
 export default function EnterpriseNavbar({ activeModule, onSelectModule, onOpenTraceSearch }) {
   const { 
     activeRole, 
     setActiveRole, 
+    currentUser,
+    logout,
     resetToInitialData, 
     finishedProducts, 
     harvestBatches, 
@@ -39,10 +41,10 @@ export default function EnterpriseNavbar({ activeModule, onSelectModule, onOpenT
           <button
             onClick={() => {
               if (onSelectModule) onSelectModule('HOME');
-              navigate({ to: '/' });
+              navigate({ to: '/overview' });
             }}
             className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-800 to-emerald-600 text-white flex items-center justify-center font-black text-base shadow-sm ring-2 ring-emerald-500/20 hover:scale-105 transition flex-shrink-0"
-            title="Go to Home Overview"
+            title="Go to 26-Step Supply Chain Overview (/overview)"
           >
             N
           </button>
@@ -51,7 +53,7 @@ export default function EnterpriseNavbar({ activeModule, onSelectModule, onOpenT
               <button
                 onClick={() => {
                   if (onSelectModule) onSelectModule('HOME');
-                  navigate({ to: '/' });
+                  navigate({ to: '/overview' });
                 }}
                 className="text-sm font-extrabold text-slate-900 tracking-tight hover:text-emerald-700 transition text-left"
               >
@@ -60,7 +62,7 @@ export default function EnterpriseNavbar({ activeModule, onSelectModule, onOpenT
               <button
                 onClick={() => {
                   if (onSelectModule) onSelectModule('HOME');
-                  navigate({ to: '/' });
+                  navigate({ to: '/overview' });
                 }}
                 className={`text-[10px] font-bold px-2 py-0.5 rounded transition ${
                   activeModule === 'HOME'
@@ -68,7 +70,7 @@ export default function EnterpriseNavbar({ activeModule, onSelectModule, onOpenT
                     : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
                 }`}
               >
-                Home • Workflow
+                Overview (/overview)
               </button>
               <span className="hidden sm:inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
                 Assam & Tripura Clusters
@@ -119,6 +121,19 @@ export default function EnterpriseNavbar({ activeModule, onSelectModule, onOpenT
           >
             <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
             <span className="hidden sm:inline">Reset Demo</span>
+          </button>
+
+          {/* Sign Out / Exit to Login Page */}
+          <button
+            onClick={() => {
+              logout();
+              navigate({ to: '/' });
+            }}
+            title="Sign out and return to enterprise login page (/)"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition shadow-xs"
+          >
+            <LogOut className="w-3.5 h-3.5 text-rose-600" />
+            <span className="hidden sm:inline">Sign Out</span>
           </button>
         </div>
       </div>

@@ -59,14 +59,14 @@ export default function DashboardModule({ onNavigateModule }) {
   const inStockBottles = finishedProducts.filter(p => p.status === 'IN_VAULT_STOCK').length;
   const totalSaplings = (pologens || []).reduce((sum, p) => sum + (p.saplingCount || 0), 0);
 
-  // Default farmer context for FARMER role view
-  const myFarmer = farmers[0] || {
-    id: 'FRM-AS-01',
-    name: 'Bhaben Saikia',
-    village: 'Dhekial Gaon, Mouza Dhekial',
+  // Default farmer context for FARMER role view (prefers demonstration farmer Manoj Kalita)
+  const myFarmer = farmers.find(f => f.isDemonstration || f.id === 'FRM-AS-03') || farmers[0] || {
+    id: 'FRM-AS-03',
+    name: 'Manoj Kalita',
+    village: 'Mohuramukh Gaon, Mouza Bokakhat',
     district: 'Golaghat',
-    dagNumber: 'Dag 182, Patta 44',
-    landAreaAcres: 3.5
+    dagNumber: 'Dag 312, Patta 78',
+    landAreaAcres: 3.2
   };
   const myTrees = trees.filter(t => t.farmerId === myFarmer.id);
   const myPologens = pologens.filter(p => p.farmerId === myFarmer.id);

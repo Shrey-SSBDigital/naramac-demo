@@ -213,11 +213,11 @@ export default function HomeWorkflowOverview({ onNavigate }) {
               <span>Verify QR</span>
             </button>
             <button
-              onClick={() => onNavigate('/dashboard')}
+              onClick={() => onNavigate('/')}
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg transition flex items-center gap-1 shadow-xs"
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Dashboard</span>
+              <span>Log In</span>
             </button>
           </div>
         </div>

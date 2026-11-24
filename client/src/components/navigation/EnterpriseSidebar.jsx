@@ -31,7 +31,8 @@ import {
   ChevronRight,
   Sparkles,
   Lock,
-  ChevronDown
+  ChevronDown,
+  LogOut
 } from 'lucide-react';
 
 export default function EnterpriseSidebar({
@@ -43,6 +44,7 @@ export default function EnterpriseSidebar({
   const {
     activeRole,
     setActiveRole,
+    logout,
     farmers,
     farmerApplications,
     pologens,
@@ -78,6 +80,19 @@ export default function EnterpriseSidebar({
 
   // Master Navigation Groups with All Enterprise Routes
   const ALL_NAV_GROUPS = [
+    {
+      group: 'Architecture & Overview',
+      items: [
+        {
+          id: 'HOME',
+          name: '26-Step Supply Chain Overview',
+          icon: Compass,
+          badge: '26 Steps',
+          highlight: true,
+          path: '/overview'
+        }
+      ]
+    },
     {
       group: 'Role Workspace',
       items: [
@@ -338,10 +353,23 @@ export default function EnterpriseSidebar({
         )}
       </div>
 
-      {/* Footer Info */}
-      <div className="p-3 border-t border-slate-200 bg-slate-50 text-[10px] text-slate-500 flex items-center justify-between">
-        <span className="font-semibold text-slate-700">Govt. of India (MDoNER)</span>
-        <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">v2.1.0</span>
+      {/* Footer Info & Sign Out */}
+      <div className="p-3 border-t border-slate-200 bg-slate-50 space-y-2">
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            navigate({ to: '/' });
+          }}
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition shadow-2xs"
+        >
+          <LogOut className="w-3.5 h-3.5 text-rose-600" />
+          <span>Sign Out / Switch Role</span>
+        </button>
+        <div className="flex items-center justify-between text-[10px] text-slate-500">
+          <span className="font-semibold text-slate-700">Govt. of India (MDoNER)</span>
+          <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">v2.1.0</span>
+        </div>
       </div>
     </aside>
   );

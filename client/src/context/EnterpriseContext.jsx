@@ -22,7 +22,8 @@ import {
   MOCK_COLLECTION_CENTRES,
   MOCK_PROCESSING_CENTRES,
   MOCK_FACILITIES,
-  MOCK_FARMER_APPLICATIONS
+  MOCK_FARMER_APPLICATIONS,
+  ROLE_CREDENTIALS
 } from '../data/mockEnterpriseData';
 
 const EnterpriseContext = createContext(null);
@@ -34,6 +35,60 @@ export function EnterpriseProvider({ children }) {
   const [activeRole, setActiveRole] = useState(() => {
     return localStorage.getItem('NERAMAC_ACTIVE_ROLE') || 'NERAMAC_ADMIN';
   });
+
+  // Current Authenticated User (synced with 10 Enterprise Roles)
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('NERAMAC_CURRENT_USER');
+      if (savedUser) return JSON.parse(savedUser);
+    } catch (e) {}
+    const defaultCred = ROLE_CREDENTIALS.find(r => r.role === 'NERAMAC_ADMIN') || ROLE_CREDENTIALS[0];
+    return {
+      role: defaultCred.role,
+      username: defaultCred.username,
+      name: defaultCred.roleName,
+      badge: defaultCred.badge,
+      defaultRoute: defaultCred.defaultRoute,
+      farmerId: defaultCred.farmerId || null,
+      farmerName: defaultCred.farmerName || null,
+      isAuthenticated: true
+    };
+  });
+
+  const login = (roleId, customCreds = {}) => {
+    const cred = ROLE_CREDENTIALS.find(r => r.role === roleId) || ROLE_CREDENTIALS[0];
+    const userObj = {
+      role: cred.role,
+      username: customCreds.username || cred.username,
+      name: cred.roleName,
+      badge: cred.badge,
+      defaultRoute: cred.defaultRoute,
+      farmerId: cred.farmerId || null,
+      farmerName: cred.farmerName || null,
+      isAuthenticated: true
+    };
+    setCurrentUser(userObj);
+    setActiveRole(cred.role);
+    try {
+      localStorage.setItem('NERAMAC_CURRENT_USER', JSON.stringify(userObj));
+      localStorage.setItem('NERAMAC_ACTIVE_ROLE', cred.role);
+    } catch (e) {}
+    addToast(`Signed in successfully as ${cred.roleName}`, 'success');
+    return cred;
+  };
+
+  const logout = () => {
+    setCurrentUser({
+      role: null,
+      username: '',
+      name: '',
+      isAuthenticated: false
+    });
+    try {
+      localStorage.removeItem('NERAMAC_CURRENT_USER');
+    } catch (e) {}
+    addToast('Signed out of session', 'info');
+  };
 
   // Global search query
   const [searchQuery, setSearchQuery] = useState('');
@@ -390,10 +445,11 @@ export function EnterpriseProvider({ children }) {
 
     const isTripura = app.state === 'Tripura' || app.cluster?.includes('Tripura');
     const farmerPrefix = isTripura ? 'FRM-TR' : 'FRM-AS';
-    const farmerId = `${farmerPrefix}-${String(farmers.length + 1).padStart(2, '0')}`;
+    const existingFarmer = farmers.find(f => f.name.toLowerCase() === app.farmerName.toLowerCase() || (f.id === 'FRM-AS-03' && app.id === 'APP-AS-2026-001'));
+    const farmerId = existingFarmer ? existingFarmer.id : `${farmerPrefix}-${String(farmers.length + 1).padStart(2, '0')}`;
 
-    const homeLat = app.latitude || (app.coordinates ? app.coordinates[0] : (app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[1] : 26.5204));
-    const homeLng = app.longitude || (app.coordinates ? app.coordinates[1] : (app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[0] : 93.9782));
+    const homeLat = app.latitude || (app.coordinates ? app.coordinates[0] : (app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[1] : 26.541012));
+    const homeLng = app.longitude || (app.coordinates ? app.coordinates[1] : (app.inspectionReport?.coordinates ? app.inspectionReport.coordinates[0] : 93.941235));
 
     // 1. Create official Farmer record
     const newFarmer = {
@@ -417,12 +473,14 @@ export function EnterpriseProvider({ children }) {
       coordinates: [homeLat, homeLng],
       latitude: homeLat,
       longitude: homeLng,
-      gpsAccuracyMeters: app.gpsAccuracyMeters || '± 4.5m'
+      gpsAccuracyMeters: app.gpsAccuracyMeters || '± 4.5m',
+      isDemonstration: true
     };
 
     // 2. Create Plantation record
     const pltPrefix = isTripura ? 'PLT-TR' : 'PLT-AS';
-    const pltId = `${pltPrefix}-${String(plantations.length + 1).padStart(2, '0')}`;
+    const existingPlt = plantations.find(p => p.farmerId === farmerId);
+    const pltId = existingPlt ? existingPlt.id : `${pltPrefix}-${String(plantations.length + 1).padStart(2, '0')}`;
     const lat = homeLat;
     const lng = homeLng;
 
@@ -520,8 +578,12 @@ export function EnterpriseProvider({ children }) {
     };
 
     const updatedAppList = farmerApplications.map(a => a.id === appId ? updatedApp : a);
-    const updatedFarmersList = [newFarmer, ...farmers];
-    const updatedPlantationsList = [newPlantation, ...plantations];
+    const updatedFarmersList = existingFarmer 
+      ? farmers.map(f => f.id === existingFarmer.id ? { ...f, ...newFarmer, id: existingFarmer.id } : f)
+      : [newFarmer, ...farmers];
+    const updatedPlantationsList = existingPlt
+      ? plantations.map(p => p.id === existingPlt.id ? { ...p, ...newPlantation, id: existingPlt.id } : p)
+      : [newPlantation, ...plantations];
 
     setFarmerApplications(updatedAppList);
     setFarmers(updatedFarmersList);
@@ -883,6 +945,9 @@ export function EnterpriseProvider({ children }) {
       authorisationId: authId,
       permitType: 'DFO Tree Felling Sanction Order',
       type: 'FELLING',
+      treeId: harvest.treeId,
+      plantingYear: harvest.plantingYear || 2014,
+      treeAgeYears: harvest.treeAgeYears || 12,
       issuingAuthority: harvest.dfoDivision || 'Divisional Forest Officer, Golaghat Forest Division, Assam',
       issuedBy: harvest.dfoDivision || 'Divisional Forest Officer, Golaghat Forest Division, Assam',
       officerName: approvalData.dfoOfficerName || 'S. K. Bordoloi, IFS (DFO Golaghat)',
@@ -990,9 +1055,13 @@ export function EnterpriseProvider({ children }) {
     });
 
     const targetTree = trees.find(t => t.id === harvest.treeId);
+    const linkedFellingPermit = permits.find(p =>
+      (p.permitType?.toLowerCase().includes('felling') || p.permitNumber?.startsWith('DFO/')) &&
+      (p.treeId === harvest.treeId || p.authorisationId === harvestId || p.linkedEntities?.includes(harvest.treeId))
+    );
     const fellingOrderNo = harvest.dfoSanctionNumber ||
-      permits.find(p => (p.permitType?.toLowerCase().includes('felling') || p.permitNumber?.startsWith('DFO/')) && (p.treeId === harvest.treeId || p.authorisationId === harvestId))?.permitNumber ||
-      'DFO/GLT/2026/HARV-379';
+      linkedFellingPermit?.permitNumber ||
+      'DFO/GLT/2026/HARV-404';
     const tpNumber = fellingData.transitPassNumber || harvest.transitPassNumber || `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newBatch = {
@@ -1048,7 +1117,15 @@ export function EnterpriseProvider({ children }) {
 
     const updatedBatches = [newBatch, ...harvestBatches];
     const updatedTrees = trees.map(t => t.id === harvest.treeId ? { ...t, status: 'HARVESTED' } : t);
-    const updatedPermits = [newTransitPermit, ...permits];
+    const updatedPermits = [
+      newTransitPermit,
+      ...permits.map(p => {
+        if (p.permitNumber === fellingOrderNo || p.treeId === harvest.treeId || p.authorisationId === harvestId) {
+          return { ...p, batchId, treeId: harvest.treeId };
+        }
+        return p;
+      })
+    ];
 
     setHarvests(updatedHarvests);
     setHarvestBatches(updatedBatches);
@@ -1691,6 +1768,9 @@ export function EnterpriseProvider({ children }) {
       value={{
         activeRole,
         setActiveRole: handleSetRole,
+        currentUser,
+        login,
+        logout,
         searchQuery,
         setSearchQuery,
         dispatchIntent,
