@@ -543,24 +543,17 @@ export function EnterpriseProvider({ children }) {
   };
 
   const rejectFarmerApplication = (appId, reason) => {
-    const updated = farmerApplications.map(a => {
-      if (a.id === appId) {
-        return {
-          ...a,
-          status: 'REJECTED',
-          approvalDetails: {
-            approvedBy: 'NERAMAC Rejection Committee',
-            approvalDate: new Date().toISOString().split('T')[0],
-            remarks: reason || 'Application rejected due to revenue title discrepancies.'
-          }
-        };
-      }
-      return a;
-    });
+    const rejectedApp = farmerApplications.find(a => a.id === appId);
+    const updated = farmerApplications.filter(a => a.id !== appId);
     setFarmerApplications(updated);
     persistState({ farmerApplications: updated });
-    logAudit('FARMER_APPLICATION_REJECTED', 'Farmer Approval', `Application ${appId} rejected: ${reason}`, appId);
-    addToast(`Application ${appId} rejected.`);
+    logAudit(
+      'FARMER_APPLICATION_REJECTED',
+      'Farmer Approval',
+      `Application ${appId} for ${rejectedApp?.farmerName || 'Applicant'} rejected: ${reason || 'Application rejected due to revenue title discrepancies.'}`,
+      appId
+    );
+    addToast(`Application ${appId} for ${rejectedApp?.farmerName || 'Applicant'} rejected and removed from list.`);
   };
 
   // 1. Farmer Management
