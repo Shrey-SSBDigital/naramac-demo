@@ -1,21 +1,24 @@
 /**
  * Role-Based Access Control (RBAC) Configuration for NERAMAC ASCTS
- * Strict segregation of operational permissions and module access for all 10 stakeholders
+ * Strict segregation of operational permissions and module access for all 9 stakeholders
  */
 
 export const ROLE_PERMISSIONS = {
-  SUPER_ADMIN: {
-    id: 'SUPER_ADMIN',
-    name: 'Super Admin',
-    authority: 'Governing Technology Authority',
-    badge: 'Full Unrestricted Access',
+  NERAMAC_ADMIN: {
+    id: 'NERAMAC_ADMIN',
+    name: 'NERAMAC Administrator',
+    authority: 'North Eastern Regional Agricultural Marketing Corp.',
+    badge: 'Full System Access',
     color: 'emerald',
     defaultRoute: '/dashboard',
     allowedModules: [
       'HOME',
       'DASHBOARD',
       'FARMERS',
+      'FARMER_REGISTER',
+      'FARMER_APPROVALS',
       'PLANTATIONS',
+      'FIELD_INSPECTION',
       'GEO_STUDIO',
       'INOCULATION',
       'HARVEST',
@@ -34,37 +37,7 @@ export const ROLE_PERMISSIONS = {
       'FLOW'
     ],
     responsibilities: [
-      'Full governance of cryptographic ledgers and system configurations',
-      'Master management of all 10 stakeholder credentials and access rights',
-      'End-to-end statutory audit trails, mass balance overrides, and system reset'
-    ]
-  },
-
-  NERAMAC_ADMIN: {
-    id: 'NERAMAC_ADMIN',
-    name: 'NERAMAC Administrator',
-    authority: 'North Eastern Regional Agricultural Marketing Corp.',
-    badge: 'Sanctioning Authority',
-    color: 'emerald',
-    defaultRoute: '/dashboard',
-    allowedModules: [
-      'HOME',
-      'DASHBOARD',
-      'FARMERS',
-      'FARMER_APPROVALS',
-      'PLANTATIONS',
-      'GEO_STUDIO',
-      'HARVEST',
-      'PERMITS',
-      'AGGREGATION',
-      'PROCESSING',
-      'INVENTORY',
-      'FINISHED_PRODUCTS',
-      'EXPORT',
-      'TRACEABILITY',
-      'AUDIT_REPORTS'
-    ],
-    responsibilities: [
+      'Unrestricted system governance, configuration, and audit access across all modules',
       'Maker-checker approval of Farmer Onboarding applications and Land Revenue titles',
       'Statutory sanction of harvest quotas and Common Processing Centre (CPC) operations',
       'Issuance of official NERAMAC QR Identity Cards and Export Consignment approvals'
@@ -263,6 +236,7 @@ export const ROLE_PERMISSIONS = {
  */
 export function isModuleAllowedForRole(roleId, moduleId) {
   if (!roleId || !moduleId) return false;
+  if (roleId === 'NERAMAC_ADMIN') return true;
   if (moduleId === 'HOME' || moduleId === 'TRACEABILITY') return true;
   const config = ROLE_PERMISSIONS[roleId];
   if (!config) return false;

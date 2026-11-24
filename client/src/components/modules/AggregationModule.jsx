@@ -237,7 +237,7 @@ export default function AggregationModule() {
   ];
 
   const isDepotRole = activeRole === 'COLLECTION_OPERATOR';
-  const isAdminRole = activeRole === 'NERAMAC_ADMIN' || activeRole === 'SUPER_ADMIN';
+  const isAdminRole = activeRole === 'NERAMAC_ADMIN';
 
   return (
     <div className="space-y-5">

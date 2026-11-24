@@ -54,7 +54,7 @@ export default function FarmerApprovalModule({ onNavigate }) {
   const [rejectionError, setRejectionError] = useState('');
   const [copiedHash, setCopiedHash] = useState(false);
 
-  const isAuthorized = activeRole === 'NERAMAC_ADMIN' || activeRole === 'FOREST_DEPT' || activeRole === 'SUPER_ADMIN';
+  const isAuthorized = activeRole === 'NERAMAC_ADMIN' || activeRole === 'FOREST_DEPT';
 
   // Exclude any applications marked as REJECTED
   const activeApplications = (farmerApplications || []).filter(app => app.status !== 'REJECTED');

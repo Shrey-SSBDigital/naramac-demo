@@ -854,7 +854,7 @@ export default function HarvestModule() {
         const isFarmer = activeRole === 'FARMER';
         const isFieldAgent = activeRole === 'FIELD_AGENT';
         const isDfo = activeRole === 'FOREST_DEPT';
-        const isAdmin = activeRole === 'NERAMAC_ADMIN' || activeRole === 'SUPER_ADMIN';
+        const isAdmin = activeRole === 'NERAMAC_ADMIN';
 
         return (
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -1004,7 +1004,7 @@ export default function HarvestModule() {
   const isFarmerRole = activeRole === 'FARMER';
   const isFaRole = activeRole === 'FIELD_AGENT';
   const isDfoRole = activeRole === 'FOREST_DEPT';
-  const isAdminRole = activeRole === 'NERAMAC_ADMIN' || activeRole === 'SUPER_ADMIN';
+  const isAdminRole = activeRole === 'NERAMAC_ADMIN';
 
   // Filtered dataset subsets for role-specific queues
   const faPreHarvestData = harvests.filter(h => h.status === 'SUBMITTED_AWAITING_NERAMAC');

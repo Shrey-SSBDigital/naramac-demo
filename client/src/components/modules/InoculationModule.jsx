@@ -541,7 +541,7 @@ export default function InoculationModule() {
           </div>
         </div>
 
-        {activeRole === 'FIELD_AGENT' || activeRole === 'SUPER_ADMIN' || activeRole === 'NERAMAC_ADMIN' ? (
+        {activeRole === 'FIELD_AGENT' || activeRole === 'NERAMAC_ADMIN' ? (
           <button
             onClick={handleOpenModal}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
@@ -569,7 +569,7 @@ export default function InoculationModule() {
           </p>
         </div>
 
-        {activeRole !== 'FIELD_AGENT' && activeRole !== 'SUPER_ADMIN' && activeRole !== 'NERAMAC_ADMIN' && (
+        {activeRole !== 'FIELD_AGENT' && activeRole !== 'NERAMAC_ADMIN' && (
           <div className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
             Field Officer Supervised Intervention
           </div>

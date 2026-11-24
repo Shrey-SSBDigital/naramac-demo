@@ -74,8 +74,7 @@ export default function EnterpriseSidebar({
     LAB_OFFICER: 'NABL Quality Lab Desk',
     EXPORTER: 'Export & Logistics Desk',
     BUYER_PUBLIC: 'Consumer Provenance Portal',
-    NERAMAC_ADMIN: 'Executive Control Room',
-    SUPER_ADMIN: 'Super Admin Command'
+    NERAMAC_ADMIN: 'Executive Control Room'
   };
 
   // Master Navigation Groups with All Enterprise Routes

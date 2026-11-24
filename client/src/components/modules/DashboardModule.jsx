@@ -1027,7 +1027,7 @@ export default function DashboardModule({ onNavigateModule }) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // 9. NERAMAC ADMIN & SUPER ADMIN EXECUTIVE COMMAND DASHBOARD (Default)
+  // 9. NERAMAC ADMIN EXECUTIVE COMMAND DASHBOARD (Default)
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">

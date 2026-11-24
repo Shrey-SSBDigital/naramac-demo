@@ -54,7 +54,7 @@ export default function RoleGuardedRoute({ moduleId, children }) {
                   </span>
                 ))
               ) : (
-                <span className="text-slate-400 text-[11px]">Super Admin only</span>
+                <span className="text-slate-400 text-[11px]">NERAMAC Administrator only</span>
               )}
             </div>
           </div>

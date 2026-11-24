@@ -155,7 +155,7 @@ export default function PermitModule() {
   const isDfoRole = activeRole === 'FOREST_DEPT';
   const isFarmerRole = activeRole === 'FARMER';
   const isCollectionRole = activeRole === 'COLLECTION_OPERATOR';
-  const isAdminRole = activeRole === 'NERAMAC_ADMIN' || activeRole === 'SUPER_ADMIN';
+  const isAdminRole = activeRole === 'NERAMAC_ADMIN';
 
   return (
     <div className="space-y-5">

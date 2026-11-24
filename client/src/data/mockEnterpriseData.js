@@ -2,8 +2,7 @@
 // Optimized for clear demo visibility: any newly performed action shows up prominently as record #2 or #3 at the top.
 
 export const USER_ROLES = [
-  { id: 'SUPER_ADMIN', name: 'Super Admin', badge: 'Full Access', desc: 'Unrestricted system governance, configuration, and audit access' },
-  { id: 'NERAMAC_ADMIN', name: 'NERAMAC Administrator', badge: 'Governing Authority', desc: 'Master approval, maker-checker verification, and quota monitoring' },
+  { id: 'NERAMAC_ADMIN', name: 'NERAMAC Administrator', badge: 'Full Access', desc: 'Unrestricted system governance, master approval, maker-checker verification, and quota monitoring' },
   { id: 'FIELD_AGENT', name: 'NERAMAC Field Agent', badge: 'Field Operations', desc: 'Farmer registration, geo-pinning, inoculation logs, felling supervision' },
   { id: 'FARMER', name: 'Registered Farmer', badge: 'Primary Producer', desc: 'Homestead plot declaration, harvest applications, digital receipts' },
   { id: 'COLLECTION_OPERATOR', name: 'Collection Centre Operator', badge: 'Cluster Depots', desc: 'Weighment receipt, gate tolerance verification (<= 1.5%), aggregation' },
@@ -19,11 +18,11 @@ export const ROLE_CREDENTIALS = [
   {
     role: 'NERAMAC_ADMIN',
     roleName: 'NERAMAC Administrator',
-    badge: 'Governing Authority',
+    badge: 'Full Access',
     username: 'admin.neramac',
     password: 'Admin@2026',
     defaultRoute: '/dashboard',
-    desc: 'Master maker-checker verification, quota monitoring, and statutory governance.'
+    desc: 'Unrestricted system governance, master maker-checker verification, quota monitoring, and statutory audit logs.'
   },
   {
     role: 'FIELD_AGENT',
@@ -98,15 +97,6 @@ export const ROLE_CREDENTIALS = [
     password: 'Buyer@2026',
     defaultRoute: '/traceability',
     desc: 'Smartphone QR provenance scan, complete audit trail, and authenticity check.'
-  },
-  {
-    role: 'SUPER_ADMIN',
-    roleName: 'Super Administrator',
-    badge: 'Full Access',
-    username: 'super.admin',
-    password: 'Super@2026',
-    defaultRoute: '/dashboard',
-    desc: 'Unrestricted system governance, facility management, and master audit logs.'
   }
 ];
 
