@@ -124,15 +124,15 @@ export default function DataTable({
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold tracking-wider uppercase text-[10px]">
+            <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-black tracking-wider uppercase text-[11px]">
               {columns.map((col, idx) => (
-                <th key={idx} className={`py-3 px-4 ${col.className || ''}`}>
+                <th key={idx} className={`py-3.5 px-4 ${col.className || ''}`}>
                   {col.header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+          <tbody className="divide-y divide-slate-200 font-semibold text-slate-900">
             {paginatedData.length > 0 ? (
               paginatedData.map((row, rowIdx) => (
                 <tr

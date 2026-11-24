@@ -31,30 +31,30 @@ export default function FullSupplyChainView({ onSelectRole }) {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
         <div className="flex items-center gap-2.5">
-          <GitFork className="w-5 h-5 text-emerald-400" />
-          <h2 className="text-xl font-bold text-white tracking-tight">
+          <GitFork className="w-5 h-5 text-emerald-700" />
+          <h2 className="text-xl font-black text-slate-900 tracking-tight">
             End-to-End 15-Step Agarwood Traceability Chain
           </h2>
         </div>
-        <p className="text-xs text-slate-400 mt-1 max-w-3xl leading-relaxed">
+        <p className="text-xs text-slate-600 mt-1 max-w-3xl leading-relaxed font-medium">
           The complete flow from registered plantation in Assam or Tripura to international buyer verification. Every step creates an immutable digital link across all stakeholders. Click any step to inspect that stakeholder's specific responsibilities.
         </p>
 
         {/* 3 Core Pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mt-5 pt-4 border-t border-slate-800 text-xs">
-          <div className="bg-slate-850 p-3 rounded-xl border border-slate-750">
-            <span className="text-emerald-400 font-bold block">1. Single Unbroken Chain</span>
-            <span className="text-slate-400 text-[11px]">No identity is created without a parent link back to the originating grower.</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mt-5 pt-4 border-t border-slate-100 text-xs">
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+            <span className="text-emerald-800 font-extrabold block">1. Single Unbroken Chain</span>
+            <span className="text-slate-600 text-[11px] font-medium">No identity is created without a parent link back to the originating grower.</span>
           </div>
-          <div className="bg-slate-850 p-3 rounded-xl border border-slate-750">
-            <span className="text-teal-400 font-bold block">2. Strict Legal Separation</span>
-            <span className="text-slate-400 text-[11px]">NERAMAC verifies technical data; DFO holds sole statutory felling authority.</span>
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+            <span className="text-teal-800 font-extrabold block">2. Strict Legal Separation</span>
+            <span className="text-slate-600 text-[11px] font-medium">NERAMAC verifies technical data; DFO holds sole statutory felling authority.</span>
           </div>
-          <div className="bg-slate-850 p-3 rounded-xl border border-slate-750">
-            <span className="text-cyan-400 font-bold block">3. Data Privacy Protection</span>
-            <span className="text-slate-400 text-[11px]">Public QR scans protect smallholder phone numbers and exact cadastral house coordinates.</span>
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+            <span className="text-blue-800 font-extrabold block">3. Data Privacy Protection</span>
+            <span className="text-slate-600 text-[11px] font-medium">Public QR scans protect smallholder phone numbers and exact cadastral house coordinates.</span>
           </div>
         </div>
       </div>
@@ -64,30 +64,30 @@ export default function FullSupplyChainView({ onSelectRole }) {
         {steps.map((s) => (
           <div
             key={s.step}
-            className="bg-slate-850/80 border border-slate-800 hover:border-emerald-500/60 p-4 rounded-xl transition duration-150 flex flex-col md:flex-row md:items-center justify-between gap-4"
+            className="bg-white border border-slate-200 hover:border-emerald-500 hover:shadow-xs p-4 rounded-xl transition duration-150 flex flex-col md:flex-row md:items-center justify-between gap-4"
           >
             <div className="flex items-start md:items-center gap-3.5">
-              <span className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 font-mono font-bold text-xs flex items-center justify-center flex-shrink-0">
+              <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-300 font-mono font-black text-xs flex items-center justify-center flex-shrink-0">
                 #{s.step}
               </span>
 
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-white">{s.title}</h3>
-                  <span className="font-mono text-[10px] px-2 py-0.2 rounded bg-slate-800 text-teal-300 border border-slate-700 font-semibold">
+                  <h3 className="text-sm font-extrabold text-slate-900">{s.title}</h3>
+                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-950 border border-emerald-300 font-bold">
                     ID: {s.id}
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 mt-0.5">{s.action}</p>
+                <p className="text-xs text-slate-600 font-medium mt-0.5">{s.action}</p>
               </div>
             </div>
 
             <button
               onClick={() => onSelectRole(s.roleId)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition flex-shrink-0"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-emerald-700 text-white text-xs font-bold transition flex-shrink-0 shadow-2xs"
             >
               <span>View Stakeholder Duties</span>
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         ))}

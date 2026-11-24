@@ -122,49 +122,49 @@ export default function WorkflowSimulationView({ translations }) {
   return (
     <div className="space-y-6">
       {/* Overview Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 shadow-xl">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 shadow-xs">
         <div className="flex items-center gap-2">
-          <Play className="w-5 h-5 text-emerald-400" />
-          <h2 className="text-xl font-bold text-white tracking-tight">
+          <Play className="w-5 h-5 text-emerald-700" />
+          <h2 className="text-xl font-black text-slate-900 tracking-tight">
             Live Interactive Operational Rules & Workflow Simulator
           </h2>
         </div>
-        <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+        <p className="text-xs text-slate-600 mt-1 max-w-3xl font-medium">
           Test core business logic from the RFP: DFO statutory maker-checker control, weighment tolerance monitoring (≤ 1.5%), the 7-year age rule transition, and offline-provisional sync.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Simulation 1: DFO Maker-Checker Workflow */}
-        <div className="bg-slate-850 border border-slate-750 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <FileCheck2 className="w-4 h-4 text-amber-400" />
-              <h3 className="text-sm font-bold text-white">
+              <FileCheck2 className="w-4 h-4 text-amber-700" />
+              <h3 className="text-sm font-black text-slate-900">
                 1. DFO Harvest Authorisation & Maker-Checker
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-slate-600 mb-4 font-medium">
               RFP Section 2.6 & 3.2: DFO issues statutory felling order; NERAMAC Maker-Checker validates the order before harvest can proceed.
             </p>
 
             <form onSubmit={handleDfoSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-medium block mb-1">DFO Order Reference:</label>
+                <label className="text-slate-700 font-bold block mb-1">DFO Order Reference:</label>
                 <input
                   type="text"
                   value={dfoOrderRef}
                   onChange={(e) => setDfoOrderRef(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-750 rounded-lg px-3 py-2 text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-mono text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-bold"
                 />
               </div>
 
               <div>
-                <label className="text-slate-300 font-medium block mb-1">DFO Statutory Decision:</label>
+                <label className="text-slate-700 font-bold block mb-1">DFO Statutory Decision:</label>
                 <select
                   value={dfoDecision}
                   onChange={(e) => setDfoDecision(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-750 rounded-lg px-3 py-2 text-white text-xs focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-bold"
                 >
                   <option value="APPROVE">Approve Harvest (Permit 200 kg from 2 mature trees)</option>
                   <option value="REJECT">Reject (Sanctuary Buffer / Quota Exceeded)</option>
@@ -174,7 +174,7 @@ export default function WorkflowSimulationView({ translations }) {
               <button
                 type="submit"
                 disabled={isDfoLoading}
-                className="w-full mt-2 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold transition"
+                className="w-full mt-2 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold transition shadow-2xs"
               >
                 {isDfoLoading ? "Executing Maker-Checker Scrutiny..." : "Execute DFO & Maker-Checker Action"}
               </button>
@@ -182,21 +182,21 @@ export default function WorkflowSimulationView({ translations }) {
           </div>
 
           {dfoResult && (
-            <div className={`mt-4 p-3 rounded-xl border text-xs ${
+            <div className={`mt-4 p-3 rounded-xl border text-xs shadow-2xs ${
               dfoResult.status.includes('APPROVED')
-                ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
-                : 'bg-red-950/60 border-red-500/50 text-red-300'
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                : 'bg-rose-50 border-rose-300 text-rose-950'
             }`}>
-              <div className="flex items-center gap-1.5 font-bold mb-1">
-                {dfoResult.status.includes('APPROVED') ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+              <div className="flex items-center gap-1.5 font-black mb-1">
+                {dfoResult.status.includes('APPROVED') ? <CheckCircle2 className="w-4 h-4 text-emerald-700" /> : <AlertTriangle className="w-4 h-4 text-rose-700" />}
                 <span>Status: {dfoResult.status}</span>
               </div>
-              <p className="text-[11px] text-slate-200">{dfoResult.message}</p>
+              <p className="text-[11px] text-slate-700 font-medium">{dfoResult.message}</p>
               {dfoResult.permitId && (
-                <div className="mt-2 pt-2 border-t border-emerald-800/50 text-[10px] space-y-0.5 font-mono text-slate-300">
-                  <div>Permit Issued: <span className="text-emerald-400">{dfoResult.permitId}</span></div>
-                  <div>Maker-Checker: <span className="text-teal-400">{dfoResult.checkerOfficer}</span></div>
-                  <div className="truncate">Signed Order Hash: {dfoResult.docHash}</div>
+                <div className="mt-2 pt-2 border-t border-emerald-200 text-[10px] space-y-0.5 font-mono text-slate-800">
+                  <div>Permit Issued: <span className="text-emerald-900 font-bold">{dfoResult.permitId}</span></div>
+                  <div>Maker-Checker: <span className="text-teal-900 font-bold">{dfoResult.checkerOfficer}</span></div>
+                  <div className="truncate text-slate-600">Signed Order Hash: {dfoResult.docHash}</div>
                 </div>
               )}
             </div>
@@ -204,56 +204,56 @@ export default function WorkflowSimulationView({ translations }) {
         </div>
 
         {/* Simulation 2: Weighment & Transit Variance Check */}
-        <div className="bg-slate-850 border border-slate-750 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <Scale className="w-4 h-4 text-cyan-400" />
-              <h3 className="text-sm font-bold text-white">
+              <Scale className="w-4 h-4 text-teal-700" />
+              <h3 className="text-sm font-black text-slate-900">
                 2. Movement & Weighment Variance Control
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-slate-600 mb-4 font-medium">
               RFP Section 2.7 & 3.2: Reconciles dispatch vs receipt weight against approved tolerance (≤ 1.5%). Auto-routes exceptions.
             </p>
 
             <form onSubmit={handleVarianceCheck} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-slate-300 font-medium block mb-1">Dispatch Wt (kg):</label>
+                  <label className="text-slate-700 font-bold block mb-1">Dispatch Wt (kg):</label>
                   <input
                     type="number"
                     step="0.1"
                     value={dispatchWeight}
                     onChange={(e) => setDispatchWeight(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-750 rounded-lg px-3 py-2 text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-mono text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-bold"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-300 font-medium block mb-1">Receipt Wt (kg):</label>
+                  <label className="text-slate-700 font-bold block mb-1">Receipt Wt (kg):</label>
                   <input
                     type="number"
                     step="0.1"
                     value={receiptWeight}
                     onChange={(e) => setReceiptWeight(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-750 rounded-lg px-3 py-2 text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-mono text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-bold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-slate-300 font-medium block mb-1">Allowed Tolerance Limit (%):</label>
+                <label className="text-slate-700 font-bold block mb-1">Allowed Tolerance Limit (%):</label>
                 <input
                   type="number"
                   step="0.1"
                   value={toleranceLimit}
                   onChange={(e) => setToleranceLimit(parseFloat(e.target.value))}
-                  className="w-full bg-slate-900 border border-slate-750 rounded-lg px-3 py-2 text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-mono text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-bold"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full mt-2 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition"
+                className="w-full mt-2 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold transition shadow-2xs"
               >
                 Compute Weight Reconciliation
               </button>
@@ -261,38 +261,38 @@ export default function WorkflowSimulationView({ translations }) {
           </div>
 
           {varianceResult && (
-            <div className={`mt-4 p-3 rounded-xl border text-xs ${
+            <div className={`mt-4 p-3 rounded-xl border text-xs shadow-2xs ${
               varianceResult.passed
-                ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
-                : 'bg-amber-950/60 border-amber-500/50 text-amber-300'
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                : 'bg-amber-50 border-amber-300 text-amber-950'
             }`}>
-              <div className="flex items-center justify-between font-bold mb-1">
+              <div className="flex items-center justify-between font-black mb-1">
                 <span>Variance: {varianceResult.varianceKg} kg ({varianceResult.variancePct}%)</span>
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-900">
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white border font-bold">
                   {varianceResult.passed ? 'PASSED' : 'EXCEPTION ALERT'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-200 mt-1">{varianceResult.message}</p>
+              <p className="text-[11px] text-slate-700 font-medium mt-1">{varianceResult.message}</p>
             </div>
           )}
         </div>
 
         {/* Simulation 3: The 7-Year Age Rule Engine */}
-        <div className="bg-slate-850 border border-slate-750 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-sm font-bold text-white">
+              <Clock className="w-4 h-4 text-emerald-700" />
+              <h3 className="text-sm font-black text-slate-900">
                 3. The Age Rule Engine (&lt; 7y vs ≥ 7y)
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-slate-600 mb-4 font-medium">
               RFP Section 3.2: Configurable business rule. Trees below 7 yrs are traced as POLOGEN polygons; trees crossing 7 yrs automatically generate individual tagging tasks.
             </p>
 
             <form onSubmit={handleAgeEvaluate} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-medium block mb-1">
+                <label className="text-slate-700 font-bold block mb-1">
                   Agarwood Planting Age (Years):
                 </label>
                 <div className="flex items-center gap-3">
@@ -303,27 +303,27 @@ export default function WorkflowSimulationView({ translations }) {
                     step="0.1"
                     value={treeAgeInput}
                     onChange={(e) => setTreeAgeInput(parseFloat(e.target.value))}
-                    className="flex-1 accent-emerald-500"
+                    className="flex-1 accent-emerald-600"
                   />
-                  <span className="w-16 font-mono text-center bg-slate-900 py-1.5 rounded border border-slate-750 text-emerald-300 font-bold">
+                  <span className="w-20 font-mono text-center bg-slate-100 py-1.5 rounded-lg border border-slate-300 text-slate-900 font-black text-xs">
                     {treeAgeInput} yrs
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-1 text-slate-400 text-[11px]">
+              <div className="flex items-center gap-2 pt-1 text-slate-600 text-[11px] font-semibold">
                 <span>Presets:</span>
                 <button
                   type="button"
                   onClick={() => setTreeAgeInput(4.5)}
-                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-750 text-slate-300"
+                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold border border-slate-200"
                 >
                   4.5 yrs (Young)
                 </button>
                 <button
                   type="button"
                   onClick={() => setTreeAgeInput(7.1)}
-                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-750 text-emerald-300 font-semibold"
+                  className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-950 font-bold border border-emerald-300"
                 >
                   7.1 yrs (Threshold Trigger)
                 </button>
@@ -331,7 +331,7 @@ export default function WorkflowSimulationView({ translations }) {
 
               <button
                 type="submit"
-                className="w-full mt-2 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition"
+                className="w-full mt-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition shadow-2xs"
               >
                 Evaluate Age Rule Compliance
               </button>
@@ -339,18 +339,18 @@ export default function WorkflowSimulationView({ translations }) {
           </div>
 
           {ageResult && (
-            <div className={`mt-4 p-3 rounded-xl border text-xs ${
+            <div className={`mt-4 p-3 rounded-xl border text-xs shadow-2xs ${
               ageResult.isMature
-                ? 'bg-amber-950/60 border-amber-500/50 text-amber-300'
-                : 'bg-blue-950/60 border-blue-500/50 text-blue-300'
+                ? 'bg-amber-50 border-amber-300 text-amber-950'
+                : 'bg-blue-50 border-blue-300 text-blue-950'
             }`}>
-              <div className="font-bold flex items-center gap-1.5 mb-1">
+              <div className="font-black flex items-center gap-1.5 mb-1">
                 <span>Identity Model: {ageResult.category}</span>
               </div>
-              <p className="text-[11px] text-slate-200">{ageResult.message}</p>
+              <p className="text-[11px] text-slate-700 font-medium">{ageResult.message}</p>
               {ageResult.isMature && (
-                <div className="mt-2 pt-2 border-t border-amber-800/50 font-mono text-[10px] text-slate-300">
-                  Task Generated: <span className="text-amber-400">{ageResult.taskRef}</span>
+                <div className="mt-2 pt-2 border-t border-amber-200 font-mono text-[10px] text-slate-800 font-semibold">
+                  Task Generated: <span className="text-amber-900 font-black">{ageResult.taskRef}</span>
                 </div>
               )}
             </div>
@@ -358,40 +358,40 @@ export default function WorkflowSimulationView({ translations }) {
         </div>
 
         {/* Simulation 4: Offline Field Mode & Provisional ID Sync */}
-        <div className="bg-slate-850 border border-slate-750 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <WifiOff className="w-4 h-4 text-purple-400" />
-              <h3 className="text-sm font-bold text-white">
+              <WifiOff className="w-4 h-4 text-purple-700" />
+              <h3 className="text-sm font-black text-slate-900">
                 4. Offline Mode & Provisional ID Reconciliation
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-slate-600 mb-4 font-medium">
               RFP Section 3.4: Field mobile apps issue non-colliding provisional IDs when offline in remote plantations, reconciling cleanly upon server sync.
             </p>
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-medium block mb-1">
+                <label className="text-slate-700 font-bold block mb-1">
                   Provisional Offline Identifier:
                 </label>
                 <input
                   type="text"
                   value={provisionalId}
                   onChange={(e) => setProvisionalId(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-750 rounded-lg px-3 py-2 text-white font-mono text-xs focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-mono text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-bold"
                 />
               </div>
 
-              <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                <div>Field Device: <span className="text-slate-200">Rugged Android Tablet #AG-09</span></div>
-                <div>Status: <span className="text-amber-400 font-medium">Recorded locally with SHA-256 photo hash</span></div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-700 space-y-1 font-medium">
+                <div>Field Device: <span className="text-slate-900 font-bold">Rugged Android Tablet #AG-09</span></div>
+                <div>Status: <span className="text-amber-900 font-bold">Recorded locally with SHA-256 photo hash</span></div>
               </div>
 
               <button
                 onClick={handleOfflineSync}
                 disabled={isSyncing}
-                className="w-full mt-2 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold transition flex items-center justify-center gap-1.5"
+                className="w-full mt-2 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold transition flex items-center justify-center gap-1.5 shadow-2xs"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                 <span>{isSyncing ? "Synchronizing to Central Server..." : "Simulate Reconnection & Sync"}</span>
@@ -400,15 +400,15 @@ export default function WorkflowSimulationView({ translations }) {
           </div>
 
           {syncResult && (
-            <div className="mt-4 p-3 rounded-xl bg-purple-950/60 border border-purple-500/50 text-xs text-purple-200">
-              <div className="font-bold flex items-center gap-1.5 mb-1">
-                <CheckCircle2 className="w-4 h-4 text-purple-400" />
+            <div className="mt-4 p-3 rounded-xl bg-purple-50 border border-purple-300 text-xs text-purple-950 shadow-2xs">
+              <div className="font-black flex items-center gap-1.5 mb-1">
+                <CheckCircle2 className="w-4 h-4 text-purple-700" />
                 <span>Sync Status: {syncResult.status}</span>
               </div>
-              <p className="text-[11px] text-slate-200">{syncResult.message}</p>
-              <div className="mt-2 pt-2 border-t border-purple-800/50 font-mono text-[10px] space-y-0.5 text-slate-300">
-                <div>Authoritative ID: <span className="text-emerald-400">{syncResult.authoritativeId}</span></div>
-                <div className="truncate">Audit Proof Hash: {syncResult.auditHash}</div>
+              <p className="text-[11px] text-slate-700 font-medium">{syncResult.message}</p>
+              <div className="mt-2 pt-2 border-t border-purple-200 font-mono text-[10px] space-y-0.5 text-slate-800">
+                <div>Authoritative ID: <span className="text-emerald-900 font-black">{syncResult.authoritativeId}</span></div>
+                <div className="truncate text-slate-600">Audit Proof Hash: {syncResult.auditHash}</div>
               </div>
             </div>
           )}

@@ -1309,32 +1309,32 @@ export default function MovementModule() {
             )}
 
             {/* Live Provenance Summary Seal */}
-            <div className="p-2.5 bg-white rounded-lg border border-emerald-200 space-y-1.5 font-mono text-[11px]">
+            <div className="p-2.5 bg-white rounded-lg border border-emerald-300 space-y-1.5 font-mono text-[11px] shadow-2xs">
               <div className="flex items-center justify-between border-b border-emerald-100 pb-1 text-[10px]">
                 <span className="font-sans font-black text-emerald-950 flex items-center gap-1">
                   <Trees className="w-3.5 h-3.5 text-emerald-700" />
                   <span>Statutory Chain of Custody Seal</span>
                 </span>
-                <span className="text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                <span className="text-emerald-950 font-black bg-emerald-100 px-2 py-0.5 rounded border border-emerald-400 shadow-2xs">
                   Form II Verified
                 </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
                 <div>
-                  <span className="text-slate-400 block font-sans">Origin Tree:</span>
-                  <span className="font-bold text-emerald-900">{farmForm.treeId}</span>
+                  <span className="text-slate-600 block font-bold font-sans">Origin Tree:</span>
+                  <span className="font-black text-emerald-950">{farmForm.treeId}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-sans">Planting Year:</span>
-                  <span className="font-bold text-slate-800">{farmForm.plantingYear} ({farmForm.treeAgeYears} yrs)</span>
+                  <span className="text-slate-600 block font-bold font-sans">Planting Year:</span>
+                  <span className="font-extrabold text-slate-900">{farmForm.plantingYear} ({farmForm.treeAgeYears} yrs)</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-sans">Harvest Batch:</span>
-                  <span className="font-bold text-slate-800">{farmForm.batchId}</span>
+                  <span className="text-slate-600 block font-bold font-sans">Harvest Batch:</span>
+                  <span className="font-black text-slate-900">{farmForm.batchId}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-sans">DFO Sanction:</span>
-                  <span className="font-bold text-teal-800">{farmForm.fellingOrderNumber || 'DFO/GLT/2026/HARV-379'}</span>
+                  <span className="text-slate-600 block font-bold font-sans">DFO Sanction:</span>
+                  <span className="font-black text-teal-950">{farmForm.fellingOrderNumber || 'DFO/GLT/2026/HARV-379'}</span>
                 </div>
               </div>
             </div>

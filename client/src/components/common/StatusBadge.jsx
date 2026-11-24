@@ -18,8 +18,8 @@ export default function StatusBadge({ status }) {
       case 'DELIVERED':
       case 'PAID_FULL':
         return {
-          bg: 'bg-emerald-50 text-emerald-800 border-emerald-300',
-          dot: 'bg-emerald-600',
+          bg: 'bg-emerald-100 text-emerald-950 border-emerald-400 font-black shadow-2xs',
+          dot: 'bg-emerald-700',
           label: val.replace(/_/g, ' ')
         };
 
@@ -34,8 +34,8 @@ export default function StatusBadge({ status }) {
       case 'UNDER_CUSTOMS_CLEARANCE':
       case 'MANIFEST_FILED':
         return {
-          bg: 'bg-amber-50 text-amber-800 border-amber-300',
-          dot: 'bg-amber-500 animate-pulse',
+          bg: 'bg-amber-100 text-amber-950 border-amber-400 font-black shadow-2xs',
+          dot: 'bg-amber-600 animate-pulse',
           label: val.replace(/_/g, ' ')
         };
 
@@ -47,8 +47,8 @@ export default function StatusBadge({ status }) {
       case 'INOCULATED':
       case 'SANCTION_APPROVED':
         return {
-          bg: 'bg-teal-50 text-teal-800 border-teal-300',
-          dot: 'bg-teal-600',
+          bg: 'bg-teal-100 text-teal-950 border-teal-400 font-black shadow-2xs',
+          dot: 'bg-teal-700',
           label: val.replace(/_/g, ' ')
         };
 
@@ -59,8 +59,8 @@ export default function StatusBadge({ status }) {
       case 'SOLD_DOMESTIC':
       case 'DISPATCHED_EXPORT':
         return {
-          bg: 'bg-blue-50 text-blue-800 border-blue-300',
-          dot: 'bg-blue-600',
+          bg: 'bg-blue-100 text-blue-950 border-blue-400 font-black shadow-2xs',
+          dot: 'bg-blue-700',
           label: val.replace(/_/g, ' ')
         };
 
@@ -70,15 +70,15 @@ export default function StatusBadge({ status }) {
       case 'TOLERANCE_EXCEEDED':
       case 'FLAGGED':
         return {
-          bg: 'bg-rose-50 text-rose-800 border-rose-300',
-          dot: 'bg-rose-600',
+          bg: 'bg-rose-100 text-rose-950 border-rose-400 font-black shadow-2xs',
+          dot: 'bg-rose-700',
           label: val.replace(/_/g, ' ')
         };
 
       default:
         return {
-          bg: 'bg-slate-100 text-slate-700 border-slate-300',
-          dot: 'bg-slate-400',
+          bg: 'bg-slate-100 text-slate-900 border-slate-400 font-black shadow-2xs',
+          dot: 'bg-slate-600',
           label: val.replace(/_/g, ' ')
         };
     }

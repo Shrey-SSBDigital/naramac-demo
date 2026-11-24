@@ -2584,23 +2584,23 @@ export default function HarvestModule() {
         >
           <div className="space-y-4 text-xs">
             {/* Official Pass Header */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-900 to-teal-900 text-white space-y-2">
-              <div className="flex items-center justify-between border-b border-emerald-700 pb-2">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white space-y-2 shadow-sm border border-emerald-700">
+              <div className="flex items-center justify-between border-b border-emerald-700/70 pb-2">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-bold block">
+                  <span className="text-[10px] uppercase tracking-wider text-emerald-200 font-black block">
                     Government of Assam • Environment and Forest Department
                   </span>
-                  <h3 className="text-sm font-black mt-0.5">
+                  <h3 className="text-sm font-black mt-0.5 text-white">
                     Electronic State Forest Transit Pass (e-TP) — Form II
                   </h3>
                 </div>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-400/30">
+                <span className="text-[10px] font-mono font-black px-2.5 py-1 rounded bg-emerald-500/30 text-emerald-100 border border-emerald-400">
                   STATUTORY VALID
                 </span>
               </div>
-              <div className="flex flex-wrap items-center justify-between text-[11px] text-emerald-200 pt-1">
-                <span><strong>Pass No:</strong> {selectedBatchForPass.transitPassNumber}</span>
-                <span><strong>Legal Ref:</strong> Assam Forest Regulation 1891 & Agarwood Policy 2020 Clause 2.6</span>
+              <div className="flex flex-wrap items-center justify-between text-[11px] text-emerald-100 pt-1 font-semibold">
+                <span><strong className="text-white">Pass No:</strong> {selectedBatchForPass.transitPassNumber}</span>
+                <span><strong className="text-white">Legal Ref:</strong> Assam Forest Regulation 1891 & Agarwood Policy 2020 Clause 2.6</span>
               </div>
             </div>
 
@@ -2608,56 +2608,56 @@ export default function HarvestModule() {
             {(() => {
               const info = getTreeAgeInfo(selectedBatchForPass);
               return (
-                <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2.5">
+                <div className="p-3.5 bg-emerald-50/70 border border-emerald-300 rounded-xl space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
                       <Trees className="w-4 h-4 text-emerald-700" />
                       <span>Linked Tree & Provenance Verification</span>
                     </span>
-                    <span className="text-[10px] font-mono font-bold bg-white text-emerald-800 px-2 py-0.5 rounded border border-emerald-300">
+                    <span className="text-[10px] font-mono font-black bg-white text-emerald-900 px-2 py-0.5 rounded border border-emerald-400 shadow-2xs">
                       Maturity Verified (≥7 Yrs)
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-white p-3 rounded-xl border border-emerald-100 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-white p-3 rounded-xl border border-emerald-200 text-xs shadow-2xs">
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">Origin Tree ID:</span>
-                      <span className="font-mono font-extrabold text-emerald-900">{selectedBatchForPass.treeId}</span>
+                      <span className="text-[10px] text-slate-600 block font-bold">Origin Tree ID:</span>
+                      <span className="font-mono font-black text-emerald-950">{selectedBatchForPass.treeId}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">Planting Year & Age:</span>
-                      <span className="font-bold text-slate-800">
+                      <span className="text-[10px] text-slate-600 block font-bold">Planting Year & Age:</span>
+                      <span className="font-extrabold text-slate-900">
                         {info.plantingYear} ({info.ageYears} Years)
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">Harvest Batch ID:</span>
-                      <span className="font-mono font-bold text-slate-900">{selectedBatchForPass.id}</span>
+                      <span className="text-[10px] text-slate-600 block font-bold">Harvest Batch ID:</span>
+                      <span className="font-mono font-black text-slate-900">{selectedBatchForPass.id}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">Certified Net Weight:</span>
-                      <span className="font-mono font-black text-emerald-800">{selectedBatchForPass.netWeightKg} kg</span>
+                      <span className="text-[10px] text-slate-600 block font-bold">Certified Net Weight:</span>
+                      <span className="font-mono font-black text-emerald-950">{selectedBatchForPass.netWeightKg} kg</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-700 bg-white p-3 rounded-xl border border-emerald-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-800 bg-white p-3 rounded-xl border border-emerald-200 shadow-2xs">
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Grower / Beneficiary:</span>
-                      <span className="font-bold text-slate-900">{selectedBatchForPass.farmerName}</span>
+                      <span className="text-slate-600 block text-[10px] font-bold">Grower / Beneficiary:</span>
+                      <span className="font-extrabold text-slate-900">{selectedBatchForPass.farmerName}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px]">DFO Felling Sanction Order:</span>
-                      <span className="font-mono font-bold text-teal-800">
+                      <span className="text-slate-600 block text-[10px] font-bold">DFO Felling Sanction Order:</span>
+                      <span className="font-mono font-black text-teal-900">
                         {selectedBatchForPass.fellingOrderNumber || 'DFO/GLT/2026/HARV-379'}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Origin Point:</span>
-                      <span className="font-medium text-slate-800">{selectedBatchForPass.farmerName} Homestead (Golaghat)</span>
+                      <span className="text-slate-600 block text-[10px] font-bold">Origin Point:</span>
+                      <span className="font-bold text-slate-900">{selectedBatchForPass.farmerName} Homestead (Golaghat)</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Permitted Destination:</span>
-                      <span className="font-semibold text-emerald-900">Golaghat Cluster Aggregation Depot</span>
+                      <span className="text-slate-600 block text-[10px] font-bold">Permitted Destination:</span>
+                      <span className="font-extrabold text-emerald-950">Golaghat Cluster Aggregation Depot</span>
                     </div>
                   </div>
                 </div>
@@ -2666,11 +2666,11 @@ export default function HarvestModule() {
 
             {/* Cryptographic Security Seal */}
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 font-mono text-[10px]">
-              <div className="flex items-center justify-between text-slate-500 font-sans font-bold">
+              <div className="flex items-center justify-between text-slate-700 font-sans font-bold">
                 <span>Cryptographic Security & Anti-Poaching Seal</span>
-                <span className="text-emerald-700">✓ Digitally Signed by RFO</span>
+                <span className="text-emerald-800 font-extrabold">✓ Digitally Signed by RFO</span>
               </div>
-              <div className="p-2 bg-slate-900 text-emerald-400 rounded-lg truncate">
+              <div className="p-2.5 bg-slate-900 text-emerald-300 rounded-lg truncate font-mono text-[11px] font-bold border border-slate-800">
                 Hash: {selectedBatchForPass.stumpPhotoSha256 || '9a3ecbe5ed12ab4d8e11ba873c2f11161202b945e3b0c44298fc1c149afbf4c8'}
               </div>
             </div>

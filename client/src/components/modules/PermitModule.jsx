@@ -40,7 +40,7 @@ export default function PermitModule() {
       render: (p) => (
         <div>
           <span className="font-extrabold text-slate-900 font-mono text-xs">{p.permitNumber}</span>
-          <div className="text-[10px] text-slate-500 font-mono">Issued: {p.issueDate}</div>
+          <div className="text-[10px] text-slate-600 font-bold font-mono">Issued: {p.issueDate}</div>
         </div>
       )
     },
@@ -52,8 +52,8 @@ export default function PermitModule() {
         const species = p.approvedSpecies || 'Aquilaria malaccensis';
         return (
           <div>
-            <span className="font-bold text-slate-800">{type}</span>
-            <div className="text-[11px] text-slate-500">{species}</div>
+            <span className="font-bold text-slate-900">{type}</span>
+            <div className="text-[11px] text-slate-600 font-semibold">{species}</div>
           </div>
         );
       }
@@ -72,20 +72,20 @@ export default function PermitModule() {
         return (
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-mono font-extrabold text-emerald-900 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-xs">
+              <span className="font-mono font-extrabold text-emerald-950 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-400 text-xs">
                 🌲 {targetTreeId}
               </span>
-              <span className="text-[10px] text-slate-600 font-semibold">
+              <span className="text-[10px] text-slate-700 font-bold">
                 (Planted {plantingYear} • {treeAge} yrs)
               </span>
             </div>
             {batchId ? (
-              <div className="flex items-center gap-1 text-[10px] text-slate-500 font-mono">
-                <span>Batch:</span>
-                <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.2 rounded">{batchId}</span>
+              <div className="flex items-center gap-1 text-[10px] text-slate-700 font-mono">
+                <span className="font-semibold">Batch:</span>
+                <span className="font-black text-slate-900 bg-slate-200 px-1.5 py-0.2 rounded">{batchId}</span>
               </div>
             ) : (
-              <div className="text-[9px] text-slate-400 font-mono">
+              <div className="text-[10px] text-slate-600 font-bold font-mono">
                 {p.authorisationId ? `Auth: ${p.authorisationId}` : 'Felling Sanction Block'}
               </div>
             )}
@@ -101,8 +101,8 @@ export default function PermitModule() {
         const officer = p.officerName || 'S. K. Bordoloi, IFS (DFO)';
         return (
           <div>
-            <span className="font-semibold text-slate-700">{auth}</span>
-            <div className="text-[10px] text-slate-500 font-medium">{officer}</div>
+            <span className="font-bold text-slate-900">{auth}</span>
+            <div className="text-[10px] text-slate-600 font-bold">{officer}</div>
           </div>
         );
       }
@@ -115,8 +115,8 @@ export default function PermitModule() {
         const id = p.beneficiaryFarmerId || p.holderId || 'FRM-AS-01';
         return (
           <div>
-            <span className="font-bold text-emerald-800">{name}</span>
-            <div className="text-[10px] text-slate-400 font-mono">{id}</div>
+            <span className="font-extrabold text-emerald-950">{name}</span>
+            <div className="text-[10px] text-slate-600 font-bold font-mono">{id}</div>
           </div>
         );
       }
@@ -125,7 +125,7 @@ export default function PermitModule() {
       header: 'Validity Expiry',
       accessor: 'expiryDate',
       render: (p) => (
-        <span className="font-mono text-xs font-semibold text-slate-700">
+        <span className="font-mono text-xs font-bold text-slate-900">
           {p.expiryDate}
         </span>
       )
@@ -144,7 +144,7 @@ export default function PermitModule() {
             e.stopPropagation();
             setSelectedPermit(p);
           }}
-          className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition"
+          className="px-3 py-1.5 text-xs font-black text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 rounded-lg shadow-2xs transition"
         >
           View Permit
         </button>

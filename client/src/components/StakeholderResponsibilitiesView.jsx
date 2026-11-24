@@ -197,51 +197,51 @@ export default function StakeholderResponsibilitiesView({
 
       {/* 2. DYNAMIC OTHER STAKEHOLDERS' RESPONSIBILITIES SECTION */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2">
-              <ArrowLeftRight className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-lg font-bold text-white tracking-tight">
+              <ArrowLeftRight className="w-5 h-5 text-emerald-700" />
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">
                 {translations.otherRolesTitle}
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-600 mt-0.5 font-medium">
               Showing how all {allStakeholders.length - 1} other stakeholders interact with, supply to, or regulate{' '}
-              <span className="text-emerald-400 font-semibold">{activeStakeholder.roleName}</span>.
+              <span className="text-emerald-900 font-bold">{activeStakeholder.roleName}</span>.
             </p>
           </div>
 
           {/* Filters & Search */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 text-xs">
+            <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200 text-xs font-semibold">
               <button
                 onClick={() => setFilterType('ALL')}
-                className={`px-3 py-1 rounded-md transition ${
-                  filterType === 'ALL' ? 'bg-emerald-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg transition ${
+                  filterType === 'ALL' ? 'bg-emerald-700 text-white font-bold shadow-2xs' : 'text-slate-700 hover:text-slate-900'
                 }`}
               >
                 All ({allStakeholders.length - 1})
               </button>
               <button
                 onClick={() => setFilterType('UPSTREAM')}
-                className={`px-3 py-1 rounded-md transition ${
-                  filterType === 'UPSTREAM' ? 'bg-teal-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg transition ${
+                  filterType === 'UPSTREAM' ? 'bg-teal-700 text-white font-bold shadow-2xs' : 'text-slate-700 hover:text-slate-900'
                 }`}
               >
                 Upstream
               </button>
               <button
                 onClick={() => setFilterType('DOWNSTREAM')}
-                className={`px-3 py-1 rounded-md transition ${
-                  filterType === 'DOWNSTREAM' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg transition ${
+                  filterType === 'DOWNSTREAM' ? 'bg-blue-700 text-white font-bold shadow-2xs' : 'text-slate-700 hover:text-slate-900'
                 }`}
               >
                 Downstream
               </button>
               <button
                 onClick={() => setFilterType('REGULATORY')}
-                className={`px-3 py-1 rounded-md transition ${
-                  filterType === 'REGULATORY' ? 'bg-amber-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg transition ${
+                  filterType === 'REGULATORY' ? 'bg-amber-700 text-white font-bold shadow-2xs' : 'text-slate-700 hover:text-slate-900'
                 }`}
               >
                 Regulators/Auditors
@@ -255,7 +255,7 @@ export default function StakeholderResponsibilitiesView({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search stakeholder or duty..."
-                className="bg-slate-850 border border-slate-700 text-xs text-slate-200 rounded-lg pl-8 pr-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 w-44 md:w-56"
+                className="bg-white border border-slate-300 text-xs text-slate-900 rounded-lg pl-8 pr-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 w-44 md:w-56 font-medium"
               />
             </div>
           </div>
@@ -270,20 +270,20 @@ export default function StakeholderResponsibilitiesView({
             return (
               <div
                 key={other.id}
-                className="bg-slate-850/80 border border-slate-750 hover:border-slate-650 rounded-xl p-4 transition-all duration-200 hover:shadow-lg flex flex-col justify-between"
+                className="bg-white border border-slate-200 hover:border-emerald-500 hover:shadow-xs rounded-xl p-4 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
                   {/* Stakeholder Header */}
                   <div className="flex items-start justify-between gap-3 mb-2.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
+                      <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-800">
                         <OtherIcon className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                           {other.roleName}
                         </h4>
-                        <span className="text-[11px] text-slate-400 font-medium">
+                        <span className="text-[11px] text-slate-600 font-bold">
                           {other.category}
                         </span>
                       </div>
@@ -292,22 +292,22 @@ export default function StakeholderResponsibilitiesView({
                     {/* Relationship Badge */}
                     <div>
                       {other.isUpstream && (
-                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30 font-medium">
+                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-teal-100 text-teal-950 border border-teal-300 font-bold">
                           ↑ {translations.upstream}
                         </span>
                       )}
                       {other.isDownstream && (
-                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-medium">
+                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-950 border border-blue-300 font-bold">
                           ↓ {translations.downstream}
                         </span>
                       )}
                       {!other.isUpstream && !other.isDownstream && other.isRegulatory && (
-                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
+                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-950 border border-amber-300 font-bold">
                           ⚖ Statutory Oversight
                         </span>
                       )}
                       {!other.isUpstream && !other.isDownstream && !other.isRegulatory && (
-                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 font-medium">
+                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-300 font-bold">
                           ⇄ Ecosystem Partner
                         </span>
                       )}
@@ -315,24 +315,24 @@ export default function StakeholderResponsibilitiesView({
                   </div>
 
                   {/* CRITICAL: Specific Reciprocal Responsibility Box */}
-                  <div className="bg-slate-900 rounded-lg p-3 border border-slate-800 mt-2 mb-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block mb-1">
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 mt-2 mb-3">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-950 block mb-1">
                       Relationship to {activeStakeholder.roleName}:
                     </span>
-                    <p className="text-xs text-slate-200 leading-relaxed font-medium">
+                    <p className="text-xs text-slate-800 leading-relaxed font-semibold">
                       "{other.relationToActive}"
                     </p>
                   </div>
 
                   {/* General Core Duties of This Role */}
                   <div className="space-y-1 mt-2">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                       Key Responsibilities in Chain:
                     </span>
-                    <ul className="space-y-1 text-xs text-slate-300">
+                    <ul className="space-y-1 text-xs text-slate-700">
                       {(isExpanded ? other.coreDuties : other.coreDuties.slice(0, 2)).map((d, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-[11px]">
-                          <span className="text-emerald-500 font-bold">•</span>
+                        <li key={i} className="flex items-start gap-1.5 text-[11px] font-medium">
+                          <span className="text-emerald-700 font-bold">•</span>
                           <span>{d}</span>
                         </li>
                       ))}
@@ -341,19 +341,19 @@ export default function StakeholderResponsibilitiesView({
 
                   {/* Expanded Information (Identities Handled & Upstream/Downstream) */}
                   {isExpanded && (
-                    <div className="mt-3 pt-3 border-t border-slate-800 space-y-2">
+                    <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
                       <div className="text-[11px]">
-                        <span className="text-slate-400 font-medium">Digital Identities Created/Governed:</span>
+                        <span className="text-slate-700 font-bold">Digital Identities Created/Governed:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {other.mandatoryIdentitiesHandled.map((idObj, idx) => (
-                            <span key={idx} className="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700">
+                            <span key={idx} className="bg-slate-100 text-slate-900 px-2 py-0.5 rounded text-[10px] font-mono border border-slate-300 font-bold">
                               {idObj.code}
                             </span>
                           ))}
                         </div>
                       </div>
-                      <div className="bg-slate-900/80 p-2 rounded text-[11px] text-amber-300/90 border border-amber-500/20">
-                        <span className="font-semibold text-amber-400">Boundary: </span>
+                      <div className="bg-amber-50 p-2.5 rounded-lg text-[11px] text-amber-950 border border-amber-300 font-medium">
+                        <span className="font-black text-amber-950">Boundary: </span>
                         {other.regulatoryBoundary}
                       </div>
                     </div>
@@ -361,17 +361,17 @@ export default function StakeholderResponsibilitiesView({
                 </div>
 
                 {/* Footer Controls: Switch Perspective or Expand */}
-                <div className="mt-4 pt-2.5 border-t border-slate-800 flex items-center justify-between text-xs">
+                <div className="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
                   <button
                     onClick={() => setExpandedRoleId(isExpanded ? null : other.id)}
-                    className="text-slate-400 hover:text-slate-200 text-[11px] font-medium underline underline-offset-2"
+                    className="text-slate-600 hover:text-slate-900 text-[11px] font-bold underline underline-offset-2"
                   >
                     {isExpanded ? 'Show Less' : 'View Full Details & IDs'}
                   </button>
 
                   <button
                     onClick={() => onSelectRole(other.id)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white transition font-medium text-[11px] border border-slate-700 hover:border-emerald-500"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-emerald-700 text-white transition font-bold text-[11px] shadow-2xs"
                   >
                     <span>Switch to this Role</span>
                     <ArrowRight className="w-3 h-3" />

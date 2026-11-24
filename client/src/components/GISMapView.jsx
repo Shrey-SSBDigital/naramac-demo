@@ -93,34 +93,34 @@ export default function GISMapView({ translations }) {
   return (
     <div className="space-y-6">
       {/* Cluster Selector & Overview Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 shadow-xl">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Compass className="w-5 h-5 text-emerald-400" />
-              <h2 className="text-xl font-bold text-white tracking-tight">
+              <Compass className="w-5 h-5 text-emerald-700" />
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">
                 Cluster Geospatial & GIS Infrastructure
               </h2>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-600 mt-1 font-medium">
               Field mapping of plantations, closed POLOGEN polygons, and individually geo-pinned trees. Section 3.2 compliance.
             </p>
           </div>
 
           {/* Cluster Switcher Buttons */}
-          <div className="flex items-center bg-slate-800 rounded-xl p-1 border border-slate-700 text-xs">
+          <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200 text-xs font-semibold">
             <button
               onClick={() => { setActiveCluster('GOLAGHAT'); setSelectedPin(null); }}
-              className={`px-4 py-1.5 rounded-lg font-semibold transition ${
-                activeCluster === 'GOLAGHAT' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              className={`px-4 py-1.5 rounded-lg font-bold transition ${
+                activeCluster === 'GOLAGHAT' ? 'bg-emerald-700 text-white shadow-2xs' : 'text-slate-700 hover:text-slate-900'
               }`}
             >
               Golaghat (Assam)
             </button>
             <button
               onClick={() => { setActiveCluster('KADAMTALA'); setSelectedPin(null); }}
-              className={`px-4 py-1.5 rounded-lg font-semibold transition ${
-                activeCluster === 'KADAMTALA' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              className={`px-4 py-1.5 rounded-lg font-bold transition ${
+                activeCluster === 'KADAMTALA' ? 'bg-emerald-700 text-white shadow-2xs' : 'text-slate-700 hover:text-slate-900'
               }`}
             >
               Kadamtala (Tripura)
@@ -129,26 +129,26 @@ export default function GISMapView({ translations }) {
         </div>
 
         {/* Cluster Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4 pt-4 border-t border-slate-800 text-center">
-          <div className="bg-slate-850 p-2.5 rounded-lg border border-slate-750">
-            <span className="text-[10px] text-slate-400 uppercase font-medium block">Registered Farmers</span>
-            <span className="text-sm font-bold text-emerald-400 font-mono mt-0.5 block">{currentCluster.stats.farmers}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4 pt-4 border-t border-slate-100 text-center">
+          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[10px] text-slate-600 uppercase font-bold block">Registered Farmers</span>
+            <span className="text-sm font-black text-emerald-950 font-mono mt-0.5 block">{currentCluster.stats.farmers}</span>
           </div>
-          <div className="bg-slate-850 p-2.5 rounded-lg border border-slate-750">
-            <span className="text-[10px] text-slate-400 uppercase font-medium block">Plantations</span>
-            <span className="text-sm font-bold text-teal-400 font-mono mt-0.5 block">{currentCluster.stats.plantations}</span>
+          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[10px] text-slate-600 uppercase font-bold block">Plantations</span>
+            <span className="text-sm font-black text-teal-950 font-mono mt-0.5 block">{currentCluster.stats.plantations}</span>
           </div>
-          <div className="bg-slate-850 p-2.5 rounded-lg border border-slate-750">
-            <span className="text-[10px] text-slate-400 uppercase font-medium block">Mature Trees (≥7 yrs)</span>
-            <span className="text-sm font-bold text-amber-400 font-mono mt-0.5 block">{currentCluster.stats.trees}</span>
+          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[10px] text-slate-600 uppercase font-bold block">Mature Trees (≥7 yrs)</span>
+            <span className="text-sm font-black text-amber-950 font-mono mt-0.5 block">{currentCluster.stats.trees}</span>
           </div>
-          <div className="bg-slate-850 p-2.5 rounded-lg border border-slate-750">
-            <span className="text-[10px] text-slate-400 uppercase font-medium block">Aggregation Depots</span>
-            <span className="text-sm font-bold text-indigo-400 font-mono mt-0.5 block">{currentCluster.stats.depots} Active</span>
+          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[10px] text-slate-600 uppercase font-bold block">Aggregation Depots</span>
+            <span className="text-sm font-black text-blue-950 font-mono mt-0.5 block">{currentCluster.stats.depots} Active</span>
           </div>
-          <div className="bg-slate-850 p-2.5 rounded-lg border border-slate-750">
-            <span className="text-[10px] text-slate-400 uppercase font-medium block">CPC Distilleries</span>
-            <span className="text-sm font-bold text-rose-400 font-mono mt-0.5 block">{currentCluster.stats.cpcs} Stills</span>
+          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[10px] text-slate-600 uppercase font-bold block">CPC Distilleries</span>
+            <span className="text-sm font-black text-purple-950 font-mono mt-0.5 block">{currentCluster.stats.cpcs} Stills</span>
           </div>
         </div>
       </div>
@@ -156,37 +156,37 @@ export default function GISMapView({ translations }) {
       {/* Interactive Map Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Visual Map Canvas */}
-        <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
           {/* Layer toggles & actions */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-800 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-100 text-xs">
             <div className="flex items-center gap-3">
-              <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-emerald-400" /> Layers:
+              <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-emerald-700" /> Layers:
               </span>
-              <label className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
+              <label className="flex items-center gap-1.5 text-slate-700 hover:text-slate-900 cursor-pointer font-semibold">
                 <input
                   type="checkbox"
                   checked={layers.plantations}
                   onChange={(e) => setLayers({ ...layers, plantations: e.target.checked })}
-                  className="rounded text-emerald-500 focus:ring-emerald-500"
+                  className="rounded text-emerald-600 focus:ring-emerald-500"
                 />
                 <span className="text-[11px]">Plantations</span>
               </label>
-              <label className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
+              <label className="flex items-center gap-1.5 text-slate-700 hover:text-slate-900 cursor-pointer font-semibold">
                 <input
                   type="checkbox"
                   checked={layers.pologens}
                   onChange={(e) => setLayers({ ...layers, pologens: e.target.checked })}
-                  className="rounded text-cyan-500 focus:ring-cyan-500"
+                  className="rounded text-teal-600 focus:ring-teal-500"
                 />
                 <span className="text-[11px]">POLOGENs (&lt;7y)</span>
               </label>
-              <label className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
+              <label className="flex items-center gap-1.5 text-slate-700 hover:text-slate-900 cursor-pointer font-semibold">
                 <input
                   type="checkbox"
                   checked={layers.trees}
                   onChange={(e) => setLayers({ ...layers, trees: e.target.checked })}
-                  className="rounded text-amber-500 focus:ring-amber-500"
+                  className="rounded text-amber-600 focus:ring-amber-500"
                 />
                 <span className="text-[11px]">Tree Pins (≥7y)</span>
               </label>
@@ -196,7 +196,7 @@ export default function GISMapView({ translations }) {
             <button
               onClick={handleSimulateBoundaryWalk}
               disabled={isWalkingSimulation}
-              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white font-medium flex items-center gap-1.5 transition shadow"
+              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold flex items-center gap-1.5 transition shadow-2xs"
             >
               <Footprints className="w-3.5 h-3.5" />
               <span>{isWalkingSimulation ? "Recording Vertices..." : "Simulate Ground Walk"}</span>
@@ -286,56 +286,56 @@ export default function GISMapView({ translations }) {
         </div>
 
         {/* Selected GIS Entity Detail Panel */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
-              <Info className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
+              <Info className="w-4 h-4 text-emerald-700" />
               Feature Inspector
             </h3>
 
             {selectedPin ? (
               <div className="space-y-4">
-                <div className="p-3.5 rounded-xl bg-slate-850 border border-slate-750">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-semibold uppercase">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-950 border border-emerald-300 font-bold uppercase">
                     {selectedPin.type}
                   </span>
-                  <h4 className="text-base font-bold text-white mt-1.5">{selectedPin.name}</h4>
-                  <p className="text-xs text-slate-300 mt-1">{selectedPin.details}</p>
+                  <h4 className="text-base font-black text-slate-900 mt-1.5">{selectedPin.name}</h4>
+                  <p className="text-xs text-slate-600 font-medium mt-1">{selectedPin.details}</p>
                 </div>
 
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between py-1 border-b border-slate-800">
-                    <span className="text-slate-400">UID:</span>
-                    <span className="font-mono text-emerald-300 font-medium">{selectedPin.id}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-600 font-semibold">UID:</span>
+                    <span className="font-mono text-emerald-950 font-black">{selectedPin.id}</span>
                   </div>
                   {selectedPin.tag && (
-                    <div className="flex justify-between py-1 border-b border-slate-800">
-                      <span className="text-slate-400">Physical Tag:</span>
-                      <span className="font-mono text-amber-300">{selectedPin.tag}</span>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-600 font-semibold">Physical Tag:</span>
+                      <span className="font-mono text-amber-950 font-bold">{selectedPin.tag}</span>
                     </div>
                   )}
                   {selectedPin.area && (
-                    <div className="flex justify-between py-1 border-b border-slate-800">
-                      <span className="text-slate-400">Extent:</span>
-                      <span className="text-slate-200">{selectedPin.area}</span>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-600 font-semibold">Extent:</span>
+                      <span className="text-slate-900 font-bold">{selectedPin.area}</span>
                     </div>
                   )}
-                  <div className="flex justify-between py-1 border-b border-slate-800">
-                    <span className="text-slate-400">Cluster Location:</span>
-                    <span className="text-slate-200">{currentCluster.name}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-600 font-semibold">Cluster Location:</span>
+                    <span className="text-slate-900 font-bold">{currentCluster.name}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12 text-slate-400 text-xs">
-                <MapPin className="w-8 h-8 mx-auto text-slate-600 mb-2" />
+              <div className="text-center py-12 text-slate-500 text-xs font-medium">
+                <MapPin className="w-8 h-8 mx-auto text-slate-400 mb-2" />
                 <p>Click any map marker pin to inspect spatial metadata, boundaries, or tree coordinates.</p>
               </div>
             )}
           </div>
 
-          <div className="mt-4 pt-4 border-t border-slate-800 text-[11px] text-slate-400">
-            <span className="font-semibold text-slate-300">Section 3.2 Geospatial Rule:</span>
+          <div className="mt-4 pt-4 border-t border-slate-100 text-[11px] text-slate-600 font-medium">
+            <span className="font-bold text-slate-900">Section 3.2 Geospatial Rule:</span>
             <p className="mt-0.5">
               Exact satellite coordinates are treated as protected data and masked on buyer-facing views.
             </p>
