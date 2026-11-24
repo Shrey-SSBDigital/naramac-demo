@@ -936,8 +936,8 @@ export default function LiveWorkflowView({
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
               <div>
-                <span className="font-bold text-slate-900 block">Sustainable Cultivation Origin:</span>
-                <span className="text-slate-700 text-[11px]">Registered Homestead Agroforest, Golaghat District, Assam (11.4 Years Cultivated)</span>
+                <span className="font-bold text-slate-900 block">Sustainable Plantation Origin:</span>
+                <span className="text-slate-700 text-[11px]">Registered Homestead Agroforest, Golaghat District, Assam (11.4 Years Old)</span>
               </div>
             </div>
 

@@ -101,7 +101,7 @@ export const ROLE_PERMISSIONS = {
   FARMER: {
     id: 'FARMER',
     name: 'Registered Farmer / Grower',
-    authority: 'Homestead Agarwood Cultivator',
+    authority: 'Homestead Agarwood Grower',
     badge: 'Primary Producer',
     color: 'green',
     defaultRoute: '/farmer',

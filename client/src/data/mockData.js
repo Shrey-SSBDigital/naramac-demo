@@ -164,7 +164,7 @@ export const STAKEHOLDERS_DATA = [
       PACKAGING_OFFICER: "The field photos and geo-tags captured by the agent are permanently embedded in the final pack's digital lineage.",
       EXPORTER_LOGISTICS: "Ensures legal procurement documentation begins with verified field origin data.",
       AUDITOR: "Provides tamper-evident device logs, GPS timestamps, and uncompressed SHA-256 photograph hashes.",
-      BUYER_PUBLIC: "Enables buyer trust by proving the raw material originated from cultivated, legally inoculated plantations."
+      BUYER_PUBLIC: "Enables buyer trust by proving the raw material originated from legally inoculated plantations."
     }
   },
   {
@@ -221,7 +221,7 @@ export const STAKEHOLDERS_DATA = [
     description: "Statutory government forest authority holding exclusive legal power to grant felling permissions, transit passes, and legal source certificates.",
     coreDuties: [
       "Reviews grower harvest authorization applications forwarded with NERAMAC verification summaries.",
-      "Conducts statutory scrutiny of plantation legitimacy, tree counts, and historical cultivation evidence.",
+      "Conducts statutory scrutiny of plantation legitimacy, tree counts, and historical plantation evidence.",
       "Records formal decision: Approved, Approved with Conditions, Clarification Required, or Rejected.",
       "Uploads signed statutory felling orders and assigns quota restrictions (number of trees / weight limit).",
       "Issues transit passes (TP) for legal timber/wood transport across district and state borders."
@@ -452,7 +452,7 @@ export const STAKEHOLDERS_DATA = [
     ],
     relationshipWithOthers: {
       FARMER: "Connects smallholder farmers of Assam and Tripura to high-value global luxury fragrance markets.",
-      FIELD_AGENT: "Demonstrates international buyer recognition of sustainable cultivation practices.",
+      FIELD_AGENT: "Demonstrates international buyer recognition of sustainable grower practices.",
       NERAMAC_ADMIN: "Facilitates premium North-Eastern GI-tagged agricultural exports under Ministry of DoNER.",
       DFO_FOREST_DEPT: "Presents legal forest source documents to Wildlife Crime Control Bureau and international customs.",
       AGGREGATOR: "Validates that export volumes match aggregated regional cluster inputs.",
@@ -533,7 +533,7 @@ export const STAKEHOLDERS_DATA = [
     ],
     relationshipWithOthers: {
       FARMER: "Appreciates the traditional indigenous heritage of Assam and Tripura farmers while respecting their personal privacy.",
-      FIELD_AGENT: "Values the authenticated field verification that guarantees the product is legally cultivated.",
+      FIELD_AGENT: "Values the authenticated field verification that guarantees the product is legally grown.",
       NERAMAC_ADMIN: "Trusts the official Government of India enterprise seal and authoritative verification guarantee.",
       DFO_FOREST_DEPT: "Has 100% assurance that the purchase does not contribute to wild forest poaching or illegal wildlife trade.",
       AGGREGATOR: "Knows the material was tracked from registered cluster collection centres.",

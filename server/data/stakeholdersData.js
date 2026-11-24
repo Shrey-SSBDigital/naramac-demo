@@ -87,7 +87,7 @@ const STAKEHOLDERS = [
       PACKAGING_OFFICER: "The field photos and geo-tags captured by the agent are permanently embedded in the final pack's digital lineage.",
       EXPORTER_LOGISTICS: "Ensures legal procurement documentation begins with verified field origin data.",
       AUDITOR: "Provides tamper-evident device logs, GPS timestamps, and uncompressed SHA-256 photograph hashes.",
-      BUYER_PUBLIC: "Enables buyer trust by proving the raw material originated from cultivated, legally inoculated plantations."
+      BUYER_PUBLIC: "Enables buyer trust by proving the raw material originated from legally inoculated plantations."
     }
   },
   {
@@ -144,7 +144,7 @@ const STAKEHOLDERS = [
     description: "Statutory government forest authority holding exclusive legal power to grant felling permissions, transit passes, and legal source certificates.",
     coreDuties: [
       "Reviews grower harvest authorization applications forwarded with NERAMAC verification summaries.",
-      "Conducts statutory scrutiny of plantation legitimacy, tree counts, and historical cultivation evidence.",
+      "Conducts statutory scrutiny of plantation legitimacy, tree counts, and historical plantation evidence.",
       "Records formal decision: Approved, Approved with Conditions, Clarification Required, or Rejected.",
       "Uploads signed statutory felling orders and assigns quota restrictions (number of trees / weight limit).",
       "Issues transit passes (TP) for legal timber/wood transport across district and state borders."
@@ -375,7 +375,7 @@ const STAKEHOLDERS = [
     ],
     relationshipWithOthers: {
       FARMER: "Connects smallholder farmers of Assam and Tripura to high-value global luxury fragrance markets.",
-      FIELD_AGENT: "Demonstrates international buyer recognition of sustainable cultivation practices.",
+      FIELD_AGENT: "Demonstrates international buyer recognition of sustainable grower practices.",
       NERAMAC_ADMIN: "Facilitates premium North-Eastern GI-tagged agricultural exports under Ministry of DoNER.",
       DFO_FOREST_DEPT: "Presents legal forest source documents to Wildlife Crime Control Bureau and international customs.",
       AGGREGATOR: "Validates that export volumes match aggregated regional cluster inputs.",
@@ -456,7 +456,7 @@ const STAKEHOLDERS = [
     ],
     relationshipWithOthers: {
       FARMER: "Appreciates the traditional indigenous heritage of Assam and Tripura farmers while respecting their personal privacy.",
-      FIELD_AGENT: "Values the authenticated field verification that guarantees the product is legally cultivated.",
+      FIELD_AGENT: "Values the authenticated field verification that guarantees the product is legally grown.",
       NERAMAC_ADMIN: "Trusts the official Government of India enterprise seal and authoritative verification guarantee.",
       DFO_FOREST_DEPT: "Has 100% assurance that the purchase does not contribute to wild forest poaching or illegal wildlife trade.",
       AGGREGATOR: "Knows the material was tracked from registered cluster collection centres.",
@@ -493,7 +493,7 @@ const WORKFLOW_STEPS = [
   { step: 1, name: "Farmer Onboarding & Geo-Pinning", idCreated: "FRM", primaryRole: "FIELD_AGENT", approvingRole: "NERAMAC_ADMIN", description: "Farmer registered, consent recorded, homestead geo-pinned. Root of chain established." },
   { step: 2, name: "Plantation & Plot Registration", idCreated: "PLT", primaryRole: "FIELD_AGENT", approvingRole: "NERAMAC_ADMIN", description: "Plantation boundary mapped, tenure verified, acreage computed." },
   { step: 3, name: "Spatial Survey: POLOGEN & Tree Tagging", idCreated: "PLG / TRE", primaryRole: "FIELD_AGENT", approvingRole: "NERAMAC_ADMIN", description: "Trees < 7 yrs recorded as POLOGEN polygons; trees ≥ 7 yrs individually tagged and geo-pinned." },
-  { step: 4, name: "Inoculation & Cultivation History", idCreated: "INO", primaryRole: "FIELD_AGENT", approvingRole: "NERAMAC_ADMIN", description: "Menu-driven capture of inoculation technique, compound lot, supplier, and SHA-256 post-op photo." },
+  { step: 4, name: "Inoculation History", idCreated: "INO", primaryRole: "FIELD_AGENT", approvingRole: "NERAMAC_ADMIN", description: "Menu-driven capture of inoculation technique, compound lot, supplier, and SHA-256 post-op photo." },
   { step: 5, name: "DFO Harvest Authorisation Workflow", idCreated: "HAU / PMT", primaryRole: "FARMER", approvingRole: "DFO_FOREST_DEPT", description: "Grower applies; NERAMAC verifies; DFO issues statutory felling order with signed document." },
   { step: 6, name: "Harvest Execution & Batch Creation", idCreated: "HBT", primaryRole: "FIELD_AGENT", approvingRole: "FARMER", description: "Harvest logged against DFO permit; gross/tare/net weight recorded; stump photos hashed." },
   { step: 7, name: "Movement: Farm to Aggregation Depot", idCreated: "MOV", primaryRole: "FIELD_AGENT", approvingRole: "AGGREGATOR", description: "Farm dispatch paired with depot receipt; weight variance evaluated against 1.5% tolerance." },

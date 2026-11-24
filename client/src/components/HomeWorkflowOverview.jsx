@@ -54,7 +54,7 @@ export default function HomeWorkflowOverview({ onNavigate }) {
       id: 'FIELD_SETUP',
       number: '1',
       title: 'Field Setup',
-      subtitle: 'Start → Farmer Registration → Farmer Verification → Plot Registration → GPS Polygon & POLOGEN ID → Tree Registration & Tree ID → Cultivation & Inoculation',
+      subtitle: 'Start → Farmer Registration → Farmer Verification → Plot Registration → GPS Polygon & POLOGEN ID → Tree Registration & Tree ID → Inoculation',
       badge: 'Origin & Plantation',
       summary: 'Establishes homestead provenance, revenue land titles (Dag/Patta), and biological tree inventory at the primary producer gate.',
       nodes: [
@@ -64,7 +64,7 @@ export default function HomeWorkflowOverview({ onNavigate }) {
         { name: 'Plot Registration', detail: 'Revenue Dag/Patta & land boundary', icon: Trees, path: '/plantation' },
         { name: 'GPS Polygon & POLOGEN ID', detail: 'Young sapling block boundary (<7 yrs)', icon: MapPin, path: '/field-inspection' },
         { name: 'Tree Registration & Tree ID', detail: 'Mature tree tag with RFID (≥7 yrs)', icon: Trees, path: '/field-inspection' },
-        { name: 'Cultivation & Inoculation', detail: 'AAU biological Fusarium solani induction', icon: Syringe, path: '/inoculation' }
+        { name: 'Inoculation', detail: 'AAU biological Fusarium solani induction', icon: Syringe, path: '/inoculation' }
       ],
       metrics: `${farmers.length} Farmers · ${pologens.length} POLOGENs · ${trees.length} Trees Registered`,
       statutoryRule: 'Assam Agarwood Policy 2020 • Land Revenue Jamabandi Title Mandate • AAU Certified Inoculation'
@@ -75,7 +75,7 @@ export default function HomeWorkflowOverview({ onNavigate }) {
       title: 'Approval',
       subtitle: '→ Harvest Application → NERAMAC Verification → DFO Approval → Approved? (No loops back / Yes issues Harvest Authorisation ID)',
       badge: 'Statutory Gate',
-      summary: 'Strict regulatory check ensuring timber is cultivated on private homestead land, preventing wild reserve felling.',
+      summary: 'Strict regulatory check ensuring timber is grown on private homestead land, preventing wild reserve felling.',
       nodes: [
         { name: 'Harvest Application', detail: 'Farmer submits requisition with tree RFID & quota', icon: Axe, path: '/harvest' },
         { name: 'NERAMAC Verification', detail: 'Field Agent on-site homestead origin confirmation', icon: ShieldCheck, path: '/harvest' },
@@ -148,7 +148,7 @@ export default function HomeWorkflowOverview({ onNavigate }) {
     { label: 'Register plot', phase: 'FIELD_SETUP', path: '/plantation', desc: 'Revenue Dag & Patta land parcel assignment' },
     { label: 'GPS / POLOGEN', phase: 'FIELD_SETUP', path: '/field-gis-studio', desc: 'Polygon boundary capture for sapling block (<7 yrs)' },
     { label: 'Trees', phase: 'FIELD_SETUP', path: '/field-gis-studio', desc: 'Mature tree geo-pinning & RFID tag registration' },
-    { label: 'Cultivation', phase: 'FIELD_SETUP', path: '/inoculation', desc: 'Tree cultivation maintenance & AAU fungal inoculation' },
+    { label: 'Inoculation', phase: 'FIELD_SETUP', path: '/inoculation', desc: 'Tree maintenance & AAU fungal inoculation' },
     { label: 'Harvest application', phase: 'APPROVAL', path: '/harvest', desc: 'Farmer submits felling requisition with tree RFIDs' },
     { label: 'NERAMAC', phase: 'APPROVAL', path: '/harvest', desc: 'NERAMAC field agent physical inspection of standing timber' },
     { label: 'DFO approval (No loops back)', phase: 'APPROVAL', path: '/harvest', desc: 'DFO Decision Gate: If rejected, loops back to Application with deficiency notice', isLoop: true },

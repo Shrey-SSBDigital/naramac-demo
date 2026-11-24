@@ -740,7 +740,7 @@ export function EnterpriseProvider({ children }) {
     return newTree;
   };
 
-  // 3. Cultivation & Inoculation
+  // 3. Inoculation
   const addInoculation = (inocData) => {
     const id = `INO-2026-${String(inoculations.length + 1).padStart(3, '0')}`;
     const targetType = inocData.targetType || 'TREE';
@@ -776,7 +776,7 @@ export function EnterpriseProvider({ children }) {
     const targetDesc = targetType === 'POLOGEN'
       ? `POLOGEN Block ${newInoc.pologenId} (${newInoc.treeCount || 'All'} saplings/trees)`
       : `Mature Tree ${newInoc.treeId}`;
-    logAudit('LOG_INOCULATION', 'Cultivation & Inoculation', `Applied ${newInoc.method} on ${targetDesc}`, id);
+    logAudit('LOG_INOCULATION', 'Inoculation', `Applied ${newInoc.method} on ${targetDesc}`, id);
     addToast(`Inoculation logged for ${targetDesc} with cryptographic hash verification`);
     return newInoc;
   };

@@ -95,7 +95,7 @@ export default function DashboardModule({ onNavigateModule }) {
                 Farmer Dashboard • {myFarmer.name}
               </h1>
               <p className="text-xs text-emerald-100">
-                Homestead Agarwood Cultivator • {myFarmer.village}, {myFarmer.district} • Land Title: <strong className="text-white">{myFarmer.dagNumber}</strong>
+                Homestead Agarwood Grower • {myFarmer.village}, {myFarmer.district} • Land Title: <strong className="text-white">{myFarmer.dagNumber}</strong>
               </p>
             </div>
 

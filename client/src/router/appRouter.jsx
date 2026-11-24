@@ -359,7 +359,7 @@ const fieldGisRoute = createRoute({ getParentRoute: () => rootRoute, path: '/fie
 const gisStudioRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gis-studio', component: FieldGisRoute });
 const gisRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gis', component: FieldGisRoute });
 
-// Silviculture & Cultivation
+// Inoculation
 const inoculationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/inoculation',

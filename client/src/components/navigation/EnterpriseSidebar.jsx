@@ -118,9 +118,9 @@ export default function EnterpriseSidebar({
       ]
     },
     {
-      group: 'Tree Cultivation & Inoculation',
+      group: 'Tree Inoculation',
       items: [
-        { id: 'INOCULATION', name: 'Cultivation & Inoculation', icon: Syringe, badge: null, path: '/inoculation' }
+        { id: 'INOCULATION', name: 'Inoculation', icon: Syringe, badge: null, path: '/inoculation' }
       ]
     },
     {

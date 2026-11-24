@@ -1655,7 +1655,7 @@ export default function HarvestModule() {
                   onChange={(e) => setFarmerDeclaration(e.target.checked)}
                   className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"
                 />
-                <span>I confirm this mature tree is cultivated on my private homestead plot under Assam Agarwood Policy 2020.</span>
+                <span>I confirm this mature tree is grown on my private homestead plot under Assam Agarwood Policy 2020.</span>
               </label>
             </div>
 
@@ -1914,7 +1914,7 @@ export default function HarvestModule() {
                     </div>
                   </div>
                   <div className="text-[10px] text-emerald-800 font-medium">
-                    Verified against grower's registration baseline. Confirmed private homestead cultivation.
+                    Verified against grower's registration baseline. Confirmed private homestead plantation.
                   </div>
                 </div>
               );

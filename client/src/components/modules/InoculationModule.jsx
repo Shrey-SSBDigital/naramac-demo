@@ -527,7 +527,7 @@ export default function InoculationModule() {
                 {activeRole === 'FIELD_AGENT' && 'NERAMAC Field Agent • Inoculation Supervision'}
                 {activeRole === 'FARMER' && 'Registered Farmer • Homestead Tree Inoculation Record'}
                 {activeRole === 'FOREST_DEPT' && 'DFO Forest Authority • Fungal Induction Scrutiny'}
-                {activeRole !== 'FIELD_AGENT' && activeRole !== 'FARMER' && activeRole !== 'FOREST_DEPT' && 'Biological Inoculation & Cultivation Oversight'}
+                {activeRole !== 'FIELD_AGENT' && activeRole !== 'FARMER' && activeRole !== 'FOREST_DEPT' && 'Biological Inoculation Oversight'}
               </span>
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 Role: {activeRole}
@@ -536,7 +536,7 @@ export default function InoculationModule() {
             <p className="text-[11px] text-slate-300 mt-0.5">
               {activeRole === 'FIELD_AGENT' && 'Accredited field agents supervise biological induction (*Fusarium solani* AS-44), capture forensic borehole photos with SHA-256 seal, and link records directly to specific trees.'}
               {activeRole === 'FARMER' && 'Track fungal induction progression and bio-strain dosage logged by NERAMAC field agents on your homestead agarwood trees.'}
-              {activeRole !== 'FIELD_AGENT' && activeRole !== 'FARMER' && 'Statutory cultivation registry verifying biological induction compound, supplier accreditation (AAU Jorhat), and drill depth compliance.'}
+              {activeRole !== 'FIELD_AGENT' && activeRole !== 'FARMER' && 'Statutory inoculation registry verifying biological induction compound, supplier accreditation (AAU Jorhat), and drill depth compliance.'}
             </p>
           </div>
         </div>
@@ -556,7 +556,7 @@ export default function InoculationModule() {
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
         <div>
           <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Cultivation &amp; Inoculation Intervention Registry</span>
+            <span>Inoculation Intervention Registry</span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
               Module 04
             </span>
