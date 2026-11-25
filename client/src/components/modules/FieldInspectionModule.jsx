@@ -1141,113 +1141,33 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                    {/* POLOGENs added by farmer for this plantation */}
-                    <div className="bg-white p-3 rounded-lg border border-teal-200 space-y-2">
-                      <div className="font-extrabold text-teal-900 flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    {/* Farmer-Declared Saplings (< 7 yrs) */}
+                    <div className="bg-white p-3 rounded-lg border border-teal-200 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="font-extrabold text-teal-900 flex items-center gap-1.5">
                           <Sprout className="w-3.5 h-3.5 text-teal-600" />
-                          <span>POLOGEN Blocks (&lt; 7 yrs)</span>
-                        </span>
-                        <span className="text-[10px] font-mono bg-teal-50 px-1.5 py-0.5 rounded text-teal-800">
-                          {pltPologens.length} block(s)
-                        </span>
+                          <span>Young Saplings (&lt; 7 yrs)</span>
+                        </div>
+                        <div className="text-xl font-black text-teal-950 font-mono mt-1">
+                          {selectedPlantation.youngTrees ?? pltPologens.reduce((s, p) => s + (p.saplingCount || 0), 0)}
+                        </div>
                       </div>
-                      {pltPologens.length === 0 ? (
-                        <div className="text-[11px] text-slate-500">
-                          Declared saplings: <strong>{selectedPlantation.youngTrees || 0}</strong> (no POLOGEN block logged yet).
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {pltPologens.map(plg => (
-                            <div key={plg.id} className="p-2 rounded bg-teal-50/70 border border-teal-100 flex items-center justify-between gap-2">
-                              <div className="min-w-0">
-                                <div className="font-bold text-slate-900 truncate">{plg.name}</div>
-                                <div className="text-[10px] text-slate-600 font-mono">
-                                  {plg.id} • {plg.saplingCount} saplings • Planted {plg.plantingYear}
-                                </div>
-                                <span className={`inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded ${
-                                  plg.status === 'FARMER_DECLARED_PENDING_GEO'
-                                    ? 'bg-amber-100 text-amber-900'
-                                    : 'bg-emerald-100 text-emerald-800'
-                                }`}>
-                                  {plg.status === 'FARMER_DECLARED_PENDING_GEO' ? 'Farmer Declared • Needs Geo-Walk' : plg.status}
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setAssetType('POLOGEN');
-                                  setPologenForm({
-                                    name: plg.name,
-                                    saplingCount: plg.saplingCount || 250,
-                                    plantingYear: plg.plantingYear || 2023
-                                  });
-                                  setStep(3);
-                                }}
-                                className="px-2 py-1 rounded bg-teal-700 hover:bg-teal-800 text-white text-[10px] font-bold shrink-0"
-                              >
-                                Geo-Tag →
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      
                     </div>
 
-                    {/* Mature Trees added by farmer for this plantation */}
-                    <div className="bg-white p-3 rounded-lg border border-emerald-200 space-y-2">
-                      <div className="font-extrabold text-emerald-900 flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
+                    {/* Farmer-Declared Mature Trees (>= 7 yrs) */}
+                    <div className="bg-white p-3 rounded-lg border border-emerald-200 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="font-extrabold text-emerald-900 flex items-center gap-1.5">
                           <TreePine className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Mature Trees (≥ 7 yrs)</span>
-                        </span>
-                        <span className="text-[10px] font-mono bg-emerald-50 px-1.5 py-0.5 rounded text-emerald-800">
-                          {pltTrees.length} record(s)
-                        </span>
+                        </div>
+                        <div className="text-xl font-black text-emerald-950 font-mono mt-1">
+                          {selectedPlantation.matureTrees ?? pltTrees.length}
+                        </div>
                       </div>
-                      {pltTrees.length === 0 ? (
-                        <div className="text-[11px] text-slate-500">
-                          Declared mature trees: <strong>{selectedPlantation.matureTrees || 0}</strong> (no tree pinned yet).
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                          {pltTrees.map(tr => (
-                            <div key={tr.id} className="p-2 rounded bg-emerald-50/70 border border-emerald-100 flex items-center justify-between gap-2">
-                              <div className="min-w-0">
-                                <div className="font-bold text-slate-900 truncate">
-                                  {tr.id} {tr.declaredCount ? `(${tr.declaredCount} trees declared)` : ''}
-                                </div>
-                                <div className="text-[10px] text-slate-600 font-mono">
-                                  Age: {tr.ageYears} yrs • GBH: {tr.girthCm} cm • {tr.qrTagCode}
-                                </div>
-                                <span className={`inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded ${
-                                  tr.status === 'FARMER_DECLARED_PENDING_TAG'
-                                    ? 'bg-amber-100 text-amber-900'
-                                    : 'bg-emerald-100 text-emerald-800'
-                                }`}>
-                                  {tr.status === 'FARMER_DECLARED_PENDING_TAG' ? 'Farmer Declared • Needs Tree Tag' : tr.status}
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setAssetType('TREE');
-                                  setTreeForm(prev => ({
-                                    ...prev,
-                                    ageYears: tr.ageYears || 10,
-                                    gbhCm: tr.girthCm || 62
-                                  }));
-                                  setStep(3);
-                                }}
-                                className="px-2 py-1 rounded bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold shrink-0"
-                              >
-                                Tree Tag →
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      
                     </div>
                   </div>
                 </div>
@@ -1350,36 +1270,15 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
           {/* Form Fields for Selected Type */}
           {assetType === 'POLOGEN' && (
             <div className="border border-teal-200 bg-teal-50/60 rounded-xl p-3.5 space-y-3">
-              <div className="font-bold text-teal-800 text-xs uppercase tracking-wider">POLOGEN Block Metadata</div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Block Name</label>
-                  <input
-                    type="text"
-                    value={pologenForm.name}
-                    onChange={e => setPologenForm(p => ({ ...p, name: e.target.value }))}
-                    placeholder="e.g. Nahorjan Sapling Block B"
-                    className="w-full text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Sapling Count *</label>
-                  <input
-                    type="number"
-                    value={pologenForm.saplingCount}
-                    onChange={e => setPologenForm(p => ({ ...p, saplingCount: e.target.value }))}
-                    className="w-full text-xs border border-teal-300 rounded-lg px-2.5 py-1.5 font-mono bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Planting Year *</label>
-                  <input
-                    type="number"
-                    value={pologenForm.plantingYear}
-                    onChange={e => setPologenForm(p => ({ ...p, plantingYear: e.target.value }))}
-                    className="w-full text-xs border border-teal-300 rounded-lg px-2.5 py-1.5 font-mono bg-white"
-                  />
-                </div>
+              <div className="font-bold text-teal-800 text-xs uppercase tracking-wider">POLOGEN Sapling Count</div>
+              <div className="max-w-xs">
+                <label className="text-xs font-bold text-slate-700 block mb-1">Sapling Count *</label>
+                <input
+                  type="number"
+                  value={pologenForm.saplingCount}
+                  onChange={e => setPologenForm(p => ({ ...p, saplingCount: e.target.value }))}
+                  className="w-full text-xs border border-teal-300 rounded-lg px-2.5 py-1.5 font-mono font-bold bg-white"
+                />
               </div>
             </div>
           )}
@@ -1998,7 +1897,6 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
             {assetType === 'POLOGEN' ? (
               <>
                 <div className="flex justify-between"><span className="text-slate-500">Saplings:</span><span className="font-bold text-teal-800">{pologenForm.saplingCount}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Planting Year:</span><span className="font-bold text-teal-800">{pologenForm.plantingYear}</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">Enclosed Area:</span><span className="font-bold text-teal-800">{polygonStats?.areaHa || '0.25'} Ha ({polygonStats?.areaAcres || '0.62'} Acres)</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">Perimeter:</span><span className="font-bold text-teal-800">{polygonStats?.perimeterM || '200'} m</span></div>
               </>

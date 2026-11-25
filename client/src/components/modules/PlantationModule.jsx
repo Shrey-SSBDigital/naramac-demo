@@ -934,97 +934,31 @@ export default function PlantationModule({ onOpenGeoStudio }) {
             </div>
           </div>
 
-          {/* POLOGEN (< 7 yrs) Declaration */}
-          <div className="p-3 bg-teal-50/60 border border-teal-200 rounded-xl space-y-2.5">
-            <div className="text-[11px] font-extrabold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Sprout className="w-3.5 h-3.5 text-teal-700" />
-              <span>POLOGEN Sapling Block (&lt; 7 Years)</span>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Young Saplings Count (&lt;7 yrs)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={plotForm.declaredSaplings}
+                onChange={e => setPlotForm({ ...plotForm, declaredSaplings: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg bg-white font-mono font-bold"
+              />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-700 mb-1">
-                  Saplings Count
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={plotForm.declaredSaplings}
-                  onChange={e => setPlotForm({ ...plotForm, declaredSaplings: e.target.value })}
-                  className="w-full px-2.5 py-1.5 border rounded-lg bg-white text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-700 mb-1">
-                  Block / Stand Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. North Sapling Grove"
-                  value={plotForm.pologenBlockName}
-                  onChange={e => setPlotForm({ ...plotForm, pologenBlockName: e.target.value })}
-                  className="w-full px-2.5 py-1.5 border rounded-lg bg-white text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-700 mb-1">
-                  Planting Year
-                </label>
-                <input
-                  type="number"
-                  min="2019"
-                  max="2026"
-                  value={plotForm.pologenPlantingYear}
-                  onChange={e => setPlotForm({ ...plotForm, pologenPlantingYear: e.target.value })}
-                  className="w-full px-2.5 py-1.5 border rounded-lg bg-white text-xs"
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Mature Trees (>= 7 yrs) Declaration */}
-          <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-2.5">
-            <div className="text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Trees className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Mature Agarwood Trees (≥ 7 Years)</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-700 mb-1">
-                  Mature Trees Count
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={plotForm.declaredMature}
-                  onChange={e => setPlotForm({ ...plotForm, declaredMature: e.target.value })}
-                  className="w-full px-2.5 py-1.5 border rounded-lg bg-white text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-700 mb-1">
-                  Planting Year
-                </label>
-                <input
-                  type="number"
-                  min="1995"
-                  max="2019"
-                  value={plotForm.maturePlantingYear}
-                  onChange={e => setPlotForm({ ...plotForm, maturePlantingYear: e.target.value })}
-                  className="w-full px-2.5 py-1.5 border rounded-lg bg-white text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-700 mb-1">
-                  Avg. Girth / GBH (cm)
-                </label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={plotForm.matureGirthCm}
-                  onChange={e => setPlotForm({ ...plotForm, matureGirthCm: e.target.value })}
-                  className="w-full px-2.5 py-1.5 border rounded-lg bg-white text-xs"
-                />
-              </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Mature Trees Count (≥7 yrs)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={plotForm.declaredMature}
+                onChange={e => setPlotForm({ ...plotForm, declaredMature: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg bg-white font-mono font-bold"
+              />
             </div>
           </div>
 
