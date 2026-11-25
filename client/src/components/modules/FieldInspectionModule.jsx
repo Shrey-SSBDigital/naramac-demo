@@ -66,6 +66,7 @@ function haversineDistMeters(lat1, lon1, lat2, lon2) {
 export default function FieldInspectionModule({ onNavigateToGisStudio }) {
   const {
     farmers,
+    plantations,
     pologens,
     trees,
     addPologen: enterpriseAddPologen,
@@ -76,6 +77,22 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
   // ── Wizard State ───────────────────────────────────────────────────────────
   const [step, setStep] = useState(1);
   const [selectedFarmerId, setSelectedFarmerId] = useState(farmers[0]?.id || '');
+  const farmerPlantations = (plantations || []).filter(p => p.farmerId === selectedFarmerId);
+  const [selectedPlantationId, setSelectedPlantationId] = useState(() => {
+    const initialPlts = (plantations || []).filter(p => p.farmerId === (farmers[0]?.id || ''));
+    return initialPlts[0]?.id || '';
+  });
+
+  useEffect(() => {
+    const plts = (plantations || []).filter(p => p.farmerId === selectedFarmerId);
+    if (plts.length > 0 && !plts.some(p => p.id === selectedPlantationId)) {
+      setSelectedPlantationId(plts[0].id);
+    } else if (plts.length === 0) {
+      setSelectedPlantationId('');
+    }
+  }, [selectedFarmerId, plantations]);
+
+  const selectedPlantation = (plantations || []).find(p => p.id === selectedPlantationId) || farmerPlantations[0] || null;
   const [assetType, setAssetType] = useState(null); // 'POLOGEN' | 'TREE'
   const [cluster, setCluster] = useState('GOLAGHAT');
   const [gpsCoords, setGpsCoords] = useState(null);
@@ -834,8 +851,8 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
       enterpriseAddPologen({
         farmerId: selectedFarmer.id,
         farmerName: selectedFarmer.name,
-        plantationId: `PLT-FIELD-${selectedFarmer.id}`,
-        plantationName: `${selectedFarmer.name}'s Plantation`,
+        plantationId: selectedPlantation?.id || `PLT-FIELD-${selectedFarmer.id}`,
+        plantationName: selectedPlantation?.name || `${selectedFarmer.name}'s Plantation`,
         name: pologenForm.name.trim() || `${selectedFarmer.name} Sapling Block ${new Date().getFullYear()}`,
         plantingYear: Number(pologenForm.plantingYear),
         ageYears: +(2026.5 - Number(pologenForm.plantingYear)).toFixed(1),
@@ -852,8 +869,8 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
       enterpriseAddTree({
         farmerId: selectedFarmer.id,
         farmerName: selectedFarmer.name,
-        plantationId: `PLT-FIELD-${selectedFarmer.id}`,
-        plantationName: `${selectedFarmer.name}'s Plantation`,
+        plantationId: selectedPlantation?.id || `PLT-FIELD-${selectedFarmer.id}`,
+        plantationName: selectedPlantation?.name || `${selectedFarmer.name}'s Plantation`,
         qrTagCode: treeForm.rfidTag,
         ageYears: Number(treeForm.ageYears),
         girthCm: Number(treeForm.gbhCm),
@@ -1043,6 +1060,201 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
             })}
           </div>
 
+          {/* Particular Plantation / Land Parcel & Farmer-Added Data */}
+          <div className="pt-3 border-t border-slate-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Select Particular Plantation / Land Parcel ({farmerPlantations.length})</span>
+              </label>
+              <span className="text-[10px] font-mono text-slate-500">
+                Farmer-Declared Parcels &amp; Assets
+              </span>
+            </div>
+
+            {farmerPlantations.length === 0 ? (
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                No plantation parcel registered yet for this farmer. Field Agent can still capture new POLOGEN or Tree assets below.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {farmerPlantations.map(plt => {
+                  const isPltSelected = plt.id === selectedPlantation?.id;
+                  const pltPologens = pologens.filter(p => p.plantationId === plt.id);
+                  const pltTrees = trees.filter(t => t.plantationId === plt.id);
+                  return (
+                    <button
+                      key={plt.id}
+                      type="button"
+                      onClick={() => setSelectedPlantationId(plt.id)}
+                      className={`p-3 rounded-xl border-2 text-left transition space-y-1.5 ${
+                        isPltSelected ? 'border-emerald-600 bg-emerald-50/80 shadow-xs' : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-[10px] font-black px-1.5 py-0.5 rounded bg-white border border-slate-200 text-emerald-900">
+                          {plt.id}
+                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          plt.status === 'PENDING_SURVEY' || !plt.geoVerified
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                            : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        }`}>
+                          {plt.status === 'PENDING_SURVEY' ? 'Farmer Declared • Pending Survey' : 'Geo-Verified'}
+                        </span>
+                      </div>
+                      <div className="font-extrabold text-slate-900 text-xs">{plt.name}</div>
+                      <div className="text-[11px] text-slate-600">
+                        {plt.dagNumber || 'Revenue Parcel'} • {plt.landAreaAcres || (plt.areaHectares * 2.471).toFixed(1)} Acres
+                      </div>
+                      <div className="flex items-center gap-2 pt-1 text-[10px] font-bold">
+                        <span className="px-2 py-0.5 rounded bg-teal-100 text-teal-900">
+                          POLOGEN: {pltPologens.length} ({plt.youngTrees || pltPologens.reduce((s, p) => s + (p.saplingCount || 0), 0)} saplings)
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
+                          Mature Trees: {pltTrees.length} ({plt.matureTrees || pltTrees.length} declared)
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Farmer-Added POLOGEN & Mature Trees Detail Box for the Selected Plantation */}
+            {selectedPlantation && (() => {
+              const pltPologens = pologens.filter(p => p.plantationId === selectedPlantation.id);
+              const pltTrees = trees.filter(t => t.plantationId === selectedPlantation.id);
+              return (
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-emerald-200 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800">
+                        Farmer-Added Data for {selectedPlantation.name} ({selectedPlantation.id})
+                      </span>
+                      <div className="text-[11px] text-slate-600">
+                        {selectedPlantation.dagNumber} • {selectedPlantation.district}
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-700 font-bold">
+                      Total Declared: {selectedPlantation.youngTrees || 0} Saplings + {selectedPlantation.matureTrees || 0} Mature
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    {/* POLOGENs added by farmer for this plantation */}
+                    <div className="bg-white p-3 rounded-lg border border-teal-200 space-y-2">
+                      <div className="font-extrabold text-teal-900 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Sprout className="w-3.5 h-3.5 text-teal-600" />
+                          <span>POLOGEN Blocks (&lt; 7 yrs)</span>
+                        </span>
+                        <span className="text-[10px] font-mono bg-teal-50 px-1.5 py-0.5 rounded text-teal-800">
+                          {pltPologens.length} block(s)
+                        </span>
+                      </div>
+                      {pltPologens.length === 0 ? (
+                        <div className="text-[11px] text-slate-500">
+                          Declared saplings: <strong>{selectedPlantation.youngTrees || 0}</strong> (no POLOGEN block logged yet).
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {pltPologens.map(plg => (
+                            <div key={plg.id} className="p-2 rounded bg-teal-50/70 border border-teal-100 flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="font-bold text-slate-900 truncate">{plg.name}</div>
+                                <div className="text-[10px] text-slate-600 font-mono">
+                                  {plg.id} • {plg.saplingCount} saplings • Planted {plg.plantingYear}
+                                </div>
+                                <span className={`inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                  plg.status === 'FARMER_DECLARED_PENDING_GEO'
+                                    ? 'bg-amber-100 text-amber-900'
+                                    : 'bg-emerald-100 text-emerald-800'
+                                }`}>
+                                  {plg.status === 'FARMER_DECLARED_PENDING_GEO' ? 'Farmer Declared • Needs Geo-Walk' : plg.status}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAssetType('POLOGEN');
+                                  setPologenForm({
+                                    name: plg.name,
+                                    saplingCount: plg.saplingCount || 250,
+                                    plantingYear: plg.plantingYear || 2023
+                                  });
+                                  setStep(3);
+                                }}
+                                className="px-2 py-1 rounded bg-teal-700 hover:bg-teal-800 text-white text-[10px] font-bold shrink-0"
+                              >
+                                Geo-Tag →
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Mature Trees added by farmer for this plantation */}
+                    <div className="bg-white p-3 rounded-lg border border-emerald-200 space-y-2">
+                      <div className="font-extrabold text-emerald-900 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <TreePine className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Mature Trees (≥ 7 yrs)</span>
+                        </span>
+                        <span className="text-[10px] font-mono bg-emerald-50 px-1.5 py-0.5 rounded text-emerald-800">
+                          {pltTrees.length} record(s)
+                        </span>
+                      </div>
+                      {pltTrees.length === 0 ? (
+                        <div className="text-[11px] text-slate-500">
+                          Declared mature trees: <strong>{selectedPlantation.matureTrees || 0}</strong> (no tree pinned yet).
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                          {pltTrees.map(tr => (
+                            <div key={tr.id} className="p-2 rounded bg-emerald-50/70 border border-emerald-100 flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="font-bold text-slate-900 truncate">
+                                  {tr.id} {tr.declaredCount ? `(${tr.declaredCount} trees declared)` : ''}
+                                </div>
+                                <div className="text-[10px] text-slate-600 font-mono">
+                                  Age: {tr.ageYears} yrs • GBH: {tr.girthCm} cm • {tr.qrTagCode}
+                                </div>
+                                <span className={`inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                  tr.status === 'FARMER_DECLARED_PENDING_TAG'
+                                    ? 'bg-amber-100 text-amber-900'
+                                    : 'bg-emerald-100 text-emerald-800'
+                                }`}>
+                                  {tr.status === 'FARMER_DECLARED_PENDING_TAG' ? 'Farmer Declared • Needs RFID Tag' : tr.status}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAssetType('TREE');
+                                  setTreeForm(prev => ({
+                                    ...prev,
+                                    ageYears: tr.ageYears || 10,
+                                    gbhCm: tr.girthCm || 62
+                                  }));
+                                  setStep(3);
+                                }}
+                                className="px-2 py-1 rounded bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold shrink-0"
+                              >
+                                RFID Tag →
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
           <div>
             <label className="text-xs font-bold text-slate-700 block mb-2">Inspection Cluster</label>
             <div className="flex gap-2">
@@ -1068,7 +1280,9 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-4">
           <h2 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
             <Sprout className="w-4 h-4 text-emerald-700" />
-            Step 2 — What are you tagging for <span className="text-emerald-700">{selectedFarmer?.name}</span>?
+            Step 2 — What are you tagging for <span className="text-emerald-700">{selectedFarmer?.name}</span>
+            {selectedPlantation ? <span className="text-xs font-mono bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200">{selectedPlantation.name} ({selectedPlantation.id})</span> : null}
+            ?
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

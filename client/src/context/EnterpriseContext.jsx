@@ -652,12 +652,19 @@ export function EnterpriseProvider({ children }) {
     const prefix = isTripura ? 'PLT-TR' : 'PLT-AS';
     const id = `${prefix}-${String(plantations.length + 1).padStart(2, '0')}`;
     const farmer = farmers.find(f => f.id === plantationData.farmerId);
+    const youngCount = parseInt(plantationData.youngTrees) || 0;
+    const matureCount = parseInt(plantationData.matureTrees) || 0;
+    const baseLat = farmer?.coordinates?.[0] || 26.5204;
+    const baseLng = farmer?.coordinates?.[1] || 93.9782;
 
     const newPlantation = {
       id,
       farmerId: plantationData.farmerId,
-      farmerName: farmer ? farmer.name : 'Registered Farmer',
+      farmerName: farmer ? farmer.name : (plantationData.farmerName || 'Registered Farmer'),
       name: plantationData.name || `Plantation Parcel ${id}`,
+      dagNumber: plantationData.dagNumber || farmer?.dagNumber || 'Dag 312, Patta 78',
+      village: plantationData.village || farmer?.village || '',
+      landAreaAcres: parseFloat(plantationData.landAreaAcres) || 2.5,
       cluster,
       state: isTripura ? 'Tripura' : 'Assam',
       district: plantationData.district || (isTripura ? 'North Tripura' : 'Golaghat'),
@@ -665,24 +672,92 @@ export function EnterpriseProvider({ children }) {
       soilType: plantationData.soilType || 'Alluvial Loam',
       elevationMeters: parseInt(plantationData.elevationMeters) || 96,
       boundaryPolygon: plantationData.boundaryPolygon || [
-        [26.5204, 93.9782],
-        [26.5218, 93.9795],
-        [26.5212, 93.9815],
-        [26.5195, 93.9808],
-        [26.5204, 93.9782]
+        [baseLat, baseLng],
+        [baseLat + 0.0014, baseLng + 0.0013],
+        [baseLat + 0.0008, baseLng + 0.0033],
+        [baseLat - 0.0009, baseLng + 0.0026],
+        [baseLat, baseLng]
       ],
-      totalTrees: (parseInt(plantationData.matureTrees) || 0) + (parseInt(plantationData.youngTrees) || 0),
-      matureTrees: parseInt(plantationData.matureTrees) || 0,
-      youngTrees: parseInt(plantationData.youngTrees) || 0,
-      geoVerified: true,
+      totalTrees: matureCount + youngCount,
+      matureTrees: matureCount,
+      youngTrees: youngCount,
+      geoVerified: false,
+      declaredByFarmer: true,
+      status: plantationData.status || 'PENDING_SURVEY',
       inspectionDate: new Date().toISOString().split('T')[0]
     };
 
-    const updated = [newPlantation, ...plantations];
-    setPlantations(updated);
-    persistState({ plantations: updated });
-    logAudit('CREATE_PLANTATION', 'Plantation Management', `Attached plantation ${newPlantation.name} (${id}) to Farmer ${newPlantation.farmerName} (${newPlantation.farmerId})`, id);
-    addToast(`Plantation ${id} attached to Farmer ${newPlantation.farmerName}`);
+    const updatedPlantations = [newPlantation, ...plantations];
+    let updatedPologens = [...pologens];
+    let updatedTrees = [...trees];
+
+    // Auto-create farmer-declared POLOGEN (< 7 yrs) record linked to this plantation
+    if (youngCount > 0) {
+      const pYear = parseInt(plantationData.pologenPlantingYear) || (new Date().getFullYear() - 3);
+      const plgId = `PLG-${new Date().getFullYear()}-${String(pologens.length + 1).padStart(3, '0')}`;
+      const newPologen = {
+        id: plgId,
+        farmerId: newPlantation.farmerId,
+        farmerName: newPlantation.farmerName,
+        plantationId: id,
+        plantationName: newPlantation.name,
+        name: plantationData.pologenBlockName?.trim() || `${newPlantation.name} — Sapling Block (<7 yrs)`,
+        cluster,
+        plantingYear: pYear,
+        ageYears: Math.max(1, new Date().getFullYear() - pYear),
+        saplingCount: youngCount,
+        boundaryPolygon: newPlantation.boundaryPolygon,
+        areaSquareMeters: Math.round(newPlantation.areaHectares * 10000),
+        perimeterMeters: 360,
+        walkedVerticesCount: 0,
+        species: 'Aquilaria malaccensis',
+        declaredByFarmer: true,
+        walkedDate: new Date().toISOString().split('T')[0],
+        status: 'FARMER_DECLARED_PENDING_GEO'
+      };
+      updatedPologens = [newPologen, ...updatedPologens];
+    }
+
+    // Auto-create farmer-declared Mature Tree (≥ 7 yrs) record linked to this plantation
+    if (matureCount > 0) {
+      const mYear = parseInt(plantationData.maturePlantingYear) || (new Date().getFullYear() - 9);
+      const treeId = `TRE-${isTripura ? 'TR' : 'AS'}-${String(trees.length + 1).padStart(3, '0')}`;
+      const newTree = {
+        id: treeId,
+        treeNumber: `AGY-${isTripura ? 'KDM' : 'GLT'}-${String(trees.length + 1).padStart(3, '0')}`,
+        species: 'Aquilaria malaccensis',
+        plantationId: id,
+        plantationName: newPlantation.name,
+        farmerId: newPlantation.farmerId,
+        farmerName: newPlantation.farmerName,
+        cluster,
+        state: newPlantation.state,
+        coordinates: [baseLat + 0.0004, baseLng + 0.0005],
+        gpsLatitude: baseLat + 0.0004,
+        gpsLongitude: baseLng + 0.0005,
+        accuracyM: null,
+        girthCm: parseFloat(plantationData.matureGirthCm) || 62.0,
+        heightM: 12.0,
+        plantingYear: mYear,
+        ageYears: Math.max(7, new Date().getFullYear() - mYear),
+        declaredCount: matureCount,
+        declaredByFarmer: true,
+        geoVerified: false,
+        tagDate: new Date().toISOString().split('T')[0],
+        qrTagCode: `PENDING-RFID-${treeId}`,
+        status: 'FARMER_DECLARED_PENDING_TAG',
+        inoculationStatus: 'NOT_INOCULATED',
+        healthStatus: 'DECLARED_HEALTHY'
+      };
+      updatedTrees = [newTree, ...updatedTrees];
+    }
+
+    setPlantations(updatedPlantations);
+    setPologens(updatedPologens);
+    setTrees(updatedTrees);
+    persistState({ plantations: updatedPlantations, pologens: updatedPologens, trees: updatedTrees });
+    logAudit('CREATE_PLANTATION', 'Plantation Management', `Farmer added plantation ${newPlantation.name} (${id}) with ${youngCount} POLOGEN saplings and ${matureCount} mature trees`, id);
+    addToast(`Plantation ${id} registered with POLOGEN (${youngCount}) & Mature Trees (${matureCount}) for Field Agent verification`);
     return newPlantation;
   };
 
