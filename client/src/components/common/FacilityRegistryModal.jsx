@@ -169,7 +169,7 @@ export default function FacilityRegistryModal({ isOpen, onClose }) {
                   <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                     <span className="flex items-center gap-1 text-emerald-700 font-semibold">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Certified Electronic Weighbridge &amp; RFID Custody Scanner Active</span>
+                      <span>Certified Electronic Weighbridge &amp; QR Custody Scanner Active</span>
                     </span>
                     <a
                       href={`https://maps.google.com/?q=${fac.lat},${fac.lng}`}

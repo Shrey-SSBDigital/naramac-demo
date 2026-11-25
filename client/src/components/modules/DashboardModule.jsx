@@ -134,7 +134,7 @@ export default function DashboardModule({ onNavigateModule }) {
             subvalue={`${myTrees.filter(t => t.status === 'INOCULATED').length} Biological Inoculated`}
             icon={CheckCircle2}
             color="teal"
-            badge="Laser RFID Tagged"
+            badge="QR Tagged"
           />
           <MetricCard
             title="Young Sapling Blocks (<7y)"
@@ -313,7 +313,7 @@ export default function DashboardModule({ onNavigateModule }) {
           <MetricCard
             title="Tagged Mature Trees (≥7y)"
             value={trees.length}
-            subvalue="Laser RFID Tagged"
+            subvalue="QR Tagged"
             icon={Trees}
             color="amber"
             badge="SHA-256 Photo Hash"
@@ -550,7 +550,7 @@ export default function DashboardModule({ onNavigateModule }) {
             subvalue="Secure Custody"
             icon={Warehouse}
             color="amber"
-            badge="RFID Tracked"
+            badge="QR Tracked"
           />
         </div>
 

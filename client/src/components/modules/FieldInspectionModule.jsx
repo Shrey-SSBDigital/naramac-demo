@@ -418,7 +418,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
       }
     } else if (assetType === 'TREE' && gpsCoords) {
       L.marker([gpsCoords.lat, gpsCoords.lng], { icon: createTreePinIcon() })
-        .bindTooltip(`Tree Point (RFID: ${treeForm.rfidTag})<br/>${gpsCoords.lat.toFixed(5)}°N, ${gpsCoords.lng.toFixed(5)}°E`, { permanent: true, direction: 'top' })
+        .bindTooltip(`Tree Point (Tag: ${treeForm.rfidTag})<br/>${gpsCoords.lat.toFixed(5)}°N, ${gpsCoords.lng.toFixed(5)}°E`, { permanent: true, direction: 'top' })
         .addTo(markersLayerGroupRef.current);
     }
   }, [walkPoints, selectedAreaPoints, polygonCoords, assetType, pologenMode, gpsCoords, overlapResult]);
@@ -579,7 +579,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
         setGpsCoords({ lat: stats.centroid.lat, lng: stats.centroid.lng, accuracy: 1.4 });
       }
       setIsGpsLocked(true);
-      showToast(`✓ Enclosed ${currentPoints.length}-sided Area: ${stats?.areaHa} Ha (${stats?.areaAcres} Acres) • ${stats?.assamBigha} Bigha`, 'success');
+      showToast(`✓ Enclosed ${currentPoints.length}-sided Area: ${stats?.areaHa} Ha (${stats?.areaAcres} Acres)`, 'success');
       return currentPoints;
     });
   };
@@ -964,7 +964,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
         <div>
           <strong className="text-emerald-900 font-bold">RFP Scenario (iii) Maturity Rule: </strong>
           <span className="text-emerald-800">
-            Agarwood trees <strong>&lt; 7 years</strong> are mapped as collective <strong>POLOGEN polygons</strong>. Once trees reach maturity (<strong>≥ 7 years &amp; GBH ≥ 50cm</strong>), they transition to <strong>Individual Tree Identity</strong> with permanent laser RFID nail tagging and DFO felling eligibility.
+            Agarwood trees <strong>&lt; 7 years</strong> are mapped as collective <strong>POLOGEN polygons</strong>. Once trees reach maturity (<strong>≥ 7 years &amp; GBH ≥ 50cm</strong>), they transition to <strong>Individual Tree Identity</strong> with permanent Tree QR tagging and DFO felling eligibility.
           </span>
         </div>
       </div>
@@ -1226,7 +1226,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
                                     ? 'bg-amber-100 text-amber-900'
                                     : 'bg-emerald-100 text-emerald-800'
                                 }`}>
-                                  {tr.status === 'FARMER_DECLARED_PENDING_TAG' ? 'Farmer Declared • Needs RFID Tag' : tr.status}
+                                  {tr.status === 'FARMER_DECLARED_PENDING_TAG' ? 'Farmer Declared • Needs Tree Tag' : tr.status}
                                 </span>
                               </div>
                               <button
@@ -1242,7 +1242,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
                                 }}
                                 className="px-2 py-1 rounded bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold shrink-0"
                               >
-                                RFID Tag →
+                                Tree Tag →
                               </button>
                             </div>
                           ))}
@@ -1332,11 +1332,11 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
               <div>
                 <div className="font-extrabold text-slate-900 text-sm">Individual Mature Tree (≥ 7 Years)</div>
                 <div className="text-xs text-slate-500 mt-0.5">Crosses maturity rule into tree-level identity</div>
-                <div className="text-[11px] text-amber-700 font-semibold mt-1.5">Stand at tree trunk → laser RFID nail tag &amp; RTK GPS</div>
+                <div className="text-[11px] text-amber-700 font-semibold mt-1.5">Stand at tree trunk → Tree QR tag &amp; RTK GPS</div>
               </div>
               <div className="flex flex-wrap gap-1 text-[10px]">
                 <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Point GPS</span>
-                <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Laser RFID</span>
+                <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Tree QR Tag</span>
                 <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Trunk Photo</span>
               </div>
               {assetType === 'TREE' && (
@@ -1389,7 +1389,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
               <div className="font-bold text-amber-800 text-xs uppercase tracking-wider">Mature Tree Metadata (≥ 7 Years)</div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">RFID Nail Tag Code *</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Tree QR Tag Code *</label>
                   <input
                     type="text"
                     value={treeForm.rfidTag}
@@ -1640,7 +1640,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
 
               {/* Area Measurements Card */}
               {polygonStats && (
-                <div className="bg-white rounded-xl border border-slate-200 p-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                <div className="bg-white rounded-xl border border-slate-200 p-3 grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="p-2 bg-slate-50 rounded-lg">
                     <span className="text-[10px] font-bold text-slate-500 uppercase block">Area (Ha)</span>
                     <span className="font-extrabold text-slate-900 text-sm">{polygonStats.areaHa} Ha</span>
@@ -1648,10 +1648,6 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
                   <div className="p-2 bg-slate-50 rounded-lg">
                     <span className="text-[10px] font-bold text-slate-500 uppercase block">Area (Acres)</span>
                     <span className="font-extrabold text-slate-900 text-sm">{polygonStats.areaAcres} Acres</span>
-                  </div>
-                  <div className="p-2 bg-slate-50 rounded-lg">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Assam Bigha</span>
-                    <span className="font-extrabold text-slate-900 text-sm">{polygonStats.assamBigha} Bigha</span>
                   </div>
                   <div className="p-2 bg-slate-50 rounded-lg">
                     <span className="text-[10px] font-bold text-slate-500 uppercase block">Perimeter</span>
@@ -1721,7 +1717,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
               </div>
 
               {polygonStats && (
-                <div className="bg-white rounded-xl border border-teal-200 p-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                <div className="bg-white rounded-xl border border-teal-200 p-3 grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="p-2 bg-teal-50/50 rounded-lg">
                     <span className="text-[10px] font-bold text-teal-700 uppercase block">Area (Ha)</span>
                     <span className="font-extrabold text-slate-900 text-sm">{polygonStats.areaHa} Ha</span>
@@ -1729,10 +1725,6 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
                   <div className="p-2 bg-teal-50/50 rounded-lg">
                     <span className="text-[10px] font-bold text-teal-700 uppercase block">Area (Acres)</span>
                     <span className="font-extrabold text-slate-900 text-sm">{polygonStats.areaAcres} Acres</span>
-                  </div>
-                  <div className="p-2 bg-teal-50/50 rounded-lg">
-                    <span className="text-[10px] font-bold text-teal-700 uppercase block">Assam Bigha</span>
-                    <span className="font-extrabold text-slate-900 text-sm">{polygonStats.assamBigha} Bigha</span>
                   </div>
                   <div className="p-2 bg-teal-50/50 rounded-lg">
                     <span className="text-[10px] font-bold text-teal-700 uppercase block">Perimeter</span>
@@ -1799,11 +1791,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
 
               {/* Area Measurements Breakdown */}
               {polygonStats && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                  <div className="p-2.5 bg-white rounded-xl border border-teal-200 shadow-2xs">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Assam Cadastral</span>
-                    <span className="font-extrabold text-teal-950 text-xs font-mono">{typeof polygonStats.assamBigha === 'number' ? polygonStats.assamBigha.toFixed(2) : polygonStats.assamBigha} Bigha</span>
-                  </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="p-2.5 bg-white rounded-xl border border-teal-200 shadow-2xs">
                     <span className="text-[10px] font-bold text-slate-500 uppercase block">Area (Ha / Acres)</span>
                     <span className="font-extrabold text-slate-900 text-xs font-mono">{polygonStats.areaHa} Ha ({polygonStats.areaAcres} Ac)</span>
@@ -1869,7 +1857,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
                   <span className="font-extrabold text-slate-900 font-mono text-xs">{gpsCoords.lng.toFixed(6)}° E</span>
                 </div>
                 <div className="p-2.5 bg-white rounded-xl border border-emerald-200 shadow-2xs">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">RFID Tag Code</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Tree QR Tag Code</span>
                   <span className="font-extrabold text-emerald-800 font-mono text-xs">{treeForm.rfidTag}</span>
                 </div>
                 <div className="p-2.5 bg-white rounded-xl border border-emerald-200 shadow-2xs">
@@ -1890,7 +1878,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
             Step 4 — Capture Field Photograph &amp; SHA-256 Seal
           </h2>
           <p className="text-xs text-slate-500">
-            Photograph the {assetType === 'POLOGEN' ? 'sapling grove' : 'tree trunk with RFID tag'}. The image is watermarked with farmer identity and sealed with Web Crypto SHA-256.
+            Photograph the {assetType === 'POLOGEN' ? 'sapling grove' : 'tree trunk with Tree QR tag'}. The image is watermarked with farmer identity and sealed with Web Crypto SHA-256.
           </p>
 
           {capturedPhoto ? (
@@ -2011,12 +1999,12 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
               <>
                 <div className="flex justify-between"><span className="text-slate-500">Saplings:</span><span className="font-bold text-teal-800">{pologenForm.saplingCount}</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">Planting Year:</span><span className="font-bold text-teal-800">{pologenForm.plantingYear}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Enclosed Area:</span><span className="font-bold text-teal-800">{polygonStats?.areaHa || '0.25'} Ha ({polygonStats?.areaAcres || '0.62'} Acres • {polygonStats?.assamBigha || '1.87'} Bigha)</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Enclosed Area:</span><span className="font-bold text-teal-800">{polygonStats?.areaHa || '0.25'} Ha ({polygonStats?.areaAcres || '0.62'} Acres)</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">Perimeter:</span><span className="font-bold text-teal-800">{polygonStats?.perimeterM || '200'} m</span></div>
               </>
             ) : (
               <>
-                <div className="flex justify-between"><span className="text-slate-500">Laser RFID Tag:</span><span className="font-bold text-amber-800">{treeForm.rfidTag}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Tree QR Tag:</span><span className="font-bold text-amber-800">{treeForm.rfidTag}</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">Age:</span><span className="font-bold text-amber-800">{treeForm.ageYears} yrs (Mature ≥7y Rule)</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">GBH / Height:</span><span className="font-bold text-amber-800">{treeForm.gbhCm} cm / {treeForm.heightM} m</span></div>
               </>

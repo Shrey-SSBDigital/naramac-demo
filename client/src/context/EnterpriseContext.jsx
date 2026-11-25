@@ -744,7 +744,7 @@ export function EnterpriseProvider({ children }) {
         declaredByFarmer: true,
         geoVerified: false,
         tagDate: new Date().toISOString().split('T')[0],
-        qrTagCode: `PENDING-RFID-${treeId}`,
+        qrTagCode: `PENDING-TAG-${treeId}`,
         status: 'FARMER_DECLARED_PENDING_TAG',
         inoculationStatus: 'NOT_INOCULATED',
         healthStatus: 'DECLARED_HEALTHY'

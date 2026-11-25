@@ -606,7 +606,7 @@ export default function FarmerRegistrationModule({ onNavigate }) {
               </label>
               <input
                 type="number"
-                placeholder="Mature trees (RFID tagging)"
+                placeholder="Mature trees (QR tagging)"
                 value={formData.matureTreesCount}
                 onChange={e => setFormData({ ...formData, matureTreesCount: e.target.value })}
                 className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-mono"
@@ -692,7 +692,7 @@ export default function FarmerRegistrationModule({ onNavigate }) {
             />
             <label htmlFor="declarationAccepted" className="text-xs text-slate-700 leading-relaxed">
               <span className="font-bold text-slate-900">Statutory Declaration under Assam Agarwood Policy 2020:</span>
-              {' '}I hereby declare that the Agarwood trees entered above are grown exclusively on my homestead / private revenue land (Dag & Patta specified above) and are not extracted from Reserve Forests or Protected Areas. I consent to NERAMAC Field Agent inspection, POLOGEN perimeter walk, and mature tree RFID tagging under Assam Agarwood Policy 2020 guidelines.
+              {' '}I hereby declare that the Agarwood trees entered above are grown exclusively on my homestead / private revenue land (Dag & Patta specified above) and are not extracted from Reserve Forests or Protected Areas. I consent to NERAMAC Field Agent inspection, POLOGEN perimeter walk, and mature tree QR tagging under Assam Agarwood Policy 2020 guidelines.
             </label>
           </div>
 

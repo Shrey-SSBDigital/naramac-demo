@@ -63,7 +63,7 @@ export default function HomeWorkflowOverview({ onNavigate }) {
         { name: 'Farmer Verification', detail: 'NERAMAC farmer & land title verification', icon: ShieldCheck, path: '/farmer/approvals' },
         { name: 'Plot Registration', detail: 'Revenue Dag/Patta & land boundary', icon: Trees, path: '/plantation' },
         { name: 'GPS Polygon & POLOGEN ID', detail: 'Young sapling block boundary (<7 yrs)', icon: MapPin, path: '/field-inspection' },
-        { name: 'Tree Registration & Tree ID', detail: 'Mature tree tag with RFID (≥7 yrs)', icon: Trees, path: '/field-inspection' },
+        { name: 'Tree Registration & Tree ID', detail: 'Mature tree tag with QR ID (≥7 yrs)', icon: Trees, path: '/field-inspection' },
         { name: 'Inoculation', detail: 'AAU biological Fusarium solani induction', icon: Syringe, path: '/inoculation' }
       ],
       metrics: `${farmers.length} Farmers · ${pologens.length} POLOGENs · ${trees.length} Trees Registered`,
@@ -77,7 +77,7 @@ export default function HomeWorkflowOverview({ onNavigate }) {
       badge: 'Statutory Gate',
       summary: 'Strict regulatory check ensuring timber is grown on private homestead land, preventing wild reserve felling.',
       nodes: [
-        { name: 'Harvest Application', detail: 'Farmer submits requisition with tree RFID & quota', icon: Axe, path: '/harvest' },
+        { name: 'Harvest Application', detail: 'Farmer submits requisition with tree QR ID & quota', icon: Axe, path: '/harvest' },
         { name: 'NERAMAC Verification', detail: 'Field Agent on-site homestead origin confirmation', icon: ShieldCheck, path: '/harvest' },
         { name: 'DFO Approval', detail: 'Divisional Forest Officer statutory scrutiny', icon: FileCheck, path: '/harvest' },
         { name: 'Decision: Approved?', detail: 'No → loops back to Application | Yes → Harvest Authorisation ID', icon: HelpCircle, path: '/harvest', isDecision: true }
@@ -93,7 +93,7 @@ export default function HomeWorkflowOverview({ onNavigate }) {
       badge: 'Chain of Custody & Yield',
       summary: 'Supervised tree felling, certified farm gate weighment, transit manifests, and industrial hydro-distillation extraction.',
       nodes: [
-        { name: 'Harvest Recording', detail: 'Supervised tree felling, RFID scan & scale weight', icon: Axe, path: '/harvest' },
+        { name: 'Harvest Recording', detail: 'Supervised tree felling, QR scan & scale weight', icon: Axe, path: '/harvest' },
         { name: 'Harvest Batch Creation', detail: 'Mints Harvest Batch ID (HBT) with stump SHA-256', icon: Boxes, path: '/harvest' },
         { name: 'Farm to Aggregator', detail: 'e-Transit Pass movement from farm gate to depot', icon: Truck, path: '/movement' },
         { name: 'Aggregator to Distillery', detail: 'Consolidated haulage to Central Processing Centre', icon: Truck, path: '/movement' },
@@ -112,7 +112,7 @@ export default function HomeWorkflowOverview({ onNavigate }) {
       summary: 'Maintains multi-source batch genealogy through splitting/merging and certifies chemical purity via GC-MS testing.',
       nodes: [
         { name: 'Lot Split / Merge', detail: 'Aggregation batches (AGG) & Distillation Lots (LOT)', icon: Boxes, path: '/aggregation' },
-        { name: 'Batch Genealogy', detail: 'End-to-end provenance link back to parent tree RFIDs', icon: Workflow, path: '/traceability' },
+        { name: 'Batch Genealogy', detail: 'End-to-end provenance link back to parent tree QR IDs', icon: Workflow, path: '/traceability' },
         { name: 'Lab Testing (GC-MS)', detail: 'Agarospirol %, Chromone markers & purity index', icon: FlaskConical, path: '/laboratory' },
         { name: 'QA Approval / Pass', detail: 'NABL Certificate of Analysis (CoA) sign-off', icon: FileCheck, path: '/laboratory' },
         { name: 'Permit & Document Linking', detail: 'CITES Non-Detriment Findings & DFO Non-Forest Link', icon: FileBadge2, path: '/permits' }
@@ -481,7 +481,7 @@ export default function HomeWorkflowOverview({ onNavigate }) {
                 <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-1 shadow-xs">
                   <span className="text-[10px] font-bold text-slate-400 uppercase">Step 1</span>
                   <div className="font-extrabold text-slate-900 text-sm">Harvest Application</div>
-                  <div className="text-[11px] text-slate-500">Farmer submits tree RFID &amp; estimated kg</div>
+                  <div className="text-[11px] text-slate-500">Farmer submits tree QR ID &amp; estimated kg</div>
                 </div>
 
                 {/* Arrow */}

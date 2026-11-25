@@ -711,7 +711,7 @@ export default function MovementModule({ mode = null }) {
                   </div>
                   <div>
                     <strong className="text-slate-900">Who records the dispatch? </strong>
-                    The <span className="font-bold text-amber-800">NERAMAC Field Agent (FIELD_AGENT)</span> on-site at tree felling records the calibrated field scale net weight, verifies the tree trunk RFID tag, stamps the stump with SHA-256 photo hash, binds the State Forest Transit Pass (Form II), and mints the initial dispatch transit manifest.
+                    The <span className="font-bold text-amber-800">NERAMAC Field Agent (FIELD_AGENT)</span> on-site at tree felling records the calibrated field scale net weight, verifies the tree trunk QR tag, stamps the stump with SHA-256 photo hash, binds the State Forest Transit Pass (Form II), and mints the initial dispatch transit manifest.
                   </div>
                   <div>
                     <strong className="text-slate-900">Transit Status: </strong>

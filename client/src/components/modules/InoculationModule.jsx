@@ -565,7 +565,7 @@ export default function InoculationModule() {
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Biological induction capture across both <strong>Individual Mature Trees (RFID)</strong> and <strong>POLOGEN Polygon Blocks (Sapling Stands)</strong>.
+            Biological induction capture across both <strong>Individual Mature Trees (QR Tag)</strong> and <strong>POLOGEN Polygon Blocks (Sapling Stands)</strong>.
           </p>
         </div>
 
@@ -758,7 +758,7 @@ export default function InoculationModule() {
           setIsModalOpen(false);
         }}
         title="Menu-Driven Inoculation Capture &amp; Camera Verification"
-        subtitle="Record biological fungal induction on Individual Mature Trees (RFID) or POLOGEN Polygon Blocks (Saplings)"
+        subtitle="Record biological fungal induction on Individual Mature Trees (QR Tag) or POLOGEN Polygon Blocks (Saplings)"
         maxWidth="max-w-2xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
@@ -781,7 +781,7 @@ export default function InoculationModule() {
                 <div>
                   <div className="text-xs font-black">Individual Mature Tree (&ge; 7 yrs)</div>
                   <div className="text-[10px] text-slate-500 font-normal mt-0.5">
-                    Single tagged tree with RFID barcode; deep spiral borehole injection.
+                    Single tagged tree with QR barcode; deep spiral borehole injection.
                   </div>
                 </div>
               </button>

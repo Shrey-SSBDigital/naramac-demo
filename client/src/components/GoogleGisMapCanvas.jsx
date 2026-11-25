@@ -163,7 +163,7 @@ export default function GoogleGisMapCanvas({
         });
 
         poly.bindTooltip(
-          `<b>${plt.id}</b> — ${plt.name}<br/>${m.assamBigha.toFixed(3)} Bigha · ${m.areaHa.toFixed(4)} ha · ${formatIndianNumber(Math.round(m.areaSqFt))} sq ft`,
+          `<b>${plt.id}</b> — ${plt.name}<br/>${m.areaHa.toFixed(4)} ha (${(m.areaHa * 2.47105).toFixed(2)} Acres) · ${formatIndianNumber(Math.round(m.areaSqFt))} sq ft`,
           { sticky: true }
         );
 
@@ -201,7 +201,7 @@ export default function GoogleGisMapCanvas({
         });
 
         poly.bindTooltip(
-          `<b>${plg.id} (${plg.version || 'v1'})</b> — ${plg.name}<br/>${plg.saplingCount} saplings (&lt;7y) · ${m.assamBigha.toFixed(3)} Bigha`,
+          `<b>${plg.id} (${plg.version || 'v1'})</b> — ${plg.name}<br/>${plg.saplingCount} saplings (&lt;7y) · ${m.areaHa.toFixed(3)} ha`,
           { sticky: true }
         );
 
@@ -250,7 +250,7 @@ export default function GoogleGisMapCanvas({
 
         const marker = L.marker([t.coordinates[1], t.coordinates[0]], { icon });
         marker.bindTooltip(
-          `<b>${t.id}</b><br/>RFID: ${t.rfidTag} · Age: ${t.ageYears}y · GBH: ${t.gbhCm}cm<br/>Status: ${t.status}`
+          `<b>${t.id}</b><br/>Tag: ${t.rfidTag} · Age: ${t.ageYears}y · GBH: ${t.gbhCm}cm<br/>Status: ${t.status}`
         );
         marker.on('click', (e) => {
           const tool = activeToolRef.current;

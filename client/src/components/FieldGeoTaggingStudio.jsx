@@ -722,7 +722,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
     if (activeTool === 'SELECT_AREA') {
       if (draftAnalysis?.measurements) {
         const m = draftAnalysis.measurements;
-        return `Custom Area: ${m.assamBigha.toFixed(3)} Bigha · ${m.areaHa.toFixed(4)} ha · ${formatIndianNumber(Math.round(m.areaSqFt))} sq ft`;
+        return `Custom Area: ${m.areaHa.toFixed(4)} ha (${(m.areaHa * 2.47105).toFixed(2)} Acres) · ${formatIndianNumber(Math.round(m.areaSqFt))} sq ft`;
       }
       return 'Select Area: Click any Plantation/POLOGEN polygon to measure it, or click 3+ points on map for custom area';
     }
@@ -730,7 +730,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
       if (draftAnalysis?.measurements) {
         const m = draftAnalysis.measurements;
         const ok = draftAnalysis.overlap?.valid ? '0.0% Overlap ✓' : `${draftAnalysis.overlap?.overlapPct}% Overlap ✗`;
-        return `New Plantation: ${m.assamBigha.toFixed(2)} Bigha (${m.areaHa.toFixed(2)} ha) · ${ok}`;
+        return `New Plantation: ${m.areaHa.toFixed(2)} ha (${(m.areaHa * 2.47105).toFixed(2)} Acres) · ${ok}`;
       }
       return `Register Plantation: Click at least 3 corners on map (${draftPoints.length}/3 plotted)`;
     }
@@ -738,7 +738,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
       if (draftAnalysis?.measurements) {
         const m = draftAnalysis.measurements;
         const inPlt = draftAnalysis.containment?.contained ? `Inside ${draftAnalysis.containment.parentPlantation.id} ✓` : 'Outside Plantation ✗';
-        return `Walk POLOGEN (<7y): ${m.assamBigha.toFixed(3)} Bigha (${formatIndianNumber(m.areaSqM, 0)} m²) · ${inPlt}`;
+        return `Walk POLOGEN (<7y): ${m.areaHa.toFixed(3)} ha (${formatIndianNumber(m.areaSqM, 0)} m²) · ${inPlt}`;
       }
       return `Walk POLOGEN (<7y): Click 3+ corners INSIDE a green Plantation, or click "Simulate GPS Walk" (${draftPoints.length}/3)`;
     }
@@ -1402,7 +1402,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                       </span>
                     </div>
                     <div className="text-xs text-slate-700 truncate mt-0.5">
-                      RFID {t.rfidTag} • {t.ageYears}y • GBH {t.gbhCm}cm
+                      Tag {t.rfidTag} • {t.ageYears}y • GBH {t.gbhCm}cm
                     </div>
                     <div className="text-[11px] text-slate-500">
                       Farmer: <b className="text-slate-800">{t.farmerName || 'Bhaben Saikia'}</b>
@@ -1587,7 +1587,7 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
                   </div>
                 </div>
                 <div>
-                  <label className="text-slate-700 font-bold block mb-1">RFID Nail Tag</label>
+                  <label className="text-slate-700 font-bold block mb-1">Tree QR Tag</label>
                   <input
                     type="text"
                     value={draftForm.rfidTag}
@@ -1785,10 +1785,10 @@ export default function FieldGeoTaggingStudio({ onAdvanceStep }) {
               ) : selectedMeasurements ? (
                 <>
                   <div className="font-extrabold text-slate-900 text-sm">
-                    {selectedMeasurements.assamBigha.toFixed(3)} Bigha
+                    {selectedMeasurements.areaHa.toFixed(3)} ha ({(selectedMeasurements.areaHa * 2.47105).toFixed(2)} Acres)
                   </div>
                   <div className="text-[10px] text-slate-500 font-mono">
-                    {selectedMeasurements.areaHa.toFixed(3)} ha ({formatIndianNumber(selectedMeasurements.areaSqM, 0)} m²)
+                    {formatIndianNumber(selectedMeasurements.areaSqM, 0)} m² ({formatIndianNumber(Math.round(selectedMeasurements.areaSqFt))} sq ft)
                   </div>
                 </>
               ) : null}

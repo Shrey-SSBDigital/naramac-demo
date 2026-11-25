@@ -65,7 +65,7 @@ export default function TraceabilityChainView({ chainData, translations }) {
       title: "Mature Tree (≥ 7 yrs)",
       entity: `Tag: ${c.treeMatured?.treeTagNumber || "AS-GLG-TAG-8941"}`,
       location: "26.5204° N, 93.9743° E",
-      details: "Individually tagged with UV RFID seal. Girth: 68.5cm, Height: 14.2m.",
+      details: "Individually tagged with QR seal. Girth: 68.5cm, Height: 14.2m.",
       badge: "POINT PIN",
       badgeColor: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
       meta: { "Age": `${c.treeMatured?.ageYears || 11.4} Years`, "Species": c.treeMatured?.species || "Aquilaria malaccensis" }

@@ -581,7 +581,7 @@ export default function TraceabilityModule({ initialSearchQuery }) {
                       TRE • Point Geo-Pinning & Age Rule Survey Table {resolvedTrees.length > 1 ? `(${resolvedTrees.length} Verified Trees)` : ''}
                     </span>
                     <span className="text-[9px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                      RFID &amp; GPS Verified
+                      QR &amp; GPS Verified
                     </span>
                   </div>
 

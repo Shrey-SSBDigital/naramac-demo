@@ -82,7 +82,7 @@ export default function HarvestModule({ mode = null }) {
   const [neramacTarget, setNeramacTarget] = useState(null);
   const [neramacForm, setNeramacForm] = useState({
     officerName: 'NERAMAC-FA-04 (Dipankar Neog)',
-    notes: 'On-site homestead origin & tree RFID tag verified. Private revenue Dag/Patta confirmed. Recommended for DFO felling sanction.'
+    notes: 'On-site homestead origin & tree QR tag verified. Private revenue Dag/Patta confirmed. Recommended for DFO felling sanction.'
   });
 
   // DFO Decision Modal State (Approved? Yes -> Authorisation ID / No -> Back to Harvest Application)
@@ -116,7 +116,7 @@ export default function HarvestModule({ mode = null }) {
     resinGrade: 'GRADE_A_DARK_RESIN',
     inspectorName: 'NERAMAC-FA-04 (Dipankar Neog)',
     treeConfirmed: true,
-    inspectionNotes: 'Tree trunk RFID verified on-site. Spiral inoculation drill plugs inspected. Heartwood resin saturation dense and dark brown.'
+    inspectionNotes: 'Tree trunk QR tag verified on-site. Spiral inoculation drill plugs inspected. Heartwood resin saturation dense and dark brown.'
   });
 
   // Camera & Photo Capture in Felling Modal
@@ -502,7 +502,7 @@ export default function HarvestModule({ mode = null }) {
     setNeramacTarget(harvest);
     setNeramacForm({
       officerName: 'NERAMAC-FA-04 (Dipankar Neog)',
-      notes: `Verified homestead land title for farmer ${harvest.farmerName}. Inspected Tree ${harvest.treeId} and verified RFID tag on-site.`
+      notes: `Verified homestead land title for farmer ${harvest.farmerName}. Inspected Tree ${harvest.treeId} and verified QR tag on-site.`
     });
     setIsNeramacModalOpen(true);
   };
@@ -578,7 +578,7 @@ export default function HarvestModule({ mode = null }) {
       resinGrade: 'GRADE_A_DARK_RESIN',
       inspectorName: 'NERAMAC-FA-04 (Dipankar Neog)',
       treeConfirmed: true,
-      inspectionNotes: `On-site tree ${harvest.treeId} physically confirmed with handheld RFID scanner. Felling supervised.`
+      inspectionNotes: `On-site tree ${harvest.treeId} physically confirmed with handheld QR scanner. Felling supervised.`
     });
     setCapturedStumpPhoto(null);
     setStumpPhotoHash('');
@@ -1047,7 +1047,7 @@ export default function HarvestModule({ mode = null }) {
             <p className="text-xs text-slate-500">
               {mode === 'FARMER_MY_APPS' && 'Track your submitted harvest permission applications, DFO review status, and statutory approvals.'}
               {mode === 'NEW_APP' && 'Submit a formal harvest sanction application for mature homestead agarwood trees (≥ 7 years).'}
-              {mode === 'FA_PRE_HARVEST' && 'Inspect farmer homestead trees, verify 7-year age & RFID barcodes, and forward dossiers to DFO.'}
+              {mode === 'FA_PRE_HARVEST' && 'Inspect farmer homestead trees, verify 7-year age & QR barcodes, and forward dossiers to DFO.'}
               {mode === 'DFO_PENDING_SANCTIONS' && 'Review field-verified harvest dossiers and issue official DFO Tree Felling Sanction Orders or return for rectification.'}
               {mode === 'DFO_SANCTIONED' && 'Registry of all issued DFO Felling Sanction Orders and active harvest authorisations.'}
               {mode === 'FA_FELLING' && 'Supervise physical tree felling, record digital scale heartwood weight, and mint Harvest Batches + e-TPs.'}
@@ -1055,7 +1055,7 @@ export default function HarvestModule({ mode = null }) {
               {!mode && (
                 <>
                   {isFarmerRole && 'Submit harvest sanction applications for your mature trees (≥ 7 yrs), track DFO review status, and view your official State Forest e-Transit Passes.'}
-                  {isFaRole && 'On-ground biometric inspection of farmer homestead trees, verifying 7-year age rule & RFID barcodes, and supervising physical felling with digital scale weighment.'}
+                  {isFaRole && 'On-ground biometric inspection of farmer homestead trees, verifying 7-year age rule & QR barcodes, and supervising physical felling with digital scale weighment.'}
                   {isDfoRole && 'Statutory felling authorization gate under Assam Agarwood Policy 2020. Review field agent verified dossiers and issue formal felling orders or return for deficiency rectification.'}
                   {isAdminRole && 'Complete lifecycle governance: Farmer Application → NERAMAC Field Verification → DFO Statutory Sanction → Supervised Felling & Scale Weighment.'}
                 </>
@@ -2347,7 +2347,7 @@ export default function HarvestModule({ mode = null }) {
               return (
                 <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-emerald-800 block">Tree RFID & Age Confirmation</span>
+                    <span className="text-[10px] uppercase font-bold text-emerald-800 block">Tree QR Tag &amp; Age Confirmation</span>
                     <span className="text-[10px] font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
                       Planted {info.plantingYear} • {info.ageYears} yrs old
                     </span>
