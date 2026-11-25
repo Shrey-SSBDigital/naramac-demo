@@ -59,8 +59,7 @@ export const ROLE_PERMISSIONS = {
       'PLANTATIONS',
       'INOCULATION',
       'HARVEST_FELLING',
-      'HARVEST_BATCHES',
-      'MOVEMENT_FARM_TO_DEPOT'
+      'HARVEST_BATCHES'
     ],
     responsibilities: [
       'On-site physical inspection of homestead land, Dag/Patta, and Lat Mandal revenue records',

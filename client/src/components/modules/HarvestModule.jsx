@@ -1795,7 +1795,7 @@ export default function HarvestModule({ mode = null }) {
                   <span>View Official e-Transit Pass (e-TP)</span>
                 </button>
 
-                {batch.status !== 'DISTILLED' && (
+                {batch.status !== 'DISTILLED' && isFarmerRole && (
                   <button
                     type="button"
                     onClick={() => {
@@ -1807,7 +1807,7 @@ export default function HarvestModule({ mode = null }) {
                         fellingOrderNumber: fellingNo,
                         treeId: batch.treeId
                       });
-                      navigate('/movement');
+                      navigate('/movement/farm-to-depot');
                     }}
                     className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-center text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
                   >
@@ -2666,27 +2666,29 @@ export default function HarvestModule({ mode = null }) {
                   <span>Print e-TP Copy</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    const batchId = selectedBatchForPass.id;
-                    const tpNumber = selectedBatchForPass.transitPassNumber;
-                    const fellingNo = resolveBatchFellingOrder(selectedBatchForPass);
-                    setSelectedBatchForPass(null);
-                    setDispatchIntent({
-                      type: 'FARM_TO_AGGREGATOR',
-                      batchId,
-                      transitPassNumber: tpNumber,
-                      fellingOrderNumber: fellingNo,
-                      treeId: selectedBatchForPass.treeId
-                    });
-                    navigate('/movement');
-                  }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black shadow-xs transition flex items-center gap-1.5"
-                >
-                  <Truck className="w-3.5 h-3.5" />
-                  <span>Proceed to Gate Dispatch (Step 14)</span>
-                </button>
+                {isFarmerRole && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const batchId = selectedBatchForPass.id;
+                      const tpNumber = selectedBatchForPass.transitPassNumber;
+                      const fellingNo = resolveBatchFellingOrder(selectedBatchForPass);
+                      setSelectedBatchForPass(null);
+                      setDispatchIntent({
+                        type: 'FARM_TO_AGGREGATOR',
+                        batchId,
+                        transitPassNumber: tpNumber,
+                        fellingOrderNumber: fellingNo,
+                        treeId: selectedBatchForPass.treeId
+                      });
+                      navigate('/movement/farm-to-depot');
+                    }}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black shadow-xs transition flex items-center gap-1.5"
+                  >
+                    <Truck className="w-3.5 h-3.5" />
+                    <span>Proceed to Gate Dispatch (Step 14)</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
