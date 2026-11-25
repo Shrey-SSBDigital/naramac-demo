@@ -14,18 +14,18 @@ export default function Toast({ toasts = [] }) {
         return (
           <div
             key={toast.id}
-            className={`pointer-events-auto p-3.5 rounded-xl border shadow-lg flex items-start gap-2.5 text-xs font-semibold animate-in slide-in-from-bottom-2 duration-200 ${
+            className={`pointer-events-auto p-3.5 rounded-xl border shadow-lg flex items-start gap-2.5 text-xs font-semibold animate-in slide-in-from-bottom-2 duration-200 bg-white text-black ${
               isSuccess 
-                ? 'bg-emerald-900 text-white border-emerald-700' 
+                ? 'border-emerald-400' 
                 : isWarning
-                  ? 'bg-amber-900 text-white border-amber-700'
-                  : 'bg-slate-900 text-white border-slate-700'
+                  ? 'border-amber-400'
+                  : 'border-slate-300'
             }`}
           >
-            {isSuccess && <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0 mt-0.5" />}
-            {isWarning && <AlertCircle className="w-4 h-4 text-amber-300 flex-shrink-0 mt-0.5" />}
-            {isInfo && <Info className="w-4 h-4 text-blue-300 flex-shrink-0 mt-0.5" />}
-            <span className="flex-1 leading-snug">{toast.message}</span>
+            {isSuccess && <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />}
+            {isWarning && <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />}
+            {isInfo && <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />}
+            <span className="flex-1 leading-snug text-black">{toast.message}</span>
           </div>
         );
       })}
