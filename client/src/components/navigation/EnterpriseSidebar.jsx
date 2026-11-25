@@ -33,14 +33,17 @@ import {
   Lock,
   ChevronDown,
   LogOut,
-  Scale
+  Scale,
+  X
 } from 'lucide-react';
 
 export default function EnterpriseSidebar({
   activeModule,
   onSelectModule,
   onOpenLegacyFlow,
-  onOpenLegacyGeoStudio
+  onOpenLegacyGeoStudio,
+  isOpen = false,
+  onClose
 }) {
   const {
     activeRole,
@@ -231,33 +234,57 @@ export default function EnterpriseSidebar({
   }).filter(grp => grp.items.length > 0);
 
   return (
-    <aside className="w-72 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0 flex-shrink-0 z-30 shadow-xs">
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden"
+          onClick={() => onClose && onClose()}
+        />
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-slate-200 flex-col h-screen lg:sticky lg:top-0 flex-shrink-0 shadow-xl lg:shadow-xs transform transition-transform duration-200 ease-out ${
+          isOpen ? 'flex translate-x-0' : 'hidden lg:flex -translate-x-full lg:translate-x-0'
+        }`}
+      >
       {/* Brand Header */}
       <div className="p-3 border-b border-slate-200">
-        <button
-          onClick={() => {
-            if (onSelectModule) onSelectModule('HOME');
-            navigate({ to: '/' });
-          }}
-          className="w-full text-left brand-header p-3 rounded-xl shadow-xs text-white space-y-1 transition hover:opacity-95"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-white text-emerald-800 flex items-center justify-center font-extrabold text-lg shadow-xs flex-shrink-0">
-              N
-            </div>
-            <div className="truncate">
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-white text-sm tracking-tight">NERAMAC</span>
-                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-400/40">
-                  ASCTS
-                </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (onSelectModule) onSelectModule('HOME');
+              if (onClose) onClose();
+              navigate({ to: '/' });
+            }}
+            className="flex-1 min-w-0 text-left brand-header p-3 rounded-xl shadow-xs text-white space-y-1 transition hover:opacity-95"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-white text-emerald-800 flex items-center justify-center font-extrabold text-lg shadow-xs flex-shrink-0">
+                N
               </div>
-              <p className="text-[10px] text-emerald-100 font-medium truncate">
-                Agarwood Traceability System
-              </p>
+              <div className="truncate">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold text-white text-sm tracking-tight">NERAMAC</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-400/40">
+                    ASCTS
+                  </span>
+                </div>
+                <p className="text-[10px] text-emerald-100 font-medium truncate">
+                  Agarwood Traceability System
+                </p>
+              </div>
             </div>
-          </div>
-        </button>
+          </button>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close navigation menu"
+              className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition flex-shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
 
         {/* Active Role Card & Dropdown Switcher */}
         <div className="mt-2 relative">
@@ -333,6 +360,7 @@ export default function EnterpriseSidebar({
                   key={item.id}
                   onClick={() => {
                     if (onSelectModule) onSelectModule(item.id, item.path);
+                    if (onClose) onClose();
                     navigate({ to: item.path });
                   }}
                   className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition group ${
@@ -408,5 +436,6 @@ export default function EnterpriseSidebar({
         </div>
       </div>
     </aside>
+    </>
   );
 }

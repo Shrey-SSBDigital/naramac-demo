@@ -72,8 +72,8 @@ export default function DataTable({
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col">
       {/* Table Toolbar */}
-      <div className="p-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
-        <div className="flex items-center gap-2 flex-1 min-w-[240px] max-w-md">
+      <div className="p-3 sm:p-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 bg-slate-50/50">
+        <div className="flex items-center gap-2 flex-1 min-w-0 sm:min-w-[240px] max-w-md w-full">
           <div className="relative w-full">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -163,7 +163,7 @@ export default function DataTable({
       </div>
 
       {/* Pagination Footer */}
-      <div className="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/40">
+      <div className="p-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 bg-slate-50/40">
         <div>
           Showing <span className="font-bold text-slate-800">{filteredData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> to{' '}
           <span className="font-bold text-slate-800">{Math.min(currentPage * pageSize, filteredData.length)}</span> of{' '}

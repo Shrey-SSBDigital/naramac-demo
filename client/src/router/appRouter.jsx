@@ -74,6 +74,7 @@ function RootLayout() {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([1]);
   const [traceSearchQuery, setTraceSearchQuery] = useState('PCK-NER-2026-001');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [workflowData, setWorkflowData] = useState({
     farmer: {
       fullName: 'Bhaben Saikia',
@@ -160,17 +161,29 @@ function RootLayout() {
 
   return (
     <FlowDemonstratorContext.Provider value={flowContextValue}>
-      <div className="flex h-screen bg-slate-100 text-slate-900 font-sans antialiased overflow-hidden selection:bg-emerald-600 selection:text-white">
+      <div className="flex min-h-screen lg:h-screen bg-slate-100 text-slate-900 font-sans antialiased lg:overflow-hidden selection:bg-emerald-600 selection:text-white">
         <EnterpriseSidebar
           activeModule={currentModule}
-          onSelectModule={(mod, path) => appNavigate(path || mod)}
-          onOpenLegacyFlow={() => navigate({ to: '/flow' })}
-          onOpenLegacyGeoStudio={() => navigate({ to: '/field-gis-studio' })}
+          isOpen={mobileSidebarOpen}
+          onClose={() => setMobileSidebarOpen(false)}
+          onSelectModule={(mod, path) => {
+            setMobileSidebarOpen(false);
+            appNavigate(path || mod);
+          }}
+          onOpenLegacyFlow={() => {
+            setMobileSidebarOpen(false);
+            navigate({ to: '/flow' });
+          }}
+          onOpenLegacyGeoStudio={() => {
+            setMobileSidebarOpen(false);
+            navigate({ to: '/field-gis-studio' });
+          }}
         />
 
-        <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-slate-50">
+        <div className="flex-1 min-w-0 flex flex-col min-h-screen lg:h-screen lg:overflow-y-auto bg-slate-50">
           <EnterpriseNavbar
             activeModule={currentModule}
+            onToggleSidebar={() => setMobileSidebarOpen(prev => !prev)}
             onSelectModule={(mod) => appNavigate(mod)}
             onOpenTraceSearch={(q) => {
               setTraceSearchQuery(q);
@@ -178,7 +191,7 @@ function RootLayout() {
             }}
           />
 
-          <main className={`p-4 md:p-6 w-full mx-auto pb-24 ${isWideLayout ? 'max-w-[1500px]' : 'max-w-6xl'}`}>
+          <main className={`p-3 sm:p-4 md:p-6 w-full mx-auto pb-24 ${isWideLayout ? 'max-w-[1500px]' : 'max-w-6xl'}`}>
             <Outlet />
           </main>
         </div>
