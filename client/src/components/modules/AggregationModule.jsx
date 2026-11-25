@@ -347,7 +347,7 @@ export default function AggregationModule() {
         </div>
       </div>
 
-      {/* Main Table */}
+      {/* Main Table: Depot Lots */}
       <DataTable
         columns={columns}
         data={aggregations}
@@ -355,6 +355,69 @@ export default function AggregationModule() {
         searchPlaceholder="Search aggregation batches by ID or facility..."
         onRowClick={(a) => setSelectedAgg(a)}
       />
+
+      {/* Split Harvest Batches Section */}
+      {(() => {
+        const splitBatches = harvestBatches.filter(
+          b => b.batchOperation === 'SPLIT' || b.parentHarvestBatchId || b.status === 'SPLIT_INTO_SUBBATCHES'
+        );
+        if (splitBatches.length === 0) return null;
+        return (
+          <div className="bg-white border border-amber-200 rounded-xl p-4 shadow-xs space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-100 pb-2.5">
+              <div>
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <Scissors className="w-4 h-4 text-amber-600" />
+                  <span>Split Harvest Batches ({splitBatches.filter(b => b.batchOperation === 'SPLIT').length} Sub-Batches)</span>
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Sub-batches created by splitting a Harvest Batch. Unmerged sub-batches can be selected in &ldquo;Merge Batches into Lot&rdquo;.
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-amber-50/70 text-amber-950 font-extrabold uppercase text-[10px] tracking-wider border-b border-amber-200">
+                  <tr>
+                    <th className="px-3 py-2.5">Batch ID</th>
+                    <th className="px-3 py-2.5">Parent Batch</th>
+                    <th className="px-3 py-2.5">Farmer &amp; Tree</th>
+                    <th className="px-3 py-2.5 text-right">Weight (kg)</th>
+                    <th className="px-3 py-2.5">Merged Lot</th>
+                    <th className="px-3 py-2.5 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {splitBatches.map(b => (
+                    <tr key={b.id} className="hover:bg-amber-50/30 transition">
+                      <td className="px-3 py-2.5 font-mono font-extrabold text-slate-900">{b.id}</td>
+                      <td className="px-3 py-2.5 font-mono text-slate-600">{b.parentHarvestBatchId || '— (Source)'}</td>
+                      <td className="px-3 py-2.5">
+                        <span className="font-bold text-slate-800">{b.farmerName}</span>
+                        <span className="text-[10px] text-slate-500 block font-mono">{b.treeId} • {b.transitPassNumber}</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-900">{b.netWeightKg} kg</td>
+                      <td className="px-3 py-2.5 font-mono text-[11px]">
+                        {b.parentOfAggregation ? (
+                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">{b.parentOfAggregation}</span>
+                        ) : b.status === 'SPLIT_INTO_SUBBATCHES' ? (
+                          <span className="text-slate-400">Split into {(b.splitChildIds || []).join(', ')}</span>
+                        ) : (
+                          <span className="text-amber-700 font-semibold">Ready to Merge</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <StatusBadge status={b.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Detail Modal with Parent Genealogy Breakdown */}
       {selectedAgg && (
