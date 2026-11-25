@@ -923,7 +923,6 @@ export function EnterpriseProvider({ children }) {
 
     const batchId = `HBT-AS-2026-${String(harvestBatches.length + 1).padStart(3, '0')}`;
     const cleanedKg = parseFloat(fellingData.cleanedHeartwoodKg || fellingData.woodWeightKg || 38.5);
-    const chipsKg = parseFloat(fellingData.sapwoodChipsKg || 12.0);
     const photoHash = fellingData.stumpPhotoSha256 || `sha256:${Math.random().toString(16).slice(2)}`;
 
     const updatedHarvests = harvests.map(h => {
@@ -935,7 +934,6 @@ export function EnterpriseProvider({ children }) {
           treeQrVerified: true,
           freshWoodWeightKg: Number((cleanedKg * 1.1).toFixed(1)),
           cleanedHeartwoodKg: cleanedKg,
-          sapwoodChipsKg: chipsKg,
           stumpPhotoHash: photoHash,
           stumpPhotoUrl: fellingData.stumpPhotoUrl || null,
           gpsCoordinates: fellingData.gpsCoordinates || [93.9782, 26.5204],

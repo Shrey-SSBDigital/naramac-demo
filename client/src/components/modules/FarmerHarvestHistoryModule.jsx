@@ -341,7 +341,6 @@ export default function FarmerHarvestHistoryModule() {
                             <div className="font-mono font-bold text-emerald-900">{b.id} ({b.harvestDate || b.fellingDate || 'Completed'})</div>
                             <div className="text-slate-700">
                               Cleaned Heartwood: <strong>{b.netWeightKg || 0} kg</strong>
-                              {b.sapwoodChipsKg ? ` • Chips: ${b.sapwoodChipsKg} kg` : ''}
                             </div>
                             <div className="font-mono text-[11px] text-slate-600">e-TP: {b.transitPassNumber || 'Issued'}</div>
                             <div className="text-[11px] text-slate-500">Location: {b.currentLocation || 'Field / Depot'}</div>
