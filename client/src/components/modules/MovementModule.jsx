@@ -96,6 +96,7 @@ export default function MovementModule({ mode = null }) {
     transitPassNumber: 'TP/FOR/GLT/2026/0920',
     vehicleNumber: 'AS-05-C-8812',
     driverName: 'Ramesh Gogoi',
+    driverMobile: '+91 98640 22190',
     dispatchWeightKg: 42.00
   });
 
@@ -114,6 +115,7 @@ export default function MovementModule({ mode = null }) {
     transitPassNumber: 'TP/FOR/GLT/2026/9114',
     vehicleNumber: 'AS-05-C-4412',
     driverName: 'Ramesh Gogoi',
+    driverMobile: '+91 94350 11220',
     dispatchWeightKg: 75.00,
     parentBatchIds: ['HBT-AS-2026-001', 'HBT-AS-2026-002'],
     resinGrade: 'GRADE_A_DARK_RESIN'
@@ -195,6 +197,7 @@ export default function MovementModule({ mode = null }) {
       transitPassNumber: linkedTransitPass,
       vehicleNumber: 'AS-05-C-8812',
       driverName: 'Ramesh Gogoi',
+      driverMobile: '+91 98640 22190',
       dispatchWeightKg: b?.netWeightKg || 38.5
     });
     setIsFarmModalOpen(true);
@@ -216,6 +219,7 @@ export default function MovementModule({ mode = null }) {
       transitPassNumber: `TP/FOR/GLT/2026/${Math.floor(1000 + Math.random() * 9000)}`,
       vehicleNumber: 'AS-05-C-4412',
       driverName: 'Ramesh Gogoi',
+      driverMobile: '+91 94350 11220',
       dispatchWeightKg: agg?.totalWeightKg || 75.00,
       parentBatchIds: agg?.parentBatchIds || ['HBT-AS-2026-001', 'HBT-AS-2026-002'],
       resinGrade: agg?.uniformResinGrade || 'GRADE_A_DARK_RESIN'
@@ -459,7 +463,7 @@ export default function MovementModule({ mode = null }) {
           </div>
           <div className="text-[10px] text-slate-400 flex items-center gap-1">
             <Truck className="w-3 h-3 text-slate-400" />
-            <span>{m.vehicleNumber} ({m.driverName || 'Designated Driver'})</span>
+            <span>{m.vehicleNumber} ({m.driverName || 'Designated Driver'}{m.driverMobile ? ` • ${m.driverMobile}` : ''})</span>
           </div>
         </div>
       )
@@ -1000,6 +1004,15 @@ export default function MovementModule({ mode = null }) {
                   <span className="text-slate-400">Dispatcher: </span>
                   <span className="font-semibold">{selectedMovement.dispatchCustodian}</span>
                 </div>
+                {(selectedMovement.driverName || selectedMovement.driverMobile) && (
+                  <div className="text-[11px] text-slate-600">
+                    <span className="text-slate-400">Driver: </span>
+                    <span className="font-semibold">
+                      {selectedMovement.driverName || 'Designated Driver'}
+                      {selectedMovement.driverMobile ? ` (${selectedMovement.driverMobile})` : ''}
+                    </span>
+                  </div>
+                )}
                 {selectedMovement.farmerName && (
                   <div className="text-[11px] text-emerald-800">
                     <span className="text-slate-400">Grower: </span>
@@ -1550,14 +1563,26 @@ export default function MovementModule({ mode = null }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Carrier Driver Name & Contact</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Carrier Driver Name *</label>
               <input
                 type="text"
+                required
                 value={farmForm.driverName}
                 onChange={(e) => setFarmForm({ ...farmForm, driverName: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Driver Mobile Number *</label>
+              <input
+                type="tel"
+                required
+                placeholder="+91 98640 00000"
+                value={farmForm.driverMobile}
+                onChange={(e) => setFarmForm({ ...farmForm, driverMobile: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg font-mono bg-white"
               />
             </div>
             <div>
@@ -1733,14 +1758,26 @@ export default function MovementModule({ mode = null }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Carrier Driver Name & Contact</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Carrier Driver Name *</label>
               <input
                 type="text"
+                required
                 value={depotForm.driverName}
                 onChange={(e) => setDepotForm({ ...depotForm, driverName: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Driver Mobile Number *</label>
+              <input
+                type="tel"
+                required
+                placeholder="+91 94350 00000"
+                value={depotForm.driverMobile}
+                onChange={(e) => setDepotForm({ ...depotForm, driverMobile: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg font-mono bg-white"
               />
             </div>
             <div>
