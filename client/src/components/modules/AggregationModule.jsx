@@ -22,14 +22,50 @@ import {
   TreePine,
   User,
   Info,
-  Truck
+  Truck,
+  Scissors
 } from 'lucide-react';
 
 export default function AggregationModule() {
-  const { aggregations, createAggregation, harvestBatches, addToast, setDispatchIntent, activeRole } = useEnterprise();
+  const { aggregations, createAggregation, splitAggregationLot, harvestBatches, addToast, setDispatchIntent, activeRole } = useEnterprise();
   const { navigate } = useAppRouter();
   const [selectedAgg, setSelectedAgg] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Split Lot Modal State
+  const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
+  const [splitSourceLotId, setSplitSourceLotId] = useState('');
+  const [splitWeight1, setSplitWeight1] = useState(0);
+
+  const activeLotsForSplit = aggregations.filter(a => a.status !== 'SPLIT_INTO_SUBLOTS');
+  const selectedSplitLot = aggregations.find(a => a.id === splitSourceLotId) || activeLotsForSplit[0] || null;
+  const splitWeight2 = selectedSplitLot
+    ? Math.max(0, Math.round(((selectedSplitLot.totalWeightKg || 0) - (parseFloat(splitWeight1) || 0)) * 10) / 10)
+    : 0;
+
+  const openSplitModal = (lot = null) => {
+    const target = lot || activeLotsForSplit[0];
+    if (!target) {
+      addToast('No active depot lot available to split', 'warning');
+      return;
+    }
+    setSplitSourceLotId(target.id);
+    setSplitWeight1(Math.round(((target.totalWeightKg || 0) / 2) * 10) / 10);
+    setIsSplitModalOpen(true);
+  };
+
+  const handleSplitSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedSplitLot) return;
+    const w1 = parseFloat(splitWeight1) || 0;
+    const w2 = splitWeight2;
+    if (w1 <= 0 || w2 <= 0) {
+      addToast('Both split lot weights must be greater than 0 kg', 'warning');
+      return;
+    }
+    splitAggregationLot(selectedSplitLot.id, [w1, w2]);
+    setIsSplitModalOpen(false);
+  };
 
   // Filter options for Modal
   const [includeAllBatches, setIncludeAllBatches] = useState(false);
@@ -219,11 +255,24 @@ export default function AggregationModule() {
           >
             Genealogy
           </button>
+          {a.status !== 'SPLIT_INTO_SUBLOTS' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                openSplitModal(a);
+              }}
+              className="px-2.5 py-1 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition flex items-center gap-1"
+              title="Split this Lot into sub-lots"
+            >
+              <Scissors className="w-3 h-3 text-amber-700" />
+              <span>Split</span>
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();
               setDispatchIntent({ type: 'AGGREGATOR_TO_DISTILLERY', batchId: a.id });
-              navigate('/movement');
+              navigate('/movement/depot-to-cpc');
             }}
             className="px-2.5 py-1 text-xs font-bold text-cyan-800 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 rounded-lg transition flex items-center gap-1"
             title="Dispatch Lot to CPC Distillery (Step 15)"
@@ -250,27 +299,35 @@ export default function AggregationModule() {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-white text-sm">
-                {isDepotRole && 'Depot Intake Desk • Multi-Grower Consignment Pooling'}
-                {!isDepotRole && 'Aggregation Facility • Multi-Grower Lot Assembly'}
+                Depot Lot Management • Merge &amp; Split Lots
               </span>
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
                 Persona: {activeRole}
               </span>
             </div>
             <p className="text-[11px] text-slate-300 mt-0.5">
-              <strong>Multi-Grower Provenance Architecture:</strong> Individual green wood batches from multiple registered growers (e.g. Bhaben Saikia &amp; Tarun Chandra Das) are merged into a homogeneous Aggregation Lot (AGG) for distillation, while maintaining 100% cryptographic backward lineage to each grower's tree and plot Dag/Patta.
+              <strong>Multi-Grower Lot Traceability:</strong> Merge multiple farmer harvest batches into a uniform Depot Lot, or Split a Depot Lot into smaller lots while maintaining 100% backward lineage.
             </p>
           </div>
         </div>
 
         {isDepotRole || isAdminRole ? (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
-          >
-            <GitMerge className="w-4 h-4" />
-            <span>Pool Batches into AGG</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => openSplitModal()}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
+            >
+              <Scissors className="w-4 h-4" />
+              <span>Split Lot</span>
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
+            >
+              <GitMerge className="w-4 h-4" />
+              <span>Merge Batches into Lot</span>
+            </button>
+          </div>
         ) : null}
       </div>
 
@@ -278,13 +335,13 @@ export default function AggregationModule() {
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
         <div>
           <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Aggregation &amp; Depot Consignment Pooling</span>
+            <span>Depot Lot Management (Merge &amp; Split)</span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
               Module 08
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Combining multiple Harvest Batches (HBT) into uniform Aggregation Batches (AGG) while maintaining complete backward genealogy.
+            Merge multiple Harvest Batches (HBT) into uniform Depot Lots (LOT), or split existing Lots into sub-lots with intact genealogy.
           </p>
         </div>
       </div>
@@ -369,12 +426,12 @@ export default function AggregationModule() {
         </Modal>
       )}
 
-      {/* Pool Batches Modal with Complete Batch Selection */}
+      {/* Merge Batches into Lot Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Pool Batches into Aggregation Charge"
-        subtitle="RFP Section 3.2: Select incoming harvest batches to combine into uniform distillation charge"
+        title="Merge Harvest Batches into Depot Lot"
+        subtitle="Select incoming harvest batches to combine into a uniform Depot Lot"
         maxWidth="max-w-3xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
@@ -634,9 +691,92 @@ export default function AggregationModule() {
               <GitMerge className="w-4 h-4" />
               <span>
                 {selectedBatchIds.length === 0
-                  ? 'Select Batches to Form Lot'
-                  : `Form Lot (${selectedBatchIds.length} Batches • ${calculatedTotalWeight} kg)`}
+                  ? 'Select Batches to Merge into Lot'
+                  : `Merge into Lot (${selectedBatchIds.length} Batches • ${calculatedTotalWeight} kg)`}
               </span>
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Split Lot Modal */}
+      <Modal
+        isOpen={isSplitModalOpen}
+        onClose={() => setIsSplitModalOpen(false)}
+        title="Split Depot Lot into Sub-Lots"
+        subtitle="Divide an existing Depot Lot into two smaller Lots while preserving full farmer & tree genealogy"
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleSplitSubmit} className="space-y-4 text-xs">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Select Source Lot to Split *</label>
+            <select
+              value={selectedSplitLot?.id || ''}
+              onChange={(e) => {
+                const nextLot = aggregations.find(a => a.id === e.target.value);
+                setSplitSourceLotId(e.target.value);
+                if (nextLot) {
+                  setSplitWeight1(Math.round(((nextLot.totalWeightKg || 0) / 2) * 10) / 10);
+                }
+              }}
+              className="w-full px-3 py-2 border rounded-lg font-mono font-bold bg-white"
+            >
+              {activeLotsForSplit.map(a => (
+                <option key={a.id} value={a.id}>{a.id} • {a.totalWeightKg} kg • {a.depotName}</option>
+              ))}
+            </select>
+          </div>
+
+          {selectedSplitLot && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="font-bold text-slate-600">Source Lot Total Weight:</span>
+                <span className="font-mono font-black text-slate-900 text-sm">{selectedSplitLot.totalWeightKg} kg</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-2.5 bg-white border border-amber-300 rounded-lg">
+                  <label className="block text-[10px] font-extrabold text-amber-900 uppercase mb-1">
+                    {selectedSplitLot.id}-S1 (kg) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max={Math.max(0.1, (selectedSplitLot.totalWeightKg || 1) - 0.1)}
+                    required
+                    value={splitWeight1}
+                    onChange={(e) => setSplitWeight1(e.target.value)}
+                    className="w-full px-2.5 py-1.5 border rounded font-mono font-bold text-slate-900"
+                  />
+                </div>
+                <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <span className="block text-[10px] font-extrabold text-emerald-900 uppercase mb-1">
+                    {selectedSplitLot.id}-S2 (Auto Remainder)
+                  </span>
+                  <div className="px-2.5 py-1.5 font-mono font-black text-emerald-950 text-sm">
+                    {splitWeight2} kg
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="pt-3 border-t flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setIsSplitModalOpen(false)}
+              className="px-4 py-2 border rounded-xl font-bold text-slate-600 hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!selectedSplitLot || splitWeight2 <= 0}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-extrabold shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Scissors className="w-4 h-4" />
+              <span>Confirm Split Lot</span>
             </button>
           </div>
         </form>

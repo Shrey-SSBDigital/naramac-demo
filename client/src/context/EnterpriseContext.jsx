@@ -1350,9 +1350,10 @@ export function EnterpriseProvider({ children }) {
 
   // 7. Aggregation Management
   const createAggregation = (aggregationData) => {
-    const id = `AGG-AS-2026-${String(aggregations.length + 1).padStart(2, '0')}`;
+    const id = `LOT-AS-2026-${String(aggregations.length + 1).padStart(2, '0')}`;
     const newAgg = {
       id,
+      lotOperation: 'MERGED',
       aggregationDate: new Date().toISOString().split('T')[0],
       status: 'READY_FOR_DISTILLATION',
       ...aggregationData
@@ -1370,9 +1371,56 @@ export function EnterpriseProvider({ children }) {
     setAggregations(updated);
     setHarvestBatches(updatedBatches);
     persistState({ aggregations: updated, harvestBatches: updatedBatches });
-    logAudit('CREATE_AGGREGATION', 'Aggregation Management', `Pooled ${newAgg.parentBatchIds.length} batches into ${id} (${newAgg.totalWeightKg} kg)`, id);
-    addToast(`Aggregation Batch ${id} created with full parent genealogy preserved`);
+    logAudit('MERGE_LOT', 'Depot Lot Management', `Merged ${newAgg.parentBatchIds.length} batches into Lot ${id} (${newAgg.totalWeightKg} kg)`, id);
+    addToast(`Depot Lot ${id} merged with full parent genealogy preserved`);
     return newAgg;
+  };
+
+  const splitAggregationLot = (sourceLotId, splitWeightsKg = [], splitMeta = {}) => {
+    const sourceLot = aggregations.find(a => a.id === sourceLotId);
+    if (!sourceLot) return null;
+
+    const validWeights = splitWeightsKg.map(w => parseFloat(w) || 0).filter(w => w > 0);
+    if (validWeights.length < 2) {
+      addToast('At least 2 non-zero sub-lot weights are required to split a lot', 'warning');
+      return null;
+    }
+
+    const totalSourceKg = parseFloat(sourceLot.totalWeightKg) || 0;
+    const childLots = validWeights.map((wt, idx) => {
+      const childId = `${sourceLot.id}-S${idx + 1}`;
+      const ratio = totalSourceKg > 0 ? wt / totalSourceKg : 1 / validWeights.length;
+      return {
+        ...sourceLot,
+        id: childId,
+        parentLotId: sourceLot.id,
+        lotOperation: 'SPLIT',
+        aggregationDate: new Date().toISOString().split('T')[0],
+        totalWeightKg: Math.round(wt * 10) / 10,
+        status: 'READY_FOR_DISTILLATION',
+        storageBay: splitMeta.storageBay || sourceLot.storageBay || `Bay-${idx + 1}`,
+        destinationCPC: splitMeta.destinationCPC || sourceLot.destinationCPC,
+        parentDetails: (sourceLot.parentDetails || []).map(p => ({
+          ...p,
+          weightKg: Math.round((p.weightKg || 0) * ratio * 10) / 10
+        }))
+      };
+    });
+
+    const updatedAggs = [
+      ...childLots,
+      ...aggregations.map(a =>
+        a.id === sourceLotId
+          ? { ...a, status: 'SPLIT_INTO_SUBLOTS', splitChildIds: childLots.map(c => c.id) }
+          : a
+      )
+    ];
+
+    setAggregations(updatedAggs);
+    persistState({ aggregations: updatedAggs });
+    logAudit('SPLIT_LOT', 'Depot Lot Management', `Split Lot ${sourceLotId} (${totalSourceKg} kg) into ${childLots.length} child lots: ${childLots.map(c => `${c.id} (${c.totalWeightKg} kg)`).join(', ')}`, sourceLotId);
+    addToast(`Lot ${sourceLotId} split into ${childLots.map(c => c.id).join(' & ')}`);
+    return childLots;
   };
 
   // 8. Processing & Distillation
@@ -1941,6 +1989,7 @@ export function EnterpriseProvider({ children }) {
         createMovement,
         receiveMovement,
         createAggregation,
+        splitAggregationLot,
         createDistillationRun,
         submitLabSampleAndTest,
         approveQualityRelease,

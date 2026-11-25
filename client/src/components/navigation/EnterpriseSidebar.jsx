@@ -171,7 +171,7 @@ export default function EnterpriseSidebar({
         },
         {
           id: 'AGGREGATION',
-          name: 'Depot Batch Pooling',
+          name: 'Depot Lot (Merge & Split)',
           icon: Boxes,
           badge: aggregations.length,
           path: '/aggregation'
