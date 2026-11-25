@@ -611,7 +611,7 @@ export default function MovementModule({ mode = null }) {
             )}
 
             {/* Page-Mode Specific Action Button (Strictly Single Purpose) */}
-            {(mode === 'FARM_TO_DEPOT' || (!mode && (activeRole === 'FARMER' || activeRole === 'FIELD_AGENT' || (activeRole !== 'COLLECTION_OPERATOR' && activeTab === 'FARM_TO_AGGREGATOR')))) && (
+            {activeRole !== 'NERAMAC_ADMIN' && (mode === 'FARM_TO_DEPOT' || (!mode && (activeRole === 'FARMER' || activeRole === 'FIELD_AGENT' || (activeRole !== 'COLLECTION_OPERATOR' && activeTab === 'FARM_TO_AGGREGATOR')))) && (
               <button
                 onClick={() => openFarmDispatchModal()}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-xs transition flex items-center gap-1.5"
@@ -621,7 +621,7 @@ export default function MovementModule({ mode = null }) {
               </button>
             )}
 
-            {(mode === 'DEPOT_TO_CPC' || (!mode && (activeRole === 'COLLECTION_OPERATOR' || (activeRole !== 'FARMER' && activeRole !== 'FIELD_AGENT' && activeTab === 'AGGREGATOR_TO_DISTILLERY')))) && (
+            {activeRole !== 'NERAMAC_ADMIN' && (mode === 'DEPOT_TO_CPC' || (!mode && (activeRole === 'COLLECTION_OPERATOR' || (activeRole !== 'FARMER' && activeRole !== 'FIELD_AGENT' && activeTab === 'AGGREGATOR_TO_DISTILLERY')))) && (
               <button
                 onClick={() => openDepotDispatchModal()}
                 className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black rounded-xl shadow-xs transition flex items-center gap-1.5"

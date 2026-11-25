@@ -6,7 +6,7 @@ import Modal from '../common/Modal';
 import { Ship, Plane, Plus, ShieldCheck, Truck, ExternalLink, Boxes, PackageCheck, FileCheck } from 'lucide-react';
 
 export default function ShipmentModule() {
-  const { shipmentLots, createShipmentLot, exportBatches, finishedProducts, addToast } = useEnterprise();
+  const { shipmentLots, createShipmentLot, exportBatches, finishedProducts, addToast, activeRole } = useEnterprise();
   const [selectedLot, setSelectedLot] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -148,13 +148,15 @@ export default function ShipmentModule() {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
-        >
-          <Plane className="w-4 h-4" />
-          <span>Dispatch Shipment Lot</span>
-        </button>
+        {activeRole !== 'NERAMAC_ADMIN' && (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
+          >
+            <Plane className="w-4 h-4" />
+            <span>Dispatch Shipment Lot</span>
+          </button>
+        )}
       </div>
 
       {/* Main Table */}

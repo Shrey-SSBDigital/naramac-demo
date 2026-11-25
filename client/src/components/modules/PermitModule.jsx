@@ -183,7 +183,7 @@ export default function PermitModule() {
           </div>
         </div>
 
-        {isDfoRole || isAdminRole ? (
+        {isDfoRole ? (
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl shadow-xs transition"

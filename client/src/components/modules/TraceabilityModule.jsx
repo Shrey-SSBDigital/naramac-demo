@@ -725,85 +725,29 @@ export default function TraceabilityModule({ initialSearchQuery }) {
                 </div>
               </div>
 
-              {/* Node 8: NABL Quality Testing & GC-MS Profiling (Structured Table) */}
+              {/* Node 8: NABL Quality Testing & CoA Verification (without detailed chemical test results) */}
               <div className="relative">
                 <div className="absolute -left-[35px] sm:-left-[43px] top-0 w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs ring-4 ring-white shadow-xs">
                   8
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
-                    <div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 block">
-                        LAB • NABL Accredited Chemical Profiling &amp; GC-MS Assay Table
-                      </span>
-                      <span className="font-extrabold text-slate-900 text-sm font-mono">
-                        Certificate of Analysis: {labTest?.coaDocumentNumber || 'COA/NER/2026/0144'}
-                      </span>
-                    </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800">
+                      LAB • NABL Accredited Quality Testing &amp; CoA
+                    </span>
                     <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
                       ISO/IEC 17025 Certified
                     </span>
                   </div>
-
-                  <div className="overflow-x-auto rounded-xl border border-purple-200 bg-white">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-purple-50 text-purple-950 font-extrabold uppercase text-[10px] tracking-wider border-b border-purple-200">
-                        <tr>
-                          <th className="px-3 py-2.5">Bioactive Compound / Parameter</th>
-                          <th className="px-3 py-2.5">Observed Test Value</th>
-                          <th className="px-3 py-2.5">Statutory Benchmark</th>
-                          <th className="px-3 py-2.5">Testing Method</th>
-                          <th className="px-3 py-2.5 text-right">Result</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-purple-100 font-mono text-xs">
-                        <tr className="hover:bg-purple-50/30">
-                          <td className="px-3 py-2 font-bold text-slate-900 font-sans">Agarospirol (Marker Sesquiterpene)</td>
-                          <td className="px-3 py-2 font-extrabold text-emerald-800">{labTest?.agarospirolPct || '14.82'}%</td>
-                          <td className="px-3 py-2 text-slate-600">&ge; 8.50%</td>
-                          <td className="px-3 py-2 text-slate-500 font-sans">GC-MS (ISO 11024)</td>
-                          <td className="px-3 py-2 text-right">
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">PASS</span>
-                          </td>
-                        </tr>
-                        <tr className="hover:bg-purple-50/30">
-                          <td className="px-3 py-2 font-bold text-slate-900 font-sans">Jinkoh-eremol (Aroma Carrier)</td>
-                          <td className="px-3 py-2 font-extrabold text-emerald-800">{labTest?.jinkohEremolPct || '6.24'}%</td>
-                          <td className="px-3 py-2 text-slate-600">&ge; 4.00%</td>
-                          <td className="px-3 py-2 text-slate-500 font-sans">GC-MS (ISO 11024)</td>
-                          <td className="px-3 py-2 text-right">
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">PASS</span>
-                          </td>
-                        </tr>
-                        <tr className="hover:bg-purple-50/30">
-                          <td className="px-3 py-2 font-bold text-slate-900 font-sans">Kusunol Content</td>
-                          <td className="px-3 py-2 font-extrabold text-emerald-800">3.18%</td>
-                          <td className="px-3 py-2 text-slate-600">&ge; 2.00%</td>
-                          <td className="px-3 py-2 text-slate-500 font-sans">GC-MS (ISO 11024)</td>
-                          <td className="px-3 py-2 text-right">
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">PASS</span>
-                          </td>
-                        </tr>
-                        <tr className="hover:bg-purple-50/30">
-                          <td className="px-3 py-2 font-bold text-slate-900 font-sans">Synthetics &amp; Phthalates (DEP / DOP)</td>
-                          <td className="px-3 py-2 font-extrabold text-emerald-800">0.00% (Nil)</td>
-                          <td className="px-3 py-2 text-slate-600">Zero Tolerance</td>
-                          <td className="px-3 py-2 text-slate-500 font-sans">GC-MS Headspace</td>
-                          <td className="px-3 py-2 text-right">
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">PURE PASS</span>
-                          </td>
-                        </tr>
-                        <tr className="hover:bg-purple-50/30">
-                          <td className="px-3 py-2 font-bold text-slate-900 font-sans">Refractive Index @ 20&deg;C</td>
-                          <td className="px-3 py-2 font-extrabold text-slate-800">1.5082</td>
-                          <td className="px-3 py-2 text-slate-600">1.5000 &ndash; 1.5150</td>
-                          <td className="px-3 py-2 text-slate-500 font-sans">Abbe Refractometer</td>
-                          <td className="px-3 py-2 text-right">
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">PASS</span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  <div className="font-extrabold text-slate-900 text-sm font-mono">
+                    Certificate of Analysis: {labTest?.coaDocumentNumber || 'COA/NER/2026/0144'}
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    Facility: <strong>{labTest?.laboratoryName || 'NERAMAC Central Quality Assurance & NABL Analytical Facility, Jorhat'}</strong>
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    Status: <strong className="text-emerald-700">{labTest?.qualityDecision === 'REJECTED' ? 'REJECTED' : 'APPROVED & RELEASED'}</strong>
+                    {labTest?.uploadedReportName ? ` • Report: ${labTest.uploadedReportName}` : ''}
                   </div>
                 </div>
               </div>

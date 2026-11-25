@@ -31,7 +31,8 @@ export default function PlantationModule({ onOpenGeoStudio }) {
     plantations,
     addPlantation,
     pologens,
-    trees
+    trees,
+    activeRole
   } = useEnterprise();
 
   // Active Tab: 'PLOTS' (Default) | 'HIERARCHY' | 'SURVEY_ASSETS'
@@ -469,14 +470,16 @@ export default function PlantationModule({ onOpenGeoStudio }) {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsAddPlotModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Plot / Plantation</span>
-          </button>
+          {activeRole !== 'NERAMAC_ADMIN' && (
+            <button
+              type="button"
+              onClick={() => setIsAddPlotModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Plot / Plantation</span>
+            </button>
+          )}
 
           {onOpenGeoStudio && (
             <button

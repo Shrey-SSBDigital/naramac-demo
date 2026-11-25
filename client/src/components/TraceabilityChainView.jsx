@@ -140,9 +140,9 @@ export default function TraceabilityChainView({ chainData, translations }) {
       code: "LAB",
       id: c.labTest?.id || "LAB-NER-2026-0089",
       title: "NABL Quality & Purity Test",
-      entity: "GC-MS Purity: 100% Pure",
+      entity: "NABL CoA Verified",
       location: "NABL Lab Guwahati",
-      details: "Agarospirol 18.42%, Jinkoh-eremol 9.85%. Zero adulterants detected.",
+      details: "Botanical species Aquilaria malaccensis confirmed. Certificate of Analysis verified.",
       badge: "VERIFIED",
       badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
       meta: { "Species": "Aquilaria malaccensis", "CoA Ref": c.labTest?.testReportReference }

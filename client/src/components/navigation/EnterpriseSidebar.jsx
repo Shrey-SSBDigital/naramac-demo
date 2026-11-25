@@ -75,7 +75,7 @@ export default function EnterpriseSidebar({
     LAB_OFFICER: 'NABL Quality Lab Desk',
     EXPORTER: 'Export & Logistics Desk',
     BUYER_PUBLIC: 'Consumer Provenance Portal',
-    NERAMAC_ADMIN: 'Executive Control Room'
+    NERAMAC_ADMIN: 'Admin Dashboard'
   };
 
   // Master Navigation Groups with All Enterprise Routes
@@ -143,8 +143,7 @@ export default function EnterpriseSidebar({
       items: [
         { id: 'HARVEST_MY_APPS', name: 'My Harvest Applications', icon: Trees, badge: harvests.length, path: '/harvest/my-applications' },
         { id: 'HARVEST_APPLY', name: 'Apply for Tree Harvest', icon: UserPlus, badge: 'New', path: '/harvest/apply' },
-        { id: 'HARVEST_PRE_INSPECT', name: 'Pre-Harvest Verification', icon: ShieldCheck, badge: harvests.filter(h => h.status === 'SUBMITTED_AWAITING_NERAMAC').length || null, highlight: harvests.some(h => h.status === 'SUBMITTED_AWAITING_NERAMAC'), path: '/harvest/pre-inspection' },
-        { id: 'HARVEST_DFO_SANCTIONS', name: 'DFO Felling Sanctions Queue', icon: FileBadge2, badge: harvests.filter(h => h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION').length || null, highlight: harvests.some(h => h.status === 'NERAMAC_VERIFIED_AWAITING_DFO'), path: '/harvest/dfo-sanctions' },
+        { id: 'HARVEST_DFO_SANCTIONS', name: 'DFO Felling Sanctions Queue', icon: FileBadge2, badge: harvests.filter(h => h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION' || h.status === 'SUBMITTED_AWAITING_NERAMAC').length || null, highlight: harvests.some(h => h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_NERAMAC'), path: '/harvest/dfo-sanctions' },
         { id: 'HARVEST_DFO_APPROVED', name: 'Sanctioned Felling Orders', icon: ShieldCheck, badge: null, path: '/harvest/dfo-approved' },
         { id: 'HARVEST_FELLING', name: 'Supervised Felling & Scale', icon: Axe, badge: harvests.filter(h => h.status === 'DFO_APPROVED_AWAITING_FELLING').length || null, highlight: harvests.some(h => h.status === 'DFO_APPROVED_AWAITING_FELLING'), path: '/harvest/felling' },
         { id: 'HARVEST_BATCHES', name: 'Harvest Batches & e-TPs', icon: QrCode, badge: null, path: '/harvest/batches' },

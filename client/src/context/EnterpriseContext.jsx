@@ -925,7 +925,7 @@ export function EnterpriseProvider({ children }) {
     const newHarvest = {
       id,
       applicationDate: new Date().toISOString().split('T')[0],
-      status: 'SUBMITTED_AWAITING_NERAMAC',
+      status: 'SUBMITTED_AWAITING_DFO',
       makerCheckerApproved: false,
       applicantMode: harvestData.applicantMode || 'FIELD_AGENT',
       fieldAgent: harvestData.fieldAgent || 'NERAMAC-FA-04 (Dipankar Neog)',
@@ -955,8 +955,8 @@ export function EnterpriseProvider({ children }) {
     const updated = [newHarvest, ...harvests];
     setHarvests(updated);
     persistState({ harvests: updated });
-    logAudit('APPLY_HARVEST', 'Harvest Management', `${newHarvest.applicantMode === 'FIELD_AGENT' ? 'Field Agent ' + newHarvest.fieldAgent + ' (on behalf of grower)' : 'Farmer ' + newHarvest.farmerName} submitted harvest application ${id} addressed to ${newHarvest.dfoDivision}`, id);
-    addToast(`Harvest application ${id} addressed to ${newHarvest.dfoDivision} submitted. Awaiting NERAMAC field verification!`);
+    logAudit('APPLY_HARVEST', 'Harvest Management', `${newHarvest.applicantMode === 'FIELD_AGENT' ? 'Field Agent ' + newHarvest.fieldAgent + ' (on behalf of grower)' : 'Farmer ' + newHarvest.farmerName} submitted harvest application ${id} directly to ${newHarvest.dfoDivision}`, id);
+    addToast(`Harvest application ${id} submitted directly to ${newHarvest.dfoDivision} for statutory approval!`);
     return newHarvest;
   };
 
@@ -1085,7 +1085,7 @@ export function EnterpriseProvider({ children }) {
         return {
           ...h,
           ...updatedData,
-          status: 'SUBMITTED_AWAITING_NERAMAC',
+          status: 'SUBMITTED_AWAITING_DFO',
           dfoDecision: null,
           resubmittedDate: new Date().toISOString().split('T')[0]
         };
@@ -1096,7 +1096,7 @@ export function EnterpriseProvider({ children }) {
     setHarvests(updatedHarvests);
     persistState({ harvests: updatedHarvests });
     logAudit('RESUBMIT_HARVEST', 'Harvest Management', `Farmer resubmitted harvest application ${harvestId} after correcting deficiency`, harvestId);
-    addToast(`Harvest application ${harvestId} resubmitted! Sent back to NERAMAC verification.`);
+    addToast(`Harvest application ${harvestId} resubmitted! Sent directly to DFO for review.`);
     return updatedHarvests.find(h => h.id === harvestId);
   };
 

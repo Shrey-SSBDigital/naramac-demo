@@ -6,7 +6,7 @@ import Modal from '../common/Modal';
 import { Store, Plus, FileText, CheckCircle2, Boxes, PackageCheck, Receipt } from 'lucide-react';
 
 export default function DomesticSalesModule() {
-  const { domesticSales, createDomesticSale, finishedProducts, addToast } = useEnterprise();
+  const { domesticSales, createDomesticSale, finishedProducts, addToast, activeRole } = useEnterprise();
   const [selectedSale, setSelectedSale] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -156,13 +156,15 @@ export default function DomesticSalesModule() {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
-        >
-          <Store className="w-4 h-4" />
-          <span>New Domestic Sale</span>
-        </button>
+        {activeRole !== 'NERAMAC_ADMIN' && (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
+          >
+            <Store className="w-4 h-4" />
+            <span>New Domestic Sale</span>
+          </button>
+        )}
       </div>
 
       {/* Main Table */}

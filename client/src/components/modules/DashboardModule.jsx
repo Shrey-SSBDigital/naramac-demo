@@ -1043,12 +1043,20 @@ export default function DashboardModule({ onNavigateModule }) {
           badge="100% Geo-Verified"
         />
         <MetricCard
-          title="Forestry Assets"
-          value={`${trees.length} Mature`}
-          subvalue={`${pologens?.length || 0} POLOGENs (${totalSaplings} Saplings)`}
+          title="Matured Trees (≥7 yrs)"
+          value={trees.length}
+          subvalue="QR Tagged & Geo-Pinned"
           icon={Trees}
           color="teal"
           trend="Farmer Attached"
+        />
+        <MetricCard
+          title="POLOGENs (<7 yrs)"
+          value={pologens?.length || 0}
+          subvalue={`${totalSaplings} Total Saplings`}
+          icon={Compass}
+          color="cyan"
+          badge="Polygon Mapped"
         />
         <MetricCard
           title="Harvested Wood"
@@ -1098,149 +1106,6 @@ export default function DashboardModule({ onNavigateModule }) {
           color="teal"
           badge="≤ 1.5% Variance"
         />
-      </div>
-
-      {/* Two Column Layout: Operational Highlights & Interactive Flow Bar */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Recent Custody Movements */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">
-                Live Material Custody Transfers & Gate Tolerance (≤ 1.5%)
-              </h3>
-              <p className="text-xs text-slate-500">
-                Continuous weighbridge audit trail between farmers, collection depots, CPC units and export customs.
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigateModule('MOVEMENT')}
-              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
-            >
-              <span>View All</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-            {movements.slice(0, 4).map(mov => (
-              <div key={mov.id} className="py-3 flex items-start justify-between gap-3 text-xs">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                      {mov.id}
-                    </span>
-                    <span className="font-extrabold text-slate-800">
-                      {mov.sourceName} → {mov.destinationName}
-                    </span>
-                  </div>
-                  <div className="text-slate-500 text-[11px] flex items-center gap-3">
-                    <span>Carrier: <strong className="text-slate-700">{mov.vehicleNumber}</strong></span>
-                    <span>Transit Pass: <strong className="text-slate-700">{mov.transitPassNumber}</strong></span>
-                  </div>
-                </div>
-
-                <div className="text-right space-y-1 flex-shrink-0">
-                  <div className="font-bold text-slate-900">
-                    {mov.dispatchWeightKg} kg → {mov.receivedWeightKg !== null ? `${mov.receivedWeightKg} kg` : 'In Transit'}
-                  </div>
-                  <div className="flex items-center justify-end gap-1.5">
-                    {mov.variancePercent !== null && (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                        Math.abs(mov.variancePercent) <= 1.5
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        Var: {mov.variancePercent}%
-                      </span>
-                    )}
-                    <StatusBadge status={mov.status} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Column: Quick Launch Actions */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-          <div className="pb-3 border-b border-slate-100">
-            <h3 className="text-sm font-extrabold text-slate-900">
-              Quick Operations Launchpad
-            </h3>
-            <p className="text-xs text-slate-500">
-              Jump directly to key operations in the supply chain
-            </p>
-          </div>
-
-          <div className="space-y-2 text-xs">
-            <button
-              onClick={() => onNavigateModule('FARMER_REGISTER')}
-              className="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200 transition flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2.5">
-                <Users className="w-4 h-4 text-emerald-600" />
-                <span className="font-bold text-slate-800">Register New Farmer & Land</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('FIELD_INSPECTION')}
-              className="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-teal-50/60 border border-slate-200 transition flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2.5">
-                <MapPin className="w-4 h-4 text-teal-600" />
-                <span className="font-bold text-slate-800">Field Inspection (GPS + Photo)</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('HARVEST')}
-              className="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-amber-50/60 border border-slate-200 transition flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2.5">
-                <Axe className="w-4 h-4 text-amber-600" />
-                <span className="font-bold text-slate-800">Harvest Felling Approval Desk</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('PROCESSING')}
-              className="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-purple-50/60 border border-slate-200 transition flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2.5">
-                <Factory className="w-4 h-4 text-purple-600" />
-                <span className="font-bold text-slate-800">CPC Hydro-Distillation Stills</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('LABORATORY')}
-              className="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-blue-50/60 border border-slate-200 transition flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2.5">
-                <FlaskConical className="w-4 h-4 text-blue-600" />
-                <span className="font-bold text-slate-800">NABL Quality Testing & CoA</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('FINISHED_PRODUCTS')}
-              className="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200 transition flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2.5">
-                <PackageCheck className="w-4 h-4 text-emerald-600" />
-                <span className="font-bold text-slate-800">Packaging & Laser QR Tagging</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

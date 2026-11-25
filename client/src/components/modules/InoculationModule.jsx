@@ -541,7 +541,7 @@ export default function InoculationModule() {
           </div>
         </div>
 
-        {activeRole === 'FIELD_AGENT' || activeRole === 'NERAMAC_ADMIN' ? (
+        {activeRole === 'FIELD_AGENT' ? (
           <button
             onClick={handleOpenModal}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl shadow-xs transition"

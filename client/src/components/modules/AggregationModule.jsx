@@ -311,7 +311,7 @@ export default function AggregationModule() {
           </div>
         </div>
 
-        {isDepotRole || isAdminRole ? (
+        {isDepotRole ? (
           <div className="flex items-center gap-2">
             <button
               onClick={() => openSplitModal()}

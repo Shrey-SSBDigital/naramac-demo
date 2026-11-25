@@ -63,7 +63,7 @@ export default function HarvestModule({ mode = null }) {
 
   const getDefaultTab = (role) => {
     if (role === 'FARMER') return 'FARMER_MY_APPS';
-    if (role === 'FIELD_AGENT') return 'FA_PRE_HARVEST';
+    if (role === 'FIELD_AGENT') return 'FA_FELLING';
     if (role === 'FOREST_DEPT') return 'DFO_PENDING_SANCTIONS';
     return 'QUEUE';
   };
@@ -858,36 +858,8 @@ export default function HarvestModule({ mode = null }) {
 
         return (
           <div className="flex items-center gap-1.5 flex-wrap">
-            {/* STAGE 1: SUBMITTED -> AWAITING NERAMAC VERIFICATION */}
-            {h.status === 'SUBMITTED_AWAITING_NERAMAC' && (
-              <>
-                {(isFieldAgent || isAdmin) && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenNeramacModal(h);
-                    }}
-                    className="px-2.5 py-1 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-xs transition flex items-center gap-1"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>NERAMAC Verify</span>
-                  </button>
-                )}
-                {isFarmer && (
-                  <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                    ⏳ Awaiting Field Inspection
-                  </span>
-                )}
-                {isDfo && (
-                  <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                    Pre-DFO Scrutiny
-                  </span>
-                )}
-              </>
-            )}
-
-            {/* STAGE 2: NERAMAC VERIFIED -> AWAITING DFO SANCTION */}
-            {(h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION') && (
+            {/* STAGE 1 & 2: SUBMITTED DIRECTLY TO DFO -> AWAITING DFO SANCTION */}
+            {(h.status === 'SUBMITTED_AWAITING_NERAMAC' || h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION') && (
               <>
                 {(isDfo || isAdmin) && (
                   <button
@@ -908,7 +880,7 @@ export default function HarvestModule({ mode = null }) {
                 )}
                 {isFieldAgent && (
                   <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                    ✓ Forwarded to DFO
+                    ✓ Sent to DFO
                   </span>
                 )}
               </>
@@ -917,7 +889,7 @@ export default function HarvestModule({ mode = null }) {
             {/* STAGE 2b: DFO REJECTED -> RETURNED TO FARMER */}
             {h.status === 'DFO_REJECTED_RETURNED_TO_FARMER' && (
               <>
-                {(isFarmer || isFieldAgent || isAdmin) && (
+                {(isFarmer || isFieldAgent) && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1007,9 +979,8 @@ export default function HarvestModule({ mode = null }) {
   const isAdminRole = activeRole === 'NERAMAC_ADMIN';
 
   // Filtered dataset subsets for role-specific queues
-  const faPreHarvestData = harvests.filter(h => h.status === 'SUBMITTED_AWAITING_NERAMAC');
   const faFellingData = harvests.filter(h => h.status === 'DFO_APPROVED_AWAITING_FELLING');
-  const dfoPendingData = harvests.filter(h => h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION');
+  const dfoPendingData = harvests.filter(h => h.status === 'SUBMITTED_AWAITING_NERAMAC' || h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION');
   const dfoSanctionedData = harvests.filter(h => h.status === 'DFO_APPROVED_AWAITING_FELLING' || h.status === 'FELL_COMPLETED' || h.dfoSanctionNumber);
 
   return (
@@ -1037,9 +1008,9 @@ export default function HarvestModule({ mode = null }) {
               {!mode && (
                 <>
                   {isFarmerRole && 'Farmer Harvest Desk • Homestead Trees & Sanction Requests'}
-                  {isFaRole && 'Field Operations Desk • Pre-Harvest Verification & Supervised Felling'}
+                  {isFaRole && 'Field Operations Desk • Supervised Felling & Weighment'}
                   {isDfoRole && 'DFO Statutory Desk • Agarwood Felling Sanctions & Transit Clearances'}
-                  {isAdminRole && 'Central Control Room • End-to-End Harvest Pipeline & Maker-Checker'}
+                  {isAdminRole && 'Central Control Room • End-to-End Harvest Pipeline'}
                   {!isFarmerRole && !isFaRole && !isDfoRole && !isAdminRole && 'Harvest Management & Custody Verification'}
                 </>
               )}
@@ -1057,7 +1028,7 @@ export default function HarvestModule({ mode = null }) {
                   {isFarmerRole && 'Submit harvest sanction applications for your mature trees (≥ 7 yrs), track DFO review status, and view your official State Forest e-Transit Passes.'}
                   {isFaRole && 'On-ground biometric inspection of farmer homestead trees, verifying 7-year age rule & QR barcodes, and supervising physical felling with digital scale weighment.'}
                   {isDfoRole && 'Statutory felling authorization gate under Assam Agarwood Policy 2020. Review field agent verified dossiers and issue formal felling orders or return for deficiency rectification.'}
-                  {isAdminRole && 'Complete lifecycle governance: Farmer Application → NERAMAC Field Verification → DFO Statutory Sanction → Supervised Felling & Scale Weighment.'}
+                  {isAdminRole && 'Complete lifecycle governance: Farmer / Field Agent Application → DFO Statutory Sanction → Supervised Felling & Scale Weighment.'}
                 </>
               )}
             </p>
@@ -1074,7 +1045,7 @@ export default function HarvestModule({ mode = null }) {
               <span>Reset Demo State</span>
             </button>
 
-            {!mode && (isFarmerRole || isAdminRole || isFaRole) && (
+            {!mode && (isFarmerRole || isFaRole) && (
               <button
                 onClick={() => setActiveTab('NEW_APP')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs ${
@@ -1090,30 +1061,24 @@ export default function HarvestModule({ mode = null }) {
           </div>
         </div>
 
-        {/* Four-Stage Linear Chain of Custody Tracker */}
+        {/* Three-Stage Linear Chain of Custody Tracker */}
         <div className="bg-slate-900 text-white p-3 rounded-xl border border-slate-800 flex items-center gap-2 text-[11px] overflow-x-auto">
           <span className="font-bold text-amber-300 whitespace-nowrap">Chain of Custody:</span>
           
           <div className={`px-2.5 py-1 rounded font-semibold whitespace-nowrap flex items-center gap-1.5 ${isFarmerRole ? 'bg-emerald-800 text-white ring-2 ring-emerald-400' : 'bg-slate-800 text-slate-300'}`}>
-            <span>1. Farmer Application</span>
+            <span>1. Farmer / Field Agent Application</span>
             {isFarmerRole && <span className="text-[9px] bg-emerald-600 px-1 py-0.2 rounded font-bold">You</span>}
           </div>
           <span className="text-slate-600">→</span>
 
-          <div className={`px-2.5 py-1 rounded font-semibold whitespace-nowrap flex items-center gap-1.5 ${isFaRole ? 'bg-amber-800 text-white ring-2 ring-amber-400' : 'bg-slate-800 text-slate-300'}`}>
-            <span>2. Field Agent Verification</span>
-            {isFaRole && <span className="text-[9px] bg-amber-600 px-1 py-0.2 rounded font-bold">You</span>}
-          </div>
-          <span className="text-slate-600">→</span>
-
           <div className={`px-2.5 py-1 rounded font-semibold whitespace-nowrap flex items-center gap-1.5 ${isDfoRole ? 'bg-blue-800 text-white ring-2 ring-blue-400' : 'bg-slate-800 text-slate-300'}`}>
-            <span>3. DFO Statutory Sanction</span>
+            <span>2. DFO Statutory Sanction</span>
             {isDfoRole && <span className="text-[9px] bg-blue-600 px-1 py-0.2 rounded font-bold">You</span>}
           </div>
           <span className="text-slate-600">→</span>
 
           <div className={`px-2.5 py-1 rounded font-semibold whitespace-nowrap flex items-center gap-1.5 ${isFaRole ? 'bg-teal-800 text-white ring-2 ring-teal-400' : 'bg-slate-800 text-slate-300'}`}>
-            <span>4. Felling &amp; e-TP</span>
+            <span>3. Felling &amp; e-TP</span>
             {isFaRole && <span className="text-[9px] bg-teal-600 px-1 py-0.2 rounded font-bold">Field Execution</span>}
           </div>
         </div>
@@ -1185,18 +1150,6 @@ export default function HarvestModule({ mode = null }) {
         {isFaRole && (
           <>
             <button
-              onClick={() => setActiveTab('FA_PRE_HARVEST')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
-                activeTab === 'FA_PRE_HARVEST'
-                  ? 'bg-slate-800 text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-              <span>1. Pre-Harvest Verification Queue ({faPreHarvestData.length})</span>
-            </button>
-
-            <button
               onClick={() => setActiveTab('FA_FELLING')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'FA_FELLING'
@@ -1205,7 +1158,7 @@ export default function HarvestModule({ mode = null }) {
               }`}
             >
               <Scale className="w-3.5 h-3.5 text-emerald-400" />
-              <span>2. Supervised Felling &amp; Scale Desk ({faFellingData.length})</span>
+              <span>1. Supervised Felling &amp; Scale Desk ({faFellingData.length})</span>
             </button>
 
             <button
@@ -1217,7 +1170,7 @@ export default function HarvestModule({ mode = null }) {
               }`}
             >
               <QrCode className="w-3.5 h-3.5" />
-              <span>3. Mined Batches &amp; e-TPs ({harvestBatches.length})</span>
+              <span>2. Mined Batches &amp; e-TPs ({harvestBatches.length})</span>
             </button>
 
             <button
@@ -1290,17 +1243,19 @@ export default function HarvestModule({ mode = null }) {
               <span>All Harvest Operations ({harvests.length})</span>
             </button>
 
-            <button
-              onClick={() => setActiveTab('NEW_APP')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
-                activeTab === 'NEW_APP'
-                  ? 'bg-slate-800 text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Step 1: Farmer Harvest Application</span>
-            </button>
+            {!isAdminRole && (
+              <button
+                onClick={() => setActiveTab('NEW_APP')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTab === 'NEW_APP'
+                    ? 'bg-slate-800 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Step 1: Farmer Harvest Application</span>
+              </button>
+            )}
 
             <button
               onClick={() => setActiveTab('BATCHES')}
@@ -1371,36 +1326,6 @@ export default function HarvestModule({ mode = null }) {
             searchPlaceholder="Search your harvest applications..."
             onRowClick={(h) => setSelectedHarvest(h)}
           />
-        </div>
-      )}
-
-      {/* VIEW: FIELD AGENT PRE-HARVEST VERIFICATION QUEUE */}
-      {activeTab === 'FA_PRE_HARVEST' && (
-        <div className="space-y-4">
-          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-xs flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-amber-700 flex-shrink-0" />
-            <div>
-              <span className="font-extrabold text-amber-950 block">Step 2: Pre-Harvest Field Verification Queue</span>
-              <span className="text-slate-600 text-[11px]">
-                Inspect on-site homestead origin, verify tree RFID tag barcode, measure girth at breast height (GBH), and verify Assam 7-year non-forest maturity prior to endorsing for DFO sanction.
-              </span>
-            </div>
-          </div>
-          {faPreHarvestData.length === 0 ? (
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-2">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-              <div className="font-bold text-slate-800">All Field Verifications Completed</div>
-              <p className="text-xs text-slate-500">There are no pending harvest applications awaiting on-ground inspection.</p>
-            </div>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={faPreHarvestData}
-              searchKey="treeId"
-              searchPlaceholder="Search trees awaiting field verification..."
-              onRowClick={(h) => setSelectedHarvest(h)}
-            />
-          )}
         </div>
       )}
 

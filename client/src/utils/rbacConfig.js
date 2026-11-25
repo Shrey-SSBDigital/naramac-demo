@@ -58,11 +58,9 @@ export const ROLE_PERMISSIONS = {
       'FARMERS',
       'PLANTATIONS',
       'INOCULATION',
-      'HARVEST_PRE_INSPECT',
       'HARVEST_FELLING',
       'HARVEST_BATCHES',
-      'MOVEMENT_FARM_TO_DEPOT',
-      'TRACEABILITY'
+      'MOVEMENT_FARM_TO_DEPOT'
     ],
     responsibilities: [
       'On-site physical inspection of homestead land, Dag/Patta, and Lat Mandal revenue records',
@@ -87,8 +85,7 @@ export const ROLE_PERMISSIONS = {
       'HARVEST_APPLY',
       'HARVEST_MY_APPS',
       'HARVEST_BATCHES',
-      'MOVEMENT_FARM_TO_DEPOT',
-      'TRACEABILITY'
+      'MOVEMENT_FARM_TO_DEPOT'
     ],
     responsibilities: [
       'Submission of formal farmer registration with grower profile & Jamabandi records',
@@ -112,8 +109,7 @@ export const ROLE_PERMISSIONS = {
       'AGGREGATION',
       'MOVEMENT_DEPOT_TO_CPC',
       'INVENTORY',
-      'PERMITS',
-      'TRACEABILITY'
+      'PERMITS'
     ],
     responsibilities: [
       'Physical weighment of green wood dispatches from registered farmers',
@@ -135,8 +131,7 @@ export const ROLE_PERMISSIONS = {
       'MOVEMENT_CPC_GATE_CHECK',
       'PROCESSING',
       'FINISHED_PRODUCTS',
-      'INVENTORY',
-      'TRACEABILITY'
+      'INVENTORY'
     ],
     responsibilities: [
       'Grading, chipping, and mechanical pulverization of aggregated agarwood logs',
@@ -156,8 +151,7 @@ export const ROLE_PERMISSIONS = {
     allowedModules: [
       'HOME',
       'LABORATORY',
-      'MASS_BALANCE',
-      'TRACEABILITY'
+      'MASS_BALANCE'
     ],
     responsibilities: [
       'Gas Chromatography - Mass Spectrometry (GC-MS) chemical profile fingerprinting',
@@ -182,8 +176,7 @@ export const ROLE_PERMISSIONS = {
       'HARVEST_BATCHES',
       'PERMITS',
       'PLANTATIONS',
-      'CITES_REPORTS',
-      'TRACEABILITY'
+      'CITES_REPORTS'
     ],
     responsibilities: [
       'Verification of land non-encroachment against Reserve Forest and Protected Area boundaries',
@@ -206,8 +199,7 @@ export const ROLE_PERMISSIONS = {
       'SHIPMENT',
       'FINISHED_PRODUCTS',
       'DOMESTIC_SALES',
-      'PERMITS',
-      'TRACEABILITY'
+      'PERMITS'
     ],
     responsibilities: [
       'Assembly of Export Batches from released finished flacons and certified chips',
@@ -227,7 +219,6 @@ export const ROLE_PERMISSIONS = {
     allowedModules: [
       'HOME',
       'TRACEABILITY',
-      'FINISHED_PRODUCTS'
     ],
     responsibilities: [
       'Instant smartphone scan of Laser QR codes etched on 12ml luxury attar crystal flacons',
@@ -242,8 +233,10 @@ export const ROLE_PERMISSIONS = {
  */
 export function isModuleAllowedForRole(roleId, moduleId) {
   if (!roleId || !moduleId) return false;
+  if (moduleId === 'HARVEST_PRE_INSPECT') return false;
+  if (moduleId === 'HARVEST_APPLY' && roleId === 'NERAMAC_ADMIN') return false;
   if (roleId === 'NERAMAC_ADMIN') return true;
-  if (moduleId === 'HOME' || moduleId === 'TRACEABILITY') return true;
+  if (moduleId === 'HOME') return true;
   const config = ROLE_PERMISSIONS[roleId];
   if (!config) return false;
   return config.allowedModules ? config.allowedModules.includes(moduleId) : false;
