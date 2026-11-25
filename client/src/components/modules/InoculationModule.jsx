@@ -929,35 +929,19 @@ export default function InoculationModule() {
             </div>
           </div>
 
-          {/* Menu-Driven Compound & Supplier */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Inoculum Compound / Bio-Strain (Menu) *</label>
-              <select
-                value={form.compound}
-                onChange={(e) => setForm({ ...form, compound: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg bg-white font-medium"
-              >
-                <option value="AAU Certified Fusarium solani (Strain AS-44)">AAU Certified Fusarium solani (Strain AS-44)</option>
-                <option value="Aspergillus niger Microbial Consortium (Strain AN-12)">Aspergillus niger Microbial Consortium (Strain AN-12)</option>
-                <option value="Lasiodiplodia theobromae (Strain LT-09)">Lasiodiplodia theobromae (Strain LT-09)</option>
-                <option value="BioOud F1 Proprietary Fungal Formulation">BioOud F1 Proprietary Fungal Formulation</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Accredited Supplier Entity (Menu) *</label>
-              <select
-                value={form.supplier}
-                onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg bg-white"
-              >
-                <option value="Assam Agricultural University (AAU), Jorhat">Assam Agricultural University (AAU), Jorhat</option>
-                <option value="Rain Forest Research Institute (RFRI), Deovan">Rain Forest Research Institute (RFRI), Deovan</option>
-                <option value="CSIR - North East Institute of Science & Technology (NEIST), Jorhat">CSIR - NEIST, Jorhat</option>
-                <option value="NERAMAC Bio-Induction Accredited Facility">NERAMAC Bio-Induction Facility</option>
-              </select>
-            </div>
+          {/* Accredited Supplier */}
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Accredited Supplier Entity (Menu) *</label>
+            <select
+              value={form.supplier}
+              onChange={(e) => setForm({ ...form, supplier: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg bg-white"
+            >
+              <option value="Assam Agricultural University (AAU), Jorhat">Assam Agricultural University (AAU), Jorhat</option>
+              <option value="Rain Forest Research Institute (RFRI), Deovan">Rain Forest Research Institute (RFRI), Deovan</option>
+              <option value="CSIR - North East Institute of Science & Technology (NEIST), Jorhat">CSIR - NEIST, Jorhat</option>
+              <option value="NERAMAC Bio-Induction Accredited Facility">NERAMAC Bio-Induction Facility</option>
+            </select>
           </div>
 
           {/* Supplier Batch & Technical Inoculation Parameters */}
