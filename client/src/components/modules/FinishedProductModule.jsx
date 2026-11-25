@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useEnterprise } from '../../context/EnterpriseContext';
 import DataTable from '../common/DataTable';
 import StatusBadge from '../common/StatusBadge';
@@ -11,6 +11,43 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isBottleModalOpen, setIsBottleModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const qrContainerRef = useRef(null);
+
+  const handleDownloadQrPng = (serialNumber) => {
+    const svg = qrContainerRef.current?.querySelector('svg');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const size = 512;
+      const padding = 40;
+      const footerH = 60;
+      const canvas = document.createElement('canvas');
+      canvas.width = size + padding * 2;
+      canvas.height = size + padding * 2 + footerH;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, padding, padding, size, size);
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 24px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(serialNumber, canvas.width / 2, size + padding + 36);
+      URL.revokeObjectURL(url);
+
+      const pngUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = pngUrl;
+      a.download = `${serialNumber}_QR.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      addToast?.(`QR code downloaded as ${serialNumber}_QR.png`, 'success');
+    };
+    img.src = url;
+  };
 
   const releasedRuns = distillations.filter(d => d.labReleaseStatus === 'RELEASED');
   const [bottleForm, setBottleForm] = useState({
@@ -182,7 +219,7 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
 
               return (
                 <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center space-y-3">
-                  <div className="p-3 bg-white rounded-xl shadow-md border border-slate-200 ring-4 ring-emerald-500/10">
+                  <div ref={qrContainerRef} className="p-3 bg-white rounded-xl shadow-md border border-slate-200 ring-4 ring-emerald-500/10">
                     <QRCodeSVG
                       value={liveQrUrl}
                       size={180}
@@ -200,7 +237,15 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadQrPng(selectedProduct.serialNumber)}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download QR</span>
+                    </button>
                     <button
                       type="button"
                       onClick={handleCopy}
