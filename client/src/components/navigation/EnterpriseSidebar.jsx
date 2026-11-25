@@ -32,7 +32,8 @@ import {
   Sparkles,
   Lock,
   ChevronDown,
-  LogOut
+  LogOut,
+  Scale
 } from 'lucide-react';
 
 export default function EnterpriseSidebar({
@@ -140,22 +141,56 @@ export default function EnterpriseSidebar({
     {
       group: 'Harvest & Statutory',
       items: [
-        { id: 'HARVEST', name: 'Harvest Management', icon: Axe, badge: harvests.length, path: '/harvest' },
+        { id: 'HARVEST_MY_APPS', name: 'My Harvest Applications', icon: Trees, badge: harvests.length, path: '/harvest/my-applications' },
+        { id: 'HARVEST_APPLY', name: 'Apply for Tree Harvest', icon: UserPlus, badge: 'New', path: '/harvest/apply' },
+        { id: 'HARVEST_PRE_INSPECT', name: 'Pre-Harvest Verification', icon: ShieldCheck, badge: harvests.filter(h => h.status === 'SUBMITTED_AWAITING_NERAMAC').length || null, highlight: harvests.some(h => h.status === 'SUBMITTED_AWAITING_NERAMAC'), path: '/harvest/pre-inspection' },
+        { id: 'HARVEST_DFO_SANCTIONS', name: 'DFO Felling Sanctions Queue', icon: FileBadge2, badge: harvests.filter(h => h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION').length || null, highlight: harvests.some(h => h.status === 'NERAMAC_VERIFIED_AWAITING_DFO'), path: '/harvest/dfo-sanctions' },
+        { id: 'HARVEST_DFO_APPROVED', name: 'Sanctioned Felling Orders', icon: ShieldCheck, badge: null, path: '/harvest/dfo-approved' },
+        { id: 'HARVEST_FELLING', name: 'Supervised Felling & Scale', icon: Axe, badge: harvests.filter(h => h.status === 'DFO_APPROVED_AWAITING_FELLING').length || null, highlight: harvests.some(h => h.status === 'DFO_APPROVED_AWAITING_FELLING'), path: '/harvest/felling' },
+        { id: 'HARVEST_BATCHES', name: 'Harvest Batches & e-TPs', icon: QrCode, badge: null, path: '/harvest/batches' },
         { id: 'PERMITS', name: 'Permits & DFO Orders', icon: FileBadge2, badge: null, path: '/permits' }
       ]
     },
     {
-      group: 'Depot & Movement',
+      group: 'Depot & Movement (4 Stages)',
       items: [
         {
-          id: 'MOVEMENT',
-          name: 'Movement & Weight Recon',
+          id: 'MOVEMENT_FARM_TO_DEPOT',
+          name: '1. Dispatch: Farm → Depot',
           icon: Truck,
-          badge: movements.filter(m => m.status === 'IN_TRANSIT').length ? `${movements.filter(m => m.status === 'IN_TRANSIT').length} In Transit` : movements.length,
-          highlight: movements.some(m => m.status === 'IN_TRANSIT'),
-          path: '/movement'
+          badge: movements.filter(m => (m.movementType || (!m.destinationType?.includes('Processing') ? 'FARM_TO_AGGREGATOR' : '')) === 'FARM_TO_AGGREGATOR').length,
+          path: '/movement/farm-to-depot'
         },
-        { id: 'AGGREGATION', name: 'Depot Batch Collection (Pooling)', icon: Boxes, badge: aggregations.length, path: '/aggregation' },
+        {
+          id: 'MOVEMENT_DEPOT_GATE_CHECK',
+          name: '2. Depot Gate Weight Check',
+          icon: Scale,
+          badge: movements.filter(m => m.status === 'IN_TRANSIT' && (m.movementType || (!m.destinationType?.includes('Processing') ? 'FARM_TO_AGGREGATOR' : '')) === 'FARM_TO_AGGREGATOR').length || null,
+          highlight: movements.some(m => m.status === 'IN_TRANSIT' && (m.movementType || (!m.destinationType?.includes('Processing') ? 'FARM_TO_AGGREGATOR' : '')) === 'FARM_TO_AGGREGATOR'),
+          path: '/movement/depot-gate-check'
+        },
+        {
+          id: 'AGGREGATION',
+          name: 'Depot Batch Pooling',
+          icon: Boxes,
+          badge: aggregations.length,
+          path: '/aggregation'
+        },
+        {
+          id: 'MOVEMENT_DEPOT_TO_CPC',
+          name: '3. Dispatch: Depot → CPC',
+          icon: Truck,
+          badge: movements.filter(m => (m.movementType || (m.destinationType?.includes('Processing') ? 'AGGREGATOR_TO_DISTILLERY' : '')) === 'AGGREGATOR_TO_DISTILLERY').length,
+          path: '/movement/depot-to-cpc'
+        },
+        {
+          id: 'MOVEMENT_CPC_GATE_CHECK',
+          name: '4. CPC Gate Weight Check',
+          icon: Scale,
+          badge: movements.filter(m => m.status === 'IN_TRANSIT' && (m.movementType || (m.destinationType?.includes('Processing') ? 'AGGREGATOR_TO_DISTILLERY' : '')) === 'AGGREGATOR_TO_DISTILLERY').length || null,
+          highlight: movements.some(m => m.status === 'IN_TRANSIT' && (m.movementType || (m.destinationType?.includes('Processing') ? 'AGGREGATOR_TO_DISTILLERY' : '')) === 'AGGREGATOR_TO_DISTILLERY'),
+          path: '/movement/cpc-gate-check'
+        },
         { id: 'INVENTORY', name: 'Inventory & Vault Stock', icon: Warehouse, badge: null, path: '/inventory' }
       ]
     },
@@ -179,7 +214,9 @@ export default function EnterpriseSidebar({
       group: 'Trust & Governance',
       items: [
         { id: 'TRACEABILITY', name: 'Traceability & QR Scan', icon: QrCode, badge: 'Live', highlight: true, path: '/traceability' },
-        { id: 'AUDIT_REPORTS', name: 'Reports & Audit History', icon: FileSpreadsheet, badge: null, path: '/audit-reports' }
+        { id: 'AUDIT_TRAIL', name: 'Cryptographic Audit Trail', icon: FileSpreadsheet, badge: null, path: '/reports/audit-trail' },
+        { id: 'MASS_BALANCE', name: 'Mass Balance Ledger', icon: Scale, badge: null, path: '/reports/mass-balance' },
+        { id: 'CITES_REPORTS', name: 'CITES Quota Reports', icon: FileBadge2, badge: null, path: '/reports/cites' }
       ]
     }
   ];

@@ -400,6 +400,69 @@ const harvestRoute = createRoute({
     </RoleGuardedRoute>
   )
 });
+const harvestApplyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/harvest/apply',
+  component: () => (
+    <RoleGuardedRoute moduleId="HARVEST_APPLY">
+      <HarvestModule mode="NEW_APP" />
+    </RoleGuardedRoute>
+  )
+});
+const harvestMyAppsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/harvest/my-applications',
+  component: () => (
+    <RoleGuardedRoute moduleId="HARVEST_MY_APPS">
+      <HarvestModule mode="FARMER_MY_APPS" />
+    </RoleGuardedRoute>
+  )
+});
+const harvestPreInspectRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/harvest/pre-inspection',
+  component: () => (
+    <RoleGuardedRoute moduleId="HARVEST_PRE_INSPECT">
+      <HarvestModule mode="FA_PRE_HARVEST" />
+    </RoleGuardedRoute>
+  )
+});
+const harvestFellingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/harvest/felling',
+  component: () => (
+    <RoleGuardedRoute moduleId="HARVEST_FELLING">
+      <HarvestModule mode="FA_FELLING" />
+    </RoleGuardedRoute>
+  )
+});
+const harvestDfoSanctionsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/harvest/dfo-sanctions',
+  component: () => (
+    <RoleGuardedRoute moduleId="HARVEST_DFO_SANCTIONS">
+      <HarvestModule mode="DFO_PENDING_SANCTIONS" />
+    </RoleGuardedRoute>
+  )
+});
+const harvestDfoApprovedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/harvest/dfo-approved',
+  component: () => (
+    <RoleGuardedRoute moduleId="HARVEST_DFO_APPROVED">
+      <HarvestModule mode="DFO_SANCTIONED" />
+    </RoleGuardedRoute>
+  )
+});
+const harvestBatchesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/harvest/batches',
+  component: () => (
+    <RoleGuardedRoute moduleId="HARVEST_BATCHES">
+      <HarvestModule mode="BATCHES" />
+    </RoleGuardedRoute>
+  )
+});
 
 const permitsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -420,13 +483,49 @@ const dfoRoute = createRoute({
   )
 });
 
-// Movement & Aggregation
+// Movement & Aggregation (4 Dedicated Separation-of-Concern Pages)
 const movementRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/movement',
   component: () => (
     <RoleGuardedRoute moduleId="MOVEMENT">
       <MovementModule />
+    </RoleGuardedRoute>
+  )
+});
+const movementFarmToDepotRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/movement/farm-to-depot',
+  component: () => (
+    <RoleGuardedRoute moduleId="MOVEMENT_FARM_TO_DEPOT">
+      <MovementModule mode="FARM_TO_DEPOT" />
+    </RoleGuardedRoute>
+  )
+});
+const movementDepotGateCheckRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/movement/depot-gate-check',
+  component: () => (
+    <RoleGuardedRoute moduleId="MOVEMENT_DEPOT_GATE_CHECK">
+      <MovementModule mode="DEPOT_GATE_CHECK" />
+    </RoleGuardedRoute>
+  )
+});
+const movementDepotToCpcRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/movement/depot-to-cpc',
+  component: () => (
+    <RoleGuardedRoute moduleId="MOVEMENT_DEPOT_TO_CPC">
+      <MovementModule mode="DEPOT_TO_CPC" />
+    </RoleGuardedRoute>
+  )
+});
+const movementCpcGateCheckRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/movement/cpc-gate-check',
+  component: () => (
+    <RoleGuardedRoute moduleId="MOVEMENT_CPC_GATE_CHECK">
+      <MovementModule mode="CPC_GATE_CHECK" />
     </RoleGuardedRoute>
   )
 });
@@ -558,6 +657,33 @@ const auditReportsRoute = createRoute({
     </RoleGuardedRoute>
   )
 });
+const auditTrailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reports/audit-trail',
+  component: () => (
+    <RoleGuardedRoute moduleId="AUDIT_TRAIL">
+      <AuditReportsModule mode="AUDIT_TRAIL" />
+    </RoleGuardedRoute>
+  )
+});
+const massBalanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reports/mass-balance',
+  component: () => (
+    <RoleGuardedRoute moduleId="MASS_BALANCE">
+      <AuditReportsModule mode="MASS_BALANCE" />
+    </RoleGuardedRoute>
+  )
+});
+const citesReportsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reports/cites',
+  component: () => (
+    <RoleGuardedRoute moduleId="CITES_REPORTS">
+      <AuditReportsModule mode="CITES_REPORTS" />
+    </RoleGuardedRoute>
+  )
+});
 
 // Flow
 const flowRoute = createRoute({
@@ -591,9 +717,20 @@ const routeTree = rootRoute.addChildren([
   gisRoute,
   inoculationRoute,
   harvestRoute,
+  harvestApplyRoute,
+  harvestMyAppsRoute,
+  harvestPreInspectRoute,
+  harvestFellingRoute,
+  harvestDfoSanctionsRoute,
+  harvestDfoApprovedRoute,
+  harvestBatchesRoute,
   permitsRoute,
   dfoRoute,
   movementRoute,
+  movementFarmToDepotRoute,
+  movementDepotGateCheckRoute,
+  movementDepotToCpcRoute,
+  movementCpcGateCheckRoute,
   aggregationRoute,
   processingRoute,
   cpcRoute,
@@ -608,6 +745,9 @@ const routeTree = rootRoute.addChildren([
   traceabilityRoute,
   verifyRoute,
   auditReportsRoute,
+  auditTrailRoute,
+  massBalanceRoute,
+  citesReportsRoute,
   flowRoute
 ]);
 

@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEnterprise } from '../../context/EnterpriseContext';
 import DataTable from '../common/DataTable';
 import StatusBadge from '../common/StatusBadge';
 import { FileSpreadsheet, Download, ShieldCheck, Clock, Hash, CheckCircle2 } from 'lucide-react';
 
-export default function AuditReportsModule() {
+export default function AuditReportsModule({ mode = null }) {
   const { auditLogs, distillations, harvestBatches, movements, exportBatches } = useEnterprise();
-  const [activeTab, setActiveTab] = useState('AUDIT_TRAIL'); // 'AUDIT_TRAIL' | 'MASS_BALANCE' | 'CITES_REPORTS'
+  const [activeTab, setActiveTab] = useState(() => mode || 'AUDIT_TRAIL'); // 'AUDIT_TRAIL' | 'MASS_BALANCE' | 'CITES_REPORTS'
+
+  useEffect(() => {
+    if (mode) setActiveTab(mode);
+  }, [mode]);
 
   const columns = [
     {
@@ -65,17 +69,32 @@ export default function AuditReportsModule() {
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
         <div>
           <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Audit Trail & Statutory Compliance Reports</span>
+            <span>
+              {mode === 'AUDIT_TRAIL'
+                ? 'Immutable Cryptographic Audit Trail'
+                : mode === 'MASS_BALANCE'
+                ? 'Conservation Mass Balance Reconciliation Ledger'
+                : mode === 'CITES_REPORTS'
+                ? 'CITES Appendix II & Regulatory Export Quota Ledgers'
+                : 'Audit Trail & Statutory Compliance Reports'}
+            </span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
               Module 17
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Immutable chronological transaction ledger with cryptographic SHA-256 signatures and mass balance audits.
+            {mode === 'AUDIT_TRAIL'
+              ? 'Chronological transaction ledger with cryptographic SHA-256 signatures across every supply chain milestone.'
+              : mode === 'MASS_BALANCE'
+              ? 'Raw heartwood to essential oil conservation balance across Depot Aggregation and CPC Distillation.'
+              : mode === 'CITES_REPORTS'
+              ? 'Statutory CITES Appendix II non-detriment findings and export consignment quota compliance.'
+              : 'Immutable chronological transaction ledger with cryptographic SHA-256 signatures and mass balance audits.'}
           </p>
         </div>
 
-        {/* Tab Switcher */}
+        {/* Tab Switcher (Hidden in dedicated single-report mode) */}
+        {!mode && (
         <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
           <button
             onClick={() => setActiveTab('AUDIT_TRAIL')}
@@ -102,6 +121,7 @@ export default function AuditReportsModule() {
             CITES Export Quota Ledgers
           </button>
         </div>
+        )}
       </div>
 
       {/* Tab 1: Immutable Chronological Audit Trail */}

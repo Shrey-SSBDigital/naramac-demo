@@ -58,8 +58,10 @@ export const ROLE_PERMISSIONS = {
       'FARMERS',
       'PLANTATIONS',
       'INOCULATION',
-      'HARVEST',
-      'MOVEMENT',
+      'HARVEST_PRE_INSPECT',
+      'HARVEST_FELLING',
+      'HARVEST_BATCHES',
+      'MOVEMENT_FARM_TO_DEPOT',
       'TRACEABILITY'
     ],
     responsibilities: [
@@ -77,14 +79,15 @@ export const ROLE_PERMISSIONS = {
     authority: 'Homestead Agarwood Grower',
     badge: 'Primary Producer',
     color: 'green',
-    defaultRoute: '/farmer',
+    defaultRoute: '/plantation',
     allowedModules: [
       'HOME',
       'FARMER_REGISTER',
-      //'FARMERS',
       'PLANTATIONS',
-      'HARVEST',
-      'MOVEMENT',
+      'HARVEST_APPLY',
+      'HARVEST_MY_APPS',
+      'HARVEST_BATCHES',
+      'MOVEMENT_FARM_TO_DEPOT',
       'TRACEABILITY'
     ],
     responsibilities: [
@@ -102,11 +105,12 @@ export const ROLE_PERMISSIONS = {
     authority: 'NERAMAC Cluster Depots (Golaghat / Hojai / Kadamtala)',
     badge: 'Depot Intake & Aggregation',
     color: 'teal',
-    defaultRoute: '/movement',
+    defaultRoute: '/movement/depot-gate-check',
     allowedModules: [
       'HOME',
-      'MOVEMENT',
+      'MOVEMENT_DEPOT_GATE_CHECK',
       'AGGREGATION',
+      'MOVEMENT_DEPOT_TO_CPC',
       'INVENTORY',
       'PERMITS',
       'TRACEABILITY'
@@ -128,9 +132,9 @@ export const ROLE_PERMISSIONS = {
     defaultRoute: '/processing',
     allowedModules: [
       'HOME',
+      'MOVEMENT_CPC_GATE_CHECK',
       'PROCESSING',
       'INVENTORY',
-      'MOVEMENT',
       'TRACEABILITY'
     ],
     responsibilities: [
@@ -152,8 +156,8 @@ export const ROLE_PERMISSIONS = {
       'HOME',
       'LABORATORY',
       'FINISHED_PRODUCTS',
-      'TRACEABILITY',
-      'AUDIT_REPORTS'
+      'MASS_BALANCE',
+      'TRACEABILITY'
     ],
     responsibilities: [
       'Gas Chromatography - Mass Spectrometry (GC-MS) chemical profile fingerprinting',
@@ -169,15 +173,17 @@ export const ROLE_PERMISSIONS = {
     authority: 'Divisional Forest Officer (Assam & Tripura Forest Dept.)',
     badge: 'Statutory Regulator',
     color: 'emerald',
-    defaultRoute: '/permits',
+    defaultRoute: '/harvest/dfo-sanctions',
     allowedModules: [
       'HOME',
-      'PERMITS',
       'FARMER_APPROVALS',
-      'HARVEST',
+      'HARVEST_DFO_SANCTIONS',
+      'HARVEST_DFO_APPROVED',
+      'HARVEST_BATCHES',
+      'PERMITS',
       'PLANTATIONS',
-      'TRACEABILITY',
-      'AUDIT_REPORTS'
+      'CITES_REPORTS',
+      'TRACEABILITY'
     ],
     responsibilities: [
       'Verification of land non-encroachment against Reserve Forest and Protected Area boundaries',

@@ -50,7 +50,7 @@ export const ROLE_CREDENTIALS = [
     badge: 'Statutory Regulator',
     username: 'dfo.golaghat',
     password: 'Forest@2026',
-    defaultRoute: '/permits',
+    defaultRoute: '/harvest/dfo-sanctions',
     desc: 'Statutory felling sanction orders, Form II e-Transit Passes, and CITES quota oversight.'
   },
   {
@@ -59,7 +59,7 @@ export const ROLE_CREDENTIALS = [
     badge: 'Cluster Depots',
     username: 'depot.golaghat',
     password: 'Depot@2026',
-    defaultRoute: '/movement',
+    defaultRoute: '/movement/depot-gate-check',
     desc: 'First-mile gate receipt, weighment verification (<= 1.5%), Lot aggregation & transit.'
   },
   {

@@ -27,7 +27,7 @@ import {
   Check
 } from 'lucide-react';
 
-export default function MovementModule() {
+export default function MovementModule({ mode = null }) {
   const {
     movements,
     createMovement,
@@ -44,18 +44,21 @@ export default function MovementModule() {
     addToast
   } = useEnterprise();
 
-  // Active Tab: 'ALL' | 'FARM_TO_AGGREGATOR' | 'AGGREGATOR_TO_DISTILLERY' | 'RECON_QUEUE'
-  const [activeTab, setActiveTab] = useState(() => {
-    if (activeRole === 'FARMER' || activeRole === 'FIELD_AGENT') return 'FARM_TO_AGGREGATOR';
-    if (activeRole === 'COLLECTION_OPERATOR') return 'AGGREGATOR_TO_DISTILLERY';
+  const resolveTabFromMode = (m, role) => {
+    if (m === 'FARM_TO_DEPOT' || m === 'DEPOT_GATE_CHECK') return 'FARM_TO_AGGREGATOR';
+    if (m === 'DEPOT_TO_CPC' || m === 'CPC_GATE_CHECK') return 'AGGREGATOR_TO_DISTILLERY';
+    if (m === 'GATE_RECEIPT') return 'RECON_QUEUE';
+    if (role === 'FARMER' || role === 'FIELD_AGENT') return 'FARM_TO_AGGREGATOR';
+    if (role === 'COLLECTION_OPERATOR') return 'AGGREGATOR_TO_DISTILLERY';
     return 'ALL';
-  });
+  };
+
+  // Active Tab: 'ALL' | 'FARM_TO_AGGREGATOR' | 'AGGREGATOR_TO_DISTILLERY' | 'RECON_QUEUE'
+  const [activeTab, setActiveTab] = useState(() => resolveTabFromMode(mode, activeRole));
 
   useEffect(() => {
-    if (activeRole === 'FARMER' || activeRole === 'FIELD_AGENT') setActiveTab('FARM_TO_AGGREGATOR');
-    else if (activeRole === 'COLLECTION_OPERATOR') setActiveTab('AGGREGATOR_TO_DISTILLERY');
-    else if (activeRole === 'CPC_OPERATOR') setActiveTab('RECON_QUEUE');
-  }, [activeRole]);
+    setActiveTab(resolveTabFromMode(mode, activeRole));
+  }, [mode, activeRole]);
   const [showRoleGuide, setShowRoleGuide] = useState(false);
 
   // Dedicated Modal States (Leg 1 and Leg 2 are completely separated)
@@ -334,16 +337,19 @@ export default function MovementModule() {
     addToast(`Aggregation Lot ${depotForm.batchId} dispatched to CPC Distillery!`, 'success');
   };
 
-  // Filtered movements based on active tab
+  // Filtered movements based on dedicated page mode (not role-wise)
   const filteredMovements = useMemo(() => {
     return movements.filter(m => {
       const type = m.movementType || (m.destinationType?.includes('Processing') ? 'AGGREGATOR_TO_DISTILLERY' : 'FARM_TO_AGGREGATOR');
+      if (mode === 'FARM_TO_DEPOT' || mode === 'DEPOT_GATE_CHECK') return type === 'FARM_TO_AGGREGATOR';
+      if (mode === 'DEPOT_TO_CPC' || mode === 'CPC_GATE_CHECK') return type === 'AGGREGATOR_TO_DISTILLERY';
+      if (mode === 'GATE_RECEIPT') return m.status === 'IN_TRANSIT';
       if (activeTab === 'FARM_TO_AGGREGATOR') return type === 'FARM_TO_AGGREGATOR';
       if (activeTab === 'AGGREGATOR_TO_DISTILLERY') return type === 'AGGREGATOR_TO_DISTILLERY';
       if (activeTab === 'RECON_QUEUE') return m.status === 'IN_TRANSIT';
       return true;
     });
-  }, [movements, activeTab]);
+  }, [movements, activeTab, mode]);
 
   // Counts for tabs
   const farmToDepotCount = movements.filter(m => (m.movementType || (!m.destinationType?.includes('Processing') ? 'FARM_TO_AGGREGATOR' : '')) === 'FARM_TO_AGGREGATOR').length;
@@ -503,33 +509,41 @@ export default function MovementModule() {
     {
       header: 'Reconciliation & GRN Action',
       accessor: 'id',
-      render: (m) => (
-        <div>
-          {m.status === 'IN_TRANSIT' ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleOpenReceiveModal(m);
-              }}
-              className="px-3 py-1.5 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition flex items-center gap-1.5 animate-pulse"
-            >
-              <Scale className="w-3.5 h-3.5" />
-              <span>Verify Receipt & Recon</span>
-            </button>
-          ) : (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedMovement(m);
-              }}
-              className="px-2.5 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition flex items-center gap-1"
-            >
-              <FileCheck2 className="w-3.5 h-3.5 text-emerald-700" />
-              <span>View GRN Slip</span>
-            </button>
-          )}
-        </div>
-      )
+      render: (m) => {
+        const isGateCheckPage = !mode || mode === 'DEPOT_GATE_CHECK' || mode === 'CPC_GATE_CHECK' || mode === 'GATE_RECEIPT';
+        return (
+          <div>
+            {m.status === 'IN_TRANSIT' && isGateCheckPage ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenReceiveModal(m);
+                }}
+                className="px-3 py-1.5 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition flex items-center gap-1.5 animate-pulse"
+              >
+                <Scale className="w-3.5 h-3.5" />
+                <span>Verify Weight &amp; Receive</span>
+              </button>
+            ) : m.status === 'IN_TRANSIT' ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                <Clock className="w-3 h-3" />
+                <span>In Transit • Awaiting Gate Weighment</span>
+              </span>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedMovement(m);
+                }}
+                className="px-2.5 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition flex items-center gap-1"
+              >
+                <FileCheck2 className="w-3.5 h-3.5 text-emerald-700" />
+                <span>View GRN Slip</span>
+              </button>
+            )}
+          </div>
+        );
+      }
     }
   ];
 
@@ -558,24 +572,46 @@ export default function MovementModule() {
               </span>
             </div>
             <h1 className="text-xl font-black text-slate-900 mt-1">
-              Material Movement & Gate Weightage Reconciliation
+              {mode === 'FARM_TO_DEPOT'
+                ? '1. Farm → Cluster Aggregation Depot Dispatch'
+                : mode === 'DEPOT_GATE_CHECK'
+                ? '2. Depot Gate Weight Check (Farm → Depot Receipt)'
+                : mode === 'DEPOT_TO_CPC'
+                ? '3. Depot → CPC Distillery Dispatch'
+                : mode === 'CPC_GATE_CHECK'
+                ? '4. CPC Gate Weight Check (Depot → CPC Receipt)'
+                : mode === 'GATE_RECEIPT'
+                ? 'Gate Weighment & Receipt Reconciliation (≤ ±1.5%)'
+                : 'Material Movement & Gate Weightage Reconciliation'}
             </h1>
             <p className="text-xs text-slate-500">
-              Statutory Custody Flow: Harvest Batch Creation → Farm to Aggregator → Aggregator to Distillery → Receipt & Weight Reconciliation (Gate Tolerance ≤ ±1.5%)
+              {mode === 'FARM_TO_DEPOT'
+                ? 'First-Mile Dispatch: Dispatch felled homestead agarwood batches with Form II e-TP to Regional Cluster Aggregation Depot.'
+                : mode === 'DEPOT_GATE_CHECK'
+                ? 'Depot Intake Gate: Verify incoming Farm → Depot consignments on calibrated weighbridge (≤ ±1.5% tolerance) and issue GRN.'
+                : mode === 'DEPOT_TO_CPC'
+                ? 'Mid-Mile Bulk Haulage: Dispatch pooled homogeneous aggregation lots from Cluster Depot to CPC Distillery.'
+                : mode === 'CPC_GATE_CHECK'
+                ? 'CPC Distillery Intake Gate: Verify incoming Depot → CPC bulk lots on weighbridge (≤ ±1.5% tolerance) before distillation.'
+                : mode === 'GATE_RECEIPT'
+                ? 'Verify incoming transit consignments on calibrated weighbridge (maximum ±1.5% variance threshold) and issue digital GRN.'
+                : 'Statutory Custody Flow: Harvest Batch Creation → Farm to Aggregator → Aggregator to Distillery → Receipt & Weight Reconciliation (Gate Tolerance ≤ ±1.5%)'}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowRoleGuide(!showRoleGuide)}
-              className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 text-slate-700 transition flex items-center gap-1.5"
-            >
-              <Info className="w-4 h-4 text-emerald-600" />
-              <span>{showRoleGuide ? 'Hide Protocol Guide' : 'Show Operational Matrix'}</span>
-            </button>
+            {!mode && (
+              <button
+                onClick={() => setShowRoleGuide(!showRoleGuide)}
+                className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 text-slate-700 transition flex items-center gap-1.5"
+              >
+                <Info className="w-4 h-4 text-emerald-600" />
+                <span>{showRoleGuide ? 'Hide Protocol Guide' : 'Show Operational Matrix'}</span>
+              </button>
+            )}
 
-            {/* Role-Specific Dispatch Action Button (Strictly Single Button to avoid confusion) */}
-            {(activeRole === 'FARMER' || activeRole === 'FIELD_AGENT' || (activeRole !== 'COLLECTION_OPERATOR' && activeTab === 'FARM_TO_AGGREGATOR')) && (
+            {/* Page-Mode Specific Action Button (Strictly Single Purpose) */}
+            {(mode === 'FARM_TO_DEPOT' || (!mode && (activeRole === 'FARMER' || activeRole === 'FIELD_AGENT' || (activeRole !== 'COLLECTION_OPERATOR' && activeTab === 'FARM_TO_AGGREGATOR')))) && (
               <button
                 onClick={() => openFarmDispatchModal()}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-xs transition flex items-center gap-1.5"
@@ -585,7 +621,7 @@ export default function MovementModule() {
               </button>
             )}
 
-            {(activeRole === 'COLLECTION_OPERATOR' || (activeRole !== 'FARMER' && activeRole !== 'FIELD_AGENT' && activeTab === 'AGGREGATOR_TO_DISTILLERY')) && (
+            {(mode === 'DEPOT_TO_CPC' || (!mode && (activeRole === 'COLLECTION_OPERATOR' || (activeRole !== 'FARMER' && activeRole !== 'FIELD_AGENT' && activeTab === 'AGGREGATOR_TO_DISTILLERY')))) && (
               <button
                 onClick={() => openDepotDispatchModal()}
                 className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black rounded-xl shadow-xs transition flex items-center gap-1.5"
@@ -597,7 +633,8 @@ export default function MovementModule() {
           </div>
         </div>
 
-        {/* 2. Statutory Flow Breadcrumb (Flowchart Steps 13 to 17) */}
+        {/* 2. Statutory Flow Breadcrumb (only in combined mode) */}
+        {!mode && (
         <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between text-xs gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-bold text-slate-500 text-[11px] uppercase tracking-wider">Flow Sequence:</span>
@@ -641,6 +678,7 @@ export default function MovementModule() {
             Active Role: <span className="font-bold text-emerald-800">{activeRole}</span>
           </div>
         </div>
+        )}
 
         {/* 3. Comprehensive Operational Custody & Responsibilities Matrix */}
         {showRoleGuide && (
@@ -735,6 +773,9 @@ export default function MovementModule() {
         )}
       </div>
 
+      {/* 4 & 5. Combined Multi-Tab KPIs & Tabs (Hidden when page is dedicated to a single task mode) */}
+      {!mode && (
+      <>
       {/* 4. KPI Stat Counters */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
@@ -840,6 +881,8 @@ export default function MovementModule() {
           </span>
         </button>
       </div>
+      </>
+      )}
 
       {/* 6. Main Data Table */}
       <DataTable

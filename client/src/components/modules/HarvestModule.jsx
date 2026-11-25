@@ -37,7 +37,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 
-export default function HarvestModule() {
+export default function HarvestModule({ mode = null }) {
   const {
     harvests,
     harvestBatches,
@@ -67,12 +67,12 @@ export default function HarvestModule() {
     if (role === 'FOREST_DEPT') return 'DFO_PENDING_SANCTIONS';
     return 'QUEUE';
   };
-  const [activeTab, setActiveTab] = useState(() => getDefaultTab(activeRole));
+  const [activeTab, setActiveTab] = useState(() => mode || getDefaultTab(activeRole));
   const [adminStageFilter, setAdminStageFilter] = useState('ALL');
 
   useEffect(() => {
-    setActiveTab(getDefaultTab(activeRole));
-  }, [activeRole]);
+    setActiveTab(mode || getDefaultTab(activeRole));
+  }, [mode, activeRole]);
 
   const [selectedHarvest, setSelectedHarvest] = useState(null);
   const [selectedBatchForPass, setSelectedBatchForPass] = useState(null);
@@ -1027,17 +1027,39 @@ export default function HarvestModule() {
               </span>
             </div>
             <h1 className="text-xl font-black text-slate-900 mt-1">
-              {isFarmerRole && 'Farmer Harvest Desk • Homestead Trees & Sanction Requests'}
-              {isFaRole && 'Field Operations Desk • Pre-Harvest Verification & Supervised Felling'}
-              {isDfoRole && 'DFO Statutory Desk • Agarwood Felling Sanctions & Transit Clearances'}
-              {isAdminRole && 'Central Control Room • End-to-End Harvest Pipeline & Maker-Checker'}
-              {!isFarmerRole && !isFaRole && !isDfoRole && !isAdminRole && 'Harvest Management & Custody Verification'}
+              {mode === 'FARMER_MY_APPS' && 'My Harvest Applications & Status Tracker'}
+              {mode === 'NEW_APP' && 'Apply for Tree Harvest Permission'}
+              {mode === 'FA_PRE_HARVEST' && 'Pre-Harvest Field Verification Queue'}
+              {mode === 'DFO_PENDING_SANCTIONS' && 'DFO Statutory Felling Sanctions Queue'}
+              {mode === 'DFO_SANCTIONED' && 'Sanctioned Felling Orders Registry'}
+              {mode === 'FA_FELLING' && 'Supervised Felling & Scale Weighment Desk'}
+              {mode === 'BATCHES' && 'Harvest Batches & State Forest e-Transit Passes (e-TP)'}
+              {!mode && (
+                <>
+                  {isFarmerRole && 'Farmer Harvest Desk • Homestead Trees & Sanction Requests'}
+                  {isFaRole && 'Field Operations Desk • Pre-Harvest Verification & Supervised Felling'}
+                  {isDfoRole && 'DFO Statutory Desk • Agarwood Felling Sanctions & Transit Clearances'}
+                  {isAdminRole && 'Central Control Room • End-to-End Harvest Pipeline & Maker-Checker'}
+                  {!isFarmerRole && !isFaRole && !isDfoRole && !isAdminRole && 'Harvest Management & Custody Verification'}
+                </>
+              )}
             </h1>
             <p className="text-xs text-slate-500">
-              {isFarmerRole && 'Submit harvest sanction applications for your mature trees (≥ 7 yrs), track DFO review status, and view your official State Forest e-Transit Passes.'}
-              {isFaRole && 'On-ground biometric inspection of farmer homestead trees, verifying 7-year age rule & RFID barcodes, and supervising physical felling with digital scale weighment.'}
-              {isDfoRole && 'Statutory felling authorization gate under Assam Agarwood Policy 2020. Review field agent verified dossiers and issue formal felling orders or return for deficiency rectification.'}
-              {isAdminRole && 'Complete lifecycle governance: Farmer Application → NERAMAC Field Verification → DFO Statutory Sanction → Supervised Felling & Scale Weighment.'}
+              {mode === 'FARMER_MY_APPS' && 'Track your submitted harvest permission applications, DFO review status, and statutory approvals.'}
+              {mode === 'NEW_APP' && 'Submit a formal harvest sanction application for mature homestead agarwood trees (≥ 7 years).'}
+              {mode === 'FA_PRE_HARVEST' && 'Inspect farmer homestead trees, verify 7-year age & RFID barcodes, and forward dossiers to DFO.'}
+              {mode === 'DFO_PENDING_SANCTIONS' && 'Review field-verified harvest dossiers and issue official DFO Tree Felling Sanction Orders or return for rectification.'}
+              {mode === 'DFO_SANCTIONED' && 'Registry of all issued DFO Felling Sanction Orders and active harvest authorisations.'}
+              {mode === 'FA_FELLING' && 'Supervise physical tree felling, record digital scale heartwood weight, and mint Harvest Batches + e-TPs.'}
+              {mode === 'BATCHES' && 'View harvested wood batches, cryptographic Form II State Forest e-Transit Passes, and dispatch to depot.'}
+              {!mode && (
+                <>
+                  {isFarmerRole && 'Submit harvest sanction applications for your mature trees (≥ 7 yrs), track DFO review status, and view your official State Forest e-Transit Passes.'}
+                  {isFaRole && 'On-ground biometric inspection of farmer homestead trees, verifying 7-year age rule & RFID barcodes, and supervising physical felling with digital scale weighment.'}
+                  {isDfoRole && 'Statutory felling authorization gate under Assam Agarwood Policy 2020. Review field agent verified dossiers and issue formal felling orders or return for deficiency rectification.'}
+                  {isAdminRole && 'Complete lifecycle governance: Farmer Application → NERAMAC Field Verification → DFO Statutory Sanction → Supervised Felling & Scale Weighment.'}
+                </>
+              )}
             </p>
           </div>
 
@@ -1052,7 +1074,7 @@ export default function HarvestModule() {
               <span>Reset Demo State</span>
             </button>
 
-            {(isFarmerRole || isAdminRole || isFaRole) && (
+            {!mode && (isFarmerRole || isAdminRole || isFaRole) && (
               <button
                 onClick={() => setActiveTab('NEW_APP')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs ${
@@ -1115,7 +1137,8 @@ export default function HarvestModule() {
         </div>
       </div>
 
-      {/* 2. Role-Segregated Navigation Tabs */}
+      {/* 2. Role-Segregated Navigation Tabs (Hidden when dedicated single-task page mode is active) */}
+      {!mode && (
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
         {/* FARMER TABS */}
         {isFarmerRole && (
@@ -1293,6 +1316,7 @@ export default function HarvestModule() {
           </>
         )}
       </div>
+      )}
 
       {/* VIEW: FARMER MY APPLICATIONS */}
       {activeTab === 'FARMER_MY_APPS' && (
