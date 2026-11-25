@@ -1130,25 +1130,70 @@ export function EnterpriseProvider({ children }) {
       return m;
     });
 
-    // If batch received at Depot, update Harvest Batch location to Depot stock
+    // Propagate verified gate weight forward to Harvest Batches & Depot Lots
+    const isCpcReceipt = movement.movementType === 'AGGREGATOR_TO_DISTILLERY' || movement.destinationType?.includes('Processing');
     let updatedBatches = harvestBatches;
+    let updatedAggregations = aggregations;
+
     if (movement.batchId) {
-      updatedBatches = harvestBatches.map(b => {
-        if (movement.batchId.includes(b.id)) {
-          return {
-            ...b,
-            currentLocation: movement.destinationName,
-            currentCustodian: movement.destinationType?.includes('Processing') ? 'CPC_OPERATOR' : 'COLLECTION_OPERATOR',
-            status: movement.destinationType?.includes('Processing') ? 'AT_CPC_DISTILLERY' : 'IN_STOCK'
-          };
-        }
-        return b;
-      });
-      setHarvestBatches(updatedBatches);
+      if (!isCpcReceipt) {
+        // Farm -> Depot Gate Check: update Harvest Batch netWeightKg to the Depot-weighed kg
+        updatedBatches = harvestBatches.map(b => {
+          if (movement.batchId === b.id || movement.batchId.includes(b.id)) {
+            return {
+              ...b,
+              originalHarvestWeightKg: b.originalHarvestWeightKg ?? b.netWeightKg,
+              netWeightKg: recv,
+              depotVerifiedWeightKg: recv,
+              currentLocation: movement.destinationName,
+              currentCustodian: 'COLLECTION_OPERATOR',
+              status: 'IN_STOCK'
+            };
+          }
+          return b;
+        });
+        setHarvestBatches(updatedBatches);
+      } else {
+        // Depot -> CPC Gate Check: update Depot Lot totalWeightKg to the CPC-weighed kg
+        updatedAggregations = aggregations.map(a => {
+          if (a.id === movement.batchId) {
+            const prevWt = parseFloat(a.totalWeightKg) || 0;
+            const ratio = prevWt > 0 ? recv / prevWt : 1;
+            return {
+              ...a,
+              dispatchedWeightKg: a.dispatchedWeightKg ?? prevWt,
+              totalWeightKg: recv,
+              cpcVerifiedWeightKg: recv,
+              status: 'AT_CPC_DISTILLERY',
+              parentDetails: (a.parentDetails || []).map(pd => ({
+                ...pd,
+                weightKg: Math.round((pd.weightKg || 0) * ratio * 10) / 10
+              }))
+            };
+          }
+          return a;
+        });
+        setAggregations(updatedAggregations);
+
+        updatedBatches = harvestBatches.map(b => {
+          if (movement.batchId === b.id || movement.batchId.includes(b.id)) {
+            return {
+              ...b,
+              netWeightKg: recv,
+              cpcVerifiedWeightKg: recv,
+              currentLocation: movement.destinationName,
+              currentCustodian: 'CPC_OPERATOR',
+              status: 'AT_CPC_DISTILLERY'
+            };
+          }
+          return b;
+        });
+        setHarvestBatches(updatedBatches);
+      }
     }
 
     setMovements(updated);
-    persistState({ movements: updated, harvestBatches: updatedBatches });
+    persistState({ movements: updated, harvestBatches: updatedBatches, aggregations: updatedAggregations });
     logAudit(
       'RECEIPT_AND_WEIGHT_RECONCILIATION',
       'Material Movement',

@@ -6,7 +6,7 @@ import Modal from '../common/Modal';
 import { Factory, Flame, Plus, Scale, Sparkles, AlertCircle, CheckCircle2, Layers, Trash2, Droplets, Package, Trees } from 'lucide-react';
 
 export default function ProcessingModule() {
-  const { distillations, createDistillationRun, aggregations, processingCentres, activeRole } = useEnterprise();
+  const { distillations, createDistillationRun, aggregations, harvestBatches, processingCentres, activeRole } = useEnterprise();
   const [selectedDistill, setSelectedDistill] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -62,6 +62,25 @@ export default function ProcessingModule() {
       ...prev,
       byProducts: (prev.byProducts || []).filter(b => b.id !== bpId)
     }));
+  };
+
+  const openLogModal = () => {
+    const defaultLot = aggregations.find(a => a.id === form.sourceBatchId) || aggregations[0];
+    const defaultBatch = !defaultLot ? (harvestBatches || []).find(b => b.id === form.sourceBatchId || (b.status !== 'SPLIT_INTO_SUBBATCHES' && !b.parentOfAggregation)) : null;
+    if (defaultLot) {
+      setForm(prev => ({
+        ...prev,
+        sourceBatchId: defaultLot.id,
+        inputWoodKg: defaultLot.cpcVerifiedWeightKg ?? defaultLot.totalWeightKg ?? prev.inputWoodKg
+      }));
+    } else if (defaultBatch) {
+      setForm(prev => ({
+        ...prev,
+        sourceBatchId: defaultBatch.id,
+        inputWoodKg: defaultBatch.cpcVerifiedWeightKg ?? defaultBatch.netWeightKg ?? prev.inputWoodKg
+      }));
+    }
+    setIsModalOpen(true);
   };
 
   const handleSubmit = (e) => {
@@ -231,7 +250,7 @@ export default function ProcessingModule() {
 
         {activeRole !== 'NERAMAC_ADMIN' && (
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={openLogModal}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
           >
             <Flame className="w-4 h-4" />
@@ -466,15 +485,38 @@ export default function ProcessingModule() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Source Aggregation Batch *</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Source Lot / Harvest Batch *</label>
               <select
                 value={form.sourceBatchId}
-                onChange={(e) => setForm({ ...form, sourceBatchId: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const nextLot = aggregations.find(a => a.id === val);
+                  const nextBatch = (harvestBatches || []).find(b => b.id === val);
+                  setForm({
+                    ...form,
+                    sourceBatchId: val,
+                    sourceBatchType: nextLot ? 'AGGREGATION_BATCH' : 'HARVEST_BATCH',
+                    inputWoodKg: nextLot
+                      ? (nextLot.cpcVerifiedWeightKg ?? nextLot.totalWeightKg ?? form.inputWoodKg)
+                      : nextBatch
+                      ? (nextBatch.cpcVerifiedWeightKg ?? nextBatch.netWeightKg ?? form.inputWoodKg)
+                      : form.inputWoodKg
+                  });
+                }}
                 className="w-full px-3 py-2 border rounded-lg font-mono font-bold bg-white"
               >
-                {aggregations.map(a => (
-                  <option key={a.id} value={a.id}>{a.id} ({a.totalWeightKg}kg, {a.depotName})</option>
-                ))}
+                <optgroup label="Depot Lots (Merged)">
+                  {aggregations.map(a => (
+                    <option key={a.id} value={a.id}>{a.id} ({a.totalWeightKg}kg, {a.depotName})</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Single Harvest Batches (Direct from Depot)">
+                  {(harvestBatches || [])
+                    .filter(b => b.status !== 'SPLIT_INTO_SUBBATCHES' && !b.parentOfAggregation)
+                    .map(b => (
+                      <option key={b.id} value={b.id}>{b.id} ({b.netWeightKg}kg, {b.farmerName})</option>
+                    ))}
+                </optgroup>
               </select>
             </div>
             <div>

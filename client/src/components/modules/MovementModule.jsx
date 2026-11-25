@@ -1637,31 +1637,59 @@ export default function MovementModule({ mode = null }) {
             </span>
           </div>
 
-          {/* Aggregated Lot Selection */}
+          {/* Aggregated Lot or Single Harvest Batch Selection */}
           <div className="p-3 bg-slate-50 border border-cyan-200 rounded-xl space-y-2.5">
             <label className="block text-[11px] font-black text-slate-800">
-              Select Aggregated Lot for CPC Haulage *
+              Select Lot or Single Harvest Batch for CPC Haulage *
             </label>
             <select
               value={depotForm.batchId}
               onChange={(e) => {
-                const agg = aggregations.find(x => x.id === e.target.value);
-                setDepotForm({
-                  ...depotForm,
-                  batchId: e.target.value,
-                  dispatchWeightKg: agg?.totalWeightKg || 75.0,
-                  sourceName: agg?.depotName || depotForm.sourceName,
-                  parentBatchIds: agg?.parentBatchIds || depotForm.parentBatchIds,
-                  resinGrade: agg?.uniformResinGrade || depotForm.resinGrade
-                });
+                const val = e.target.value;
+                const agg = aggregations.find(x => x.id === val);
+                if (agg) {
+                  setDepotForm({
+                    ...depotForm,
+                    batchId: val,
+                    farmerName: 'Consolidated Aggregation Lot',
+                    dispatchWeightKg: agg.totalWeightKg || 75.0,
+                    sourceName: agg.depotName || depotForm.sourceName,
+                    parentBatchIds: agg.parentBatchIds || depotForm.parentBatchIds,
+                    resinGrade: agg.uniformResinGrade || depotForm.resinGrade
+                  });
+                } else {
+                  const hbt = harvestBatches.find(x => x.id === val);
+                  if (hbt) {
+                    setDepotForm({
+                      ...depotForm,
+                      batchId: hbt.id,
+                      farmerName: hbt.farmerName || 'Single Grower Batch',
+                      dispatchWeightKg: hbt.netWeightKg || 38.5,
+                      sourceName: hbt.currentLocation || 'Golaghat Cluster Aggregation Depot',
+                      parentBatchIds: [hbt.id],
+                      resinGrade: hbt.resinGrade || 'GRADE_A_DARK_RESIN'
+                    });
+                  }
+                }
               }}
               className="w-full px-3 py-2 border rounded-lg font-mono font-bold bg-white text-xs"
             >
-              {aggregations.map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.id} • {a.totalWeightKg} kg • Grade: {(a.uniformResinGrade || 'GRADE_A_DARK_RESIN').replace(/_/g, ' ')} • Depot: {a.depotName}
-                </option>
-              ))}
+              <optgroup label="Depot Lots (Merged)">
+                {aggregations.map(a => (
+                  <option key={a.id} value={a.id}>
+                    {a.id} • {a.totalWeightKg} kg • Grade: {(a.uniformResinGrade || 'GRADE_A_DARK_RESIN').replace(/_/g, ' ')} • Depot: {a.depotName}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Single Harvest Batches (Without Merge/Split)">
+                {harvestBatches
+                  .filter(b => b.status !== 'SPLIT_INTO_SUBBATCHES' && !b.parentOfAggregation)
+                  .map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.id} • {b.netWeightKg} kg • {b.farmerName} ({b.status})
+                    </option>
+                  ))}
+              </optgroup>
             </select>
 
             {/* Live Aggregation Genealogy Box */}
