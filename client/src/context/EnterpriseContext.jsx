@@ -1377,23 +1377,44 @@ export function EnterpriseProvider({ children }) {
 
   // 8. Processing & Distillation
   const createDistillationRun = (runData) => {
-    const id = `DST-AS-2026-${String(distillations.length + 1).padStart(2, '0')}`;
-    const woodIn = parseFloat(runData.inputWoodKg);
-    const oilMl = parseFloat(runData.outputPureOudOilMl);
+    const pType = runData.processingType || 'AGARWOOD_OIL';
+    const prefix = pType === 'AGARWOOD_CHIPS' ? 'CHP' : pType === 'RAW_WOOD' ? 'RAW' : pType === 'BY_PRODUCTS' ? 'BYP' : 'DST';
+    const id = `${prefix}-AS-2026-${String(distillations.length + 1).padStart(2, '0')}`;
+    const woodIn = parseFloat(runData.inputWoodKg) || 0;
+    const oilMl = pType === 'AGARWOOD_OIL' ? (parseFloat(runData.outputPureOudOilMl) || 0) : 0;
     const oilKg = parseFloat((oilMl * 0.00096).toFixed(3));
-    const hydroL = parseFloat(runData.outputHydrosolLiters);
-    const spentKg = parseFloat(runData.outputSpentBiomassKg);
-    const lossKg = parseFloat((woodIn - (oilKg + spentKg)).toFixed(3));
-    const yieldPct = parseFloat(((oilKg / woodIn) * 100).toFixed(3));
+    const chipsKg = pType === 'AGARWOOD_CHIPS' ? (parseFloat(runData.outputChipsKg) || 0) : 0;
+    const rawWoodKg = pType === 'RAW_WOOD' ? (parseFloat(runData.outputRawWoodKg) || 0) : 0;
+    const hydroL = parseFloat(runData.outputHydrosolLiters) || 0;
+    const spentKg = parseFloat(runData.outputSpentBiomassKg) || 0;
+    const trimmingsKg = parseFloat(runData.outputTrimmingsKg) || 0;
+    const byProducts = Array.isArray(runData.byProducts) ? runData.byProducts : [];
+    const byProductKg = byProducts.reduce((sum, bp) => sum + (bp.unit === 'kg' ? (parseFloat(bp.quantity) || 0) : 0), 0);
+
+    const totalAccountedKg = oilKg + chipsKg + rawWoodKg + spentKg + trimmingsKg + byProductKg;
+    const lossKg = parseFloat(Math.max(0, woodIn - totalAccountedKg).toFixed(3));
+    const primaryKg = pType === 'AGARWOOD_CHIPS' ? chipsKg : pType === 'RAW_WOOD' ? rawWoodKg : pType === 'BY_PRODUCTS' ? byProductKg : oilKg;
+    const yieldPct = woodIn > 0 ? parseFloat(((primaryKg / woodIn) * 100).toFixed(2)) : 0;
+    const efficiencyPct = woodIn > 0 ? Math.min(100, parseFloat(((Math.min(woodIn, totalAccountedKg) / woodIn) * 100).toFixed(1))) : 99.5;
 
     const newRun = {
       id,
+      processingType: pType,
       chargeDate: new Date().toISOString().split('T')[0],
       completionDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0],
-      durationHours: 240,
+      durationHours: pType === 'AGARWOOD_OIL' ? 240 : 48,
+      outputPureOudOilMl: oilMl,
       outputPureOudOilKg: oilKg,
-      calculatedProcessLossKg: Math.max(0, lossKg),
-      massBalanceEfficiencyPercent: 99.7,
+      outputChipsKg: chipsKg,
+      chipsGrade: runData.chipsGrade || 'Grade A Dark Resin Chips',
+      outputRawWoodKg: rawWoodKg,
+      rawWoodGrade: runData.rawWoodGrade || 'Cleaned Resin-Rich Heartwood Logs',
+      outputTrimmingsKg: trimmingsKg,
+      outputHydrosolLiters: hydroL,
+      outputSpentBiomassKg: spentKg,
+      byProducts,
+      calculatedProcessLossKg: lossKg,
+      massBalanceEfficiencyPercent: efficiencyPct || 99.7,
       recoveryYieldPercent: yieldPct,
       labReleaseStatus: 'PENDING_RELEASE',
       finishedPacksGenerated: 0,
@@ -1404,8 +1425,15 @@ export function EnterpriseProvider({ children }) {
     const updated = [newRun, ...distillations];
     setDistillations(updated);
     persistState({ distillations: updated });
-    logAudit('CREATE_DISTILLATION', 'Processing & Distillation', `Logged hydro-distillation charge ${id}: ${woodIn}kg wood -> ${oilMl}ml oil`, id);
-    addToast(`Distillation Run ${id} logged. Mass balance calculated successfully.`);
+    const summaryOutput = pType === 'AGARWOOD_CHIPS'
+      ? `${chipsKg}kg graded chips`
+      : pType === 'RAW_WOOD'
+      ? `${rawWoodKg}kg cleaned raw wood`
+      : pType === 'BY_PRODUCTS'
+      ? `${byProducts.length} by-product(s)`
+      : `${oilMl}ml oud oil`;
+    logAudit('CREATE_PROCESSING_RUN', 'Processing & CPC Operations', `Logged ${pType} run ${id}: ${woodIn}kg wood -> ${summaryOutput}`, id);
+    addToast(`CPC Processing Run ${id} (${pType.replace(/_/g, ' ')}) logged successfully.`);
     return newRun;
   };
 
