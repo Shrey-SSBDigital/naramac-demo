@@ -3,16 +3,17 @@ import { useEnterprise } from '../../context/EnterpriseContext';
 import DataTable from '../common/DataTable';
 import StatusBadge from '../common/StatusBadge';
 import Modal from '../common/Modal';
-import { FlaskConical, ShieldCheck, Plus, CheckCircle2, FileText, AlertTriangle } from 'lucide-react';
+import { FlaskConical, ShieldCheck, Plus, CheckCircle2, FileText, AlertTriangle, Upload, FileCheck2, XCircle } from 'lucide-react';
 
 export default function LaboratoryModule() {
-  const { labTests, submitLabSampleAndTest, approveQualityRelease, distillations } = useEnterprise();
+  const { labTests, submitLabSampleAndTest, distillations } = useEnterprise();
   const [selectedTest, setSelectedTest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [remarksError, setRemarksError] = useState('');
 
   const [form, setForm] = useState({
-    distillationRunId: 'DST-AS-2026-01',
-    sourceBatchId: 'AGG-AS-2026-01',
+    distillationRunId: distillations[0]?.id || 'DST-AS-2026-01',
+    sourceBatchId: distillations[0]?.sourceBatchId || 'AGG-AS-2026-01',
     laboratoryName: 'NERAMAC Central Quality Assurance & NABL Analytical Facility, Jorhat',
     testingOfficer: 'Dr. Ananya Sarmah, Chief Analytical Chemist',
     agarospirolPercent: 14.82,
@@ -21,12 +22,43 @@ export default function LaboratoryModule() {
     refractiveIndex20C: 1.507,
     opticalRotation: '+15.2°',
     qualityDecision: 'RELEASED_FOR_COMMERCIAL_USE',
-    coaDocumentNumber: `COA/NER/2026/${Math.floor(1000 + Math.random() * 9000)}`
+    coaDocumentNumber: `COA/NER/2026/${Math.floor(1000 + Math.random() * 9000)}`,
+    uploadedReportName: '',
+    uploadedReportSize: '',
+    uploadedReportUrl: '',
+    remarks: ''
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    submitLabSampleAndTest(form);
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const sizeKb = (file.size / 1024).toFixed(1);
+    setForm(prev => ({
+      ...prev,
+      uploadedReportName: file.name,
+      uploadedReportSize: `${sizeKb} KB`,
+      uploadedReportUrl: URL.createObjectURL(file)
+    }));
+  };
+
+  const handleDecisionSubmit = (decision) => {
+    if (!form.uploadedReportName) {
+      setRemarksError('Please upload a lab test report file first.');
+      return;
+    }
+    if (decision === 'REJECTED' && !form.remarks.trim()) {
+      setRemarksError('Please enter remarks explaining why the report is rejected.');
+      return;
+    }
+    setRemarksError('');
+    submitLabSampleAndTest({
+      ...form,
+      qualityDecision: decision,
+      approvalRemarks: decision === 'RELEASED_FOR_COMMERCIAL_USE' ? form.remarks.trim() : '',
+      rejectionRemarks: decision === 'REJECTED' ? form.remarks.trim() : '',
+      coaDocumentUrl: form.uploadedReportUrl || `/coa/${form.uploadedReportName}`
+    });
+    setForm(prev => ({ ...prev, uploadedReportName: '', uploadedReportSize: '', uploadedReportUrl: '', remarks: '' }));
     setIsModalOpen(false);
   };
 
@@ -54,20 +86,6 @@ export default function LaboratoryModule() {
       )
     },
     {
-      header: 'GC-MS Key Marker',
-      accessor: 'agarospirolPercent',
-      render: (t) => (
-        <div>
-          <div className="font-black text-emerald-800 text-xs">
-            Agarospirol: {t.agarospirolPercent}% (Std &ge; 8.0%)
-          </div>
-          <div className="text-[11px] text-slate-500 font-semibold">
-            Jinkoh-eremol: {t.jinkohEremolPercent}%
-          </div>
-        </div>
-      )
-    },
-    {
       header: 'Species & Adulterants',
       accessor: 'botanicalConfirmation',
       render: (t) => (
@@ -89,34 +107,31 @@ export default function LaboratoryModule() {
     {
       header: 'Quality Release Decision',
       accessor: 'qualityDecision',
-      render: (t) => <StatusBadge status={t.qualityDecision} />
+      render: (t) => (
+        <div className="space-y-0.5">
+          <StatusBadge status={t.qualityDecision} />
+          {(t.rejectionRemarks || t.approvalRemarks || t.remarks) && (
+            <div className={`text-[10px] max-w-[180px] truncate ${t.qualityDecision === 'REJECTED' ? 'text-rose-700 font-semibold' : 'text-emerald-700'}`}>
+              {t.rejectionRemarks || t.approvalRemarks || t.remarks}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       header: 'Action',
       accessor: 'id',
       render: (t) => (
         <div className="flex items-center gap-1.5">
-          {t.qualityDecision !== 'RELEASED_FOR_COMMERCIAL_USE' ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                approveQualityRelease(t.id);
-              }}
-              className="px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition"
-            >
-              Sign Release
-            </button>
-          ) : (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTest(t);
-              }}
-              className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition"
-            >
-              View COA
-            </button>
-          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedTest(t);
+            }}
+            className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition"
+          >
+            View COA
+          </button>
         </div>
       )
     }
@@ -166,43 +181,27 @@ export default function LaboratoryModule() {
           maxWidth="max-w-xl"
         >
           <div className="space-y-4 text-xs">
-            {/* Top Chemical Profile Box */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between border-b pb-2">
-                <span className="font-extrabold text-slate-900 text-xs">Key GC-MS Marker Analysis</span>
-                <span className="font-mono text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">
-                  {selectedTest.nablAccreditationNo}
-                </span>
+            {/* Uploaded CoA File & Decision Summary */}
+            {(selectedTest.uploadedReportName || selectedTest.rejectionRemarks || selectedTest.approvalRemarks || selectedTest.remarks) && (
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                {selectedTest.uploadedReportName && (
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-emerald-600" />
+                      {selectedTest.uploadedReportName}
+                    </span>
+                    <span className="font-mono text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">
+                      {selectedTest.nablAccreditationNo}
+                    </span>
+                  </div>
+                )}
+                {(selectedTest.rejectionRemarks || selectedTest.approvalRemarks || selectedTest.remarks) && (
+                  <div className={`text-[11px] font-medium ${selectedTest.qualityDecision === 'REJECTED' ? 'text-rose-700' : 'text-emerald-800'}`}>
+                    <strong>Remarks:</strong> {selectedTest.rejectionRemarks || selectedTest.approvalRemarks || selectedTest.remarks}
+                  </div>
+                )}
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-2.5 rounded-lg bg-white border border-slate-200">
-                  <span className="text-[10px] text-slate-500 uppercase font-bold">Agarospirol (%)</span>
-                  <div className="text-base font-black text-emerald-800">{selectedTest.agarospirolPercent}%</div>
-                  <div className="text-[10px] text-slate-400">Standard &ge; 8.0% (PASS)</div>
-                </div>
-                <div className="p-2.5 rounded-lg bg-white border border-slate-200">
-                  <span className="text-[10px] text-slate-500 uppercase font-bold">Jinkoh-Eremol (%)</span>
-                  <div className="text-base font-black text-emerald-800">{selectedTest.jinkohEremolPercent}%</div>
-                  <div className="text-[10px] text-slate-400">Standard &ge; 3.5% (PASS)</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-center pt-1 text-[11px]">
-                <div className="p-2 rounded bg-white border">
-                  <div className="text-slate-500 text-[10px]">Specific Gravity</div>
-                  <strong className="text-slate-800 font-mono">{selectedTest.specificGravity25C}</strong>
-                </div>
-                <div className="p-2 rounded bg-white border">
-                  <div className="text-slate-500 text-[10px]">Refractive Index</div>
-                  <strong className="text-slate-800 font-mono">{selectedTest.refractiveIndex20C}</strong>
-                </div>
-                <div className="p-2 rounded bg-white border">
-                  <div className="text-slate-500 text-[10px]">Optical Rotation</div>
-                  <strong className="text-slate-800 font-mono">{selectedTest.opticalRotation}</strong>
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Botanical CITES & Adulterant Screening */}
             <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5 text-emerald-900">
@@ -244,95 +243,81 @@ export default function LaboratoryModule() {
         </Modal>
       )}
 
-      {/* Register & Enter Results Modal */}
+      {/* Upload Lab Report Modal (File Upload + Remarks + Approve/Reject) */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Register Sample & Enter GC-MS Profiling"
-        subtitle="Mandatory quality release gate prior to packaging and commercial dispatch"
+        title="Upload Lab Test Report (CoA)"
+        subtitle="Upload signed laboratory test report, add remarks, and Approve or Reject"
       >
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Source Distillation Run *</label>
-              <select
-                value={form.distillationRunId}
-                onChange={(e) => setForm({ ...form, distillationRunId: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-mono font-bold"
-              >
-                {distillations.map(d => (
-                  <option key={d.id} value={d.id}>{d.id} ({d.outputPureOudOilMl}ml, {d.cpcName})</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Testing Officer Name</label>
-              <input
-                type="text"
-                value={form.testingOfficer}
-                onChange={(e) => setForm({ ...form, testingOfficer: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-semibold"
-              />
-            </div>
+        <div className="space-y-4 text-xs">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Select Processing Run *</label>
+            <select
+              value={form.distillationRunId}
+              onChange={(e) => {
+                const selectedRun = distillations.find(d => d.id === e.target.value);
+                setForm({
+                  ...form,
+                  distillationRunId: e.target.value,
+                  sourceBatchId: selectedRun?.sourceBatchId || form.sourceBatchId
+                });
+              }}
+              className="w-full px-3 py-2 border rounded-lg font-mono font-bold bg-white"
+            >
+              {distillations.map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.id} ({d.processingType ? d.processingType.replace(/_/g, ' ') : `${d.outputPureOudOilMl}ml`}, {d.cpcName})
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Agarospirol Content (%) *</label>
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+              Upload Lab Report / Certificate of Analysis (PDF, Image) *
+            </label>
+            <label className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-emerald-400 rounded-2xl bg-emerald-50/40 hover:bg-emerald-50 cursor-pointer transition text-center space-y-2">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                {form.uploadedReportName ? <FileCheck2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+              </div>
+              {form.uploadedReportName ? (
+                <div className="space-y-0.5">
+                  <div className="font-extrabold text-emerald-900 text-xs">{form.uploadedReportName}</div>
+                  <div className="text-[10px] font-mono text-emerald-700">{form.uploadedReportSize} • Ready</div>
+                </div>
+              ) : (
+                <div className="space-y-0.5">
+                  <div className="font-bold text-slate-800">Click to select Lab Test Report file</div>
+                  <div className="text-[10px] text-slate-500">Supports PDF, PNG, JPG, DOC/DOCX</div>
+                </div>
+              )}
               <input
-                type="number"
-                step="0.01"
-                required
-                value={form.agarospirolPercent}
-                onChange={(e) => setForm({ ...form, agarospirolPercent: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border rounded-lg font-bold text-emerald-800"
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                onChange={handleFileChange}
+                className="hidden"
               />
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Jinkoh-Eremol Content (%) *</label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                value={form.jinkohEremolPercent}
-                onChange={(e) => setForm({ ...form, jinkohEremolPercent: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border rounded-lg font-bold text-emerald-800"
-              />
-            </div>
+            </label>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Specific Gravity (25°C)</label>
-              <input
-                type="number"
-                step="0.001"
-                value={form.specificGravity25C}
-                onChange={(e) => setForm({ ...form, specificGravity25C: parseFloat(e.target.value) || 0.96 })}
-                className="w-full px-3 py-2 border rounded-lg font-mono"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Refractive Index</label>
-              <input
-                type="number"
-                step="0.001"
-                value={form.refractiveIndex20C}
-                onChange={(e) => setForm({ ...form, refractiveIndex20C: parseFloat(e.target.value) || 1.505 })}
-                className="w-full px-3 py-2 border rounded-lg font-mono"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Decision</label>
-              <select
-                value={form.qualityDecision}
-                onChange={(e) => setForm({ ...form, qualityDecision: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-bold"
-              >
-                <option value="RELEASED_FOR_COMMERCIAL_USE">RELEASE (Approved)</option>
-                <option value="QUARANTINED">QUARANTINE (Flagged)</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              Remarks (Required for Reject, Optional for Approve)
+            </label>
+            <textarea
+              rows={3}
+              value={form.remarks}
+              onChange={(e) => {
+                setForm({ ...form, remarks: e.target.value });
+                if (remarksError) setRemarksError('');
+              }}
+              placeholder="Enter lab verification remarks or rejection reason..."
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+            {remarksError && (
+              <p className="text-[11px] text-rose-600 font-bold mt-1">{remarksError}</p>
+            )}
           </div>
 
           <div className="pt-3 border-t flex justify-end gap-2">
@@ -344,13 +329,25 @@ export default function LaboratoryModule() {
               Cancel
             </button>
             <button
-              type="submit"
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-xs"
+              type="button"
+              disabled={!form.uploadedReportName}
+              onClick={() => handleDecisionSubmit('REJECTED')}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-xs flex items-center gap-1.5 disabled:opacity-50"
             >
-              Issue COA & Release
+              <XCircle className="w-4 h-4" />
+              <span>Reject</span>
+            </button>
+            <button
+              type="button"
+              disabled={!form.uploadedReportName}
+              onClick={() => handleDecisionSubmit('RELEASED_FOR_COMMERCIAL_USE')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Approve &amp; Release</span>
             </button>
           </div>
-        </form>
+        </div>
       </Modal>
     </div>
   );

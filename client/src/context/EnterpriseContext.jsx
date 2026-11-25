@@ -1505,11 +1505,17 @@ export function EnterpriseProvider({ children }) {
     const updated = [newTest, ...labTests];
     setLabTests(updated);
 
-    // If released, update distillation run
-    if (newTest.qualityDecision === 'RELEASED_FOR_COMMERCIAL_USE') {
+    // If released or rejected, update distillation run
+    if (newTest.qualityDecision === 'RELEASED_FOR_COMMERCIAL_USE' || newTest.qualityDecision === 'REJECTED') {
+      const isApproved = newTest.qualityDecision === 'RELEASED_FOR_COMMERCIAL_USE';
       const updatedDistills = distillations.map(d => {
         if (d.id === newTest.distillationRunId) {
-          return { ...d, labSampleId: id, labReleaseStatus: 'RELEASED', status: 'COMPLETED_PACKAGED' };
+          return {
+            ...d,
+            labSampleId: id,
+            labReleaseStatus: isApproved ? 'RELEASED' : 'REJECTED',
+            status: isApproved ? 'QUALITY_RELEASED' : 'LAB_REJECTED'
+          };
         }
         return d;
       });
@@ -1519,8 +1525,18 @@ export function EnterpriseProvider({ children }) {
       persistState({ labTests: updated });
     }
 
-    logAudit('LAB_ANALYSIS_COMPLETED', 'Laboratory & Quality', `Completed GC-MS analysis ${id} for run ${newTest.distillationRunId}`, id);
-    addToast(`Lab Sample ${id} tested and Certificate of Analysis generated`);
+    logAudit(
+      newTest.qualityDecision === 'REJECTED' ? 'LAB_REPORT_REJECTED' : 'LAB_REPORT_APPROVED',
+      'Laboratory & Quality',
+      `${newTest.qualityDecision === 'REJECTED' ? 'Rejected' : 'Approved'} lab report ${id} for run ${newTest.distillationRunId}${newTest.remarks ? ` (${newTest.remarks})` : ''}`,
+      id
+    );
+    addToast(
+      newTest.qualityDecision === 'REJECTED'
+        ? `Lab Report ${id} rejected with remarks`
+        : `Lab Report ${id} approved & released for CPC packaging`,
+      newTest.qualityDecision === 'REJECTED' ? 'warning' : 'success'
+    );
     return newTest;
   };
 
