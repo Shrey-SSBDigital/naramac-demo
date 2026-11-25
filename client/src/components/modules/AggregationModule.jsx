@@ -27,43 +27,43 @@ import {
 } from 'lucide-react';
 
 export default function AggregationModule() {
-  const { aggregations, createAggregation, splitAggregationLot, harvestBatches, addToast, setDispatchIntent, activeRole } = useEnterprise();
+  const { aggregations, createAggregation, splitHarvestBatch, harvestBatches, addToast, setDispatchIntent, activeRole } = useEnterprise();
   const { navigate } = useAppRouter();
   const [selectedAgg, setSelectedAgg] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Split Lot Modal State
+  // Split Harvest Batch Modal State
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
-  const [splitSourceLotId, setSplitSourceLotId] = useState('');
+  const [splitSourceBatchId, setSplitSourceBatchId] = useState('');
   const [splitWeight1, setSplitWeight1] = useState(0);
 
-  const activeLotsForSplit = aggregations.filter(a => a.status !== 'SPLIT_INTO_SUBLOTS');
-  const selectedSplitLot = aggregations.find(a => a.id === splitSourceLotId) || activeLotsForSplit[0] || null;
-  const splitWeight2 = selectedSplitLot
-    ? Math.max(0, Math.round(((selectedSplitLot.totalWeightKg || 0) - (parseFloat(splitWeight1) || 0)) * 10) / 10)
+  const activeBatchesForSplit = harvestBatches.filter(b => b.status !== 'SPLIT_INTO_SUBBATCHES' && !b.parentOfAggregation);
+  const selectedSplitBatch = harvestBatches.find(b => b.id === splitSourceBatchId) || activeBatchesForSplit[0] || null;
+  const splitWeight2 = selectedSplitBatch
+    ? Math.max(0, Math.round(((selectedSplitBatch.netWeightKg || 0) - (parseFloat(splitWeight1) || 0)) * 10) / 10)
     : 0;
 
-  const openSplitModal = (lot = null) => {
-    const target = lot || activeLotsForSplit[0];
+  const openSplitModal = (batch = null) => {
+    const target = batch || activeBatchesForSplit[0];
     if (!target) {
-      addToast('No active depot lot available to split', 'warning');
+      addToast('No unmerged harvest batch available to split', 'warning');
       return;
     }
-    setSplitSourceLotId(target.id);
-    setSplitWeight1(Math.round(((target.totalWeightKg || 0) / 2) * 10) / 10);
+    setSplitSourceBatchId(target.id);
+    setSplitWeight1(Math.round(((target.netWeightKg || 0) / 2) * 10) / 10);
     setIsSplitModalOpen(true);
   };
 
   const handleSplitSubmit = (e) => {
     e.preventDefault();
-    if (!selectedSplitLot) return;
+    if (!selectedSplitBatch) return;
     const w1 = parseFloat(splitWeight1) || 0;
     const w2 = splitWeight2;
     if (w1 <= 0 || w2 <= 0) {
-      addToast('Both split lot weights must be greater than 0 kg', 'warning');
+      addToast('Both split harvest batch weights must be greater than 0 kg', 'warning');
       return;
     }
-    splitAggregationLot(selectedSplitLot.id, [w1, w2]);
+    splitHarvestBatch(selectedSplitBatch.id, [w1, w2]);
     setIsSplitModalOpen(false);
   };
 
@@ -74,9 +74,10 @@ export default function AggregationModule() {
   // Selected batch IDs for aggregation
   const [selectedBatchIds, setSelectedBatchIds] = useState([]);
 
-  // Filter poolable batches
+  // Filter poolable batches (exclude already-split parent batches)
   const poolableBatches = useMemo(() => {
     return harvestBatches.filter(b => {
+      if (b.status === 'SPLIT_INTO_SUBBATCHES') return false;
       if (includeAllBatches) return true;
       return (
         b.status === 'IN_STOCK' ||
@@ -318,7 +319,7 @@ export default function AggregationModule() {
               className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
             >
               <Scissors className="w-4 h-4" />
-              <span>Split Lot</span>
+              <span>Split Harvest Batch</span>
             </button>
             <button
               onClick={() => setIsModalOpen(true)}
@@ -699,51 +700,51 @@ export default function AggregationModule() {
         </form>
       </Modal>
 
-      {/* Split Lot Modal */}
+      {/* Split Harvest Batch Modal */}
       <Modal
         isOpen={isSplitModalOpen}
         onClose={() => setIsSplitModalOpen(false)}
-        title="Split Depot Lot into Sub-Lots"
-        subtitle="Divide an existing Depot Lot into two smaller Lots while preserving full farmer & tree genealogy"
+        title="Split Harvest Batch into Sub-Batches"
+        subtitle="Divide a Harvest Batch into two smaller Harvest Batches while preserving full farmer, tree & e-TP genealogy"
         maxWidth="max-w-lg"
       >
         <form onSubmit={handleSplitSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">Select Source Lot to Split *</label>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Select Source Harvest Batch to Split *</label>
             <select
-              value={selectedSplitLot?.id || ''}
+              value={selectedSplitBatch?.id || ''}
               onChange={(e) => {
-                const nextLot = aggregations.find(a => a.id === e.target.value);
-                setSplitSourceLotId(e.target.value);
-                if (nextLot) {
-                  setSplitWeight1(Math.round(((nextLot.totalWeightKg || 0) / 2) * 10) / 10);
+                const nextBatch = harvestBatches.find(b => b.id === e.target.value);
+                setSplitSourceBatchId(e.target.value);
+                if (nextBatch) {
+                  setSplitWeight1(Math.round(((nextBatch.netWeightKg || 0) / 2) * 10) / 10);
                 }
               }}
               className="w-full px-3 py-2 border rounded-lg font-mono font-bold bg-white"
             >
-              {activeLotsForSplit.map(a => (
-                <option key={a.id} value={a.id}>{a.id} • {a.totalWeightKg} kg • {a.depotName}</option>
+              {activeBatchesForSplit.map(b => (
+                <option key={b.id} value={b.id}>{b.id} • {b.netWeightKg} kg • {b.farmerName}</option>
               ))}
             </select>
           </div>
 
-          {selectedSplitLot && (
+          {selectedSplitBatch && (
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
               <div className="flex justify-between items-center text-[11px]">
-                <span className="font-bold text-slate-600">Source Lot Total Weight:</span>
-                <span className="font-mono font-black text-slate-900 text-sm">{selectedSplitLot.totalWeightKg} kg</span>
+                <span className="font-bold text-slate-600">Source Harvest Batch Weight:</span>
+                <span className="font-mono font-black text-slate-900 text-sm">{selectedSplitBatch.netWeightKg} kg</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-2.5 bg-white border border-amber-300 rounded-lg">
                   <label className="block text-[10px] font-extrabold text-amber-900 uppercase mb-1">
-                    {selectedSplitLot.id}-S1 (kg) *
+                    {selectedSplitBatch.id}-S1 (kg) *
                   </label>
                   <input
                     type="number"
                     step="0.1"
                     min="0.1"
-                    max={Math.max(0.1, (selectedSplitLot.totalWeightKg || 1) - 0.1)}
+                    max={Math.max(0.1, (selectedSplitBatch.netWeightKg || 1) - 0.1)}
                     required
                     value={splitWeight1}
                     onChange={(e) => setSplitWeight1(e.target.value)}
@@ -752,7 +753,7 @@ export default function AggregationModule() {
                 </div>
                 <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
                   <span className="block text-[10px] font-extrabold text-emerald-900 uppercase mb-1">
-                    {selectedSplitLot.id}-S2 (Auto Remainder)
+                    {selectedSplitBatch.id}-S2 (Auto Remainder)
                   </span>
                   <div className="px-2.5 py-1.5 font-mono font-black text-emerald-950 text-sm">
                     {splitWeight2} kg
@@ -772,11 +773,11 @@ export default function AggregationModule() {
             </button>
             <button
               type="submit"
-              disabled={!selectedSplitLot || splitWeight2 <= 0}
+              disabled={!selectedSplitBatch || splitWeight2 <= 0}
               className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-extrabold shadow-xs flex items-center gap-1.5 disabled:opacity-50"
             >
               <Scissors className="w-4 h-4" />
-              <span>Confirm Split Lot</span>
+              <span>Confirm Split Harvest Batch</span>
             </button>
           </div>
         </form>

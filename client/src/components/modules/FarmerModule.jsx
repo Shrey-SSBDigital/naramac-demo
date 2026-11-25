@@ -354,24 +354,26 @@ export default function FarmerModule({ onOpenGeoStudio, onOpenRegister }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {onOpenRegister && (
+        {activeRole !== 'NERAMAC_ADMIN' && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {onOpenRegister && (
+              <button
+                onClick={onOpenRegister}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold rounded-xl shadow-xs transition"
+              >
+                <UserPlus className="w-4 h-4 text-emerald-700" />
+                <span>Full Registration Form (/farmer/register)</span>
+              </button>
+            )}
             <button
-              onClick={onOpenRegister}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold rounded-xl shadow-xs transition"
+              onClick={() => setIsRegisterModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
             >
-              <UserPlus className="w-4 h-4 text-emerald-700" />
-              <span>Full Registration Form (/farmer/register)</span>
+              <Plus className="w-4 h-4" />
+              <span>Quick Register Modal</span>
             </button>
-          )}
-          <button
-            onClick={() => setIsRegisterModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Quick Register Modal</span>
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Main Data Table */}

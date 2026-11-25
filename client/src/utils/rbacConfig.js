@@ -15,7 +15,6 @@ export const ROLE_PERMISSIONS = {
       'HOME',
       'DASHBOARD',
       'FARMERS',
-      'FARMER_REGISTER',
       'FARMER_APPROVALS',
       'FARMER_HARVEST_HISTORY',
       'PLANTATIONS',
@@ -56,7 +55,6 @@ export const ROLE_PERMISSIONS = {
       'HOME',
       'FIELD_INSPECTION',
       'GEO_STUDIO',
-      'FARMERS',
       'PLANTATIONS',
       'INOCULATION',
       'HARVEST_FELLING',
@@ -170,7 +168,6 @@ export const ROLE_PERMISSIONS = {
     defaultRoute: '/harvest/dfo-sanctions',
     allowedModules: [
       'HOME',
-      'FARMER_APPROVALS',
       'HARVEST_DFO_SANCTIONS',
       'HARVEST_DFO_APPROVED',
       'HARVEST_BATCHES',
@@ -235,6 +232,7 @@ export function isModuleAllowedForRole(roleId, moduleId) {
   if (!roleId || !moduleId) return false;
   if (moduleId === 'HARVEST_PRE_INSPECT') return false;
   if (moduleId === 'HARVEST_APPLY' && roleId === 'NERAMAC_ADMIN') return false;
+  if (moduleId === 'FARMER_REGISTER' && roleId === 'NERAMAC_ADMIN') return false;
   if (moduleId === 'FARMER_HARVEST_HISTORY' && roleId !== 'NERAMAC_ADMIN') return false;
   if (roleId === 'NERAMAC_ADMIN') return true;
   if (moduleId === 'HOME') return true;

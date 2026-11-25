@@ -1240,6 +1240,46 @@ export function EnterpriseProvider({ children }) {
     return childLots;
   };
 
+  const splitHarvestBatch = (sourceBatchId, splitWeightsKg = []) => {
+    const sourceBatch = harvestBatches.find(b => b.id === sourceBatchId);
+    if (!sourceBatch) return null;
+
+    const validWeights = splitWeightsKg.map(w => parseFloat(w) || 0).filter(w => w > 0);
+    if (validWeights.length < 2) {
+      addToast('At least 2 non-zero sub-batch weights are required to split a harvest batch', 'warning');
+      return null;
+    }
+
+    const totalSourceKg = parseFloat(sourceBatch.netWeightKg) || 0;
+    const childBatches = validWeights.map((wt, idx) => {
+      const childId = `${sourceBatch.id}-S${idx + 1}`;
+      return {
+        ...sourceBatch,
+        id: childId,
+        parentHarvestBatchId: sourceBatch.id,
+        batchOperation: 'SPLIT',
+        netWeightKg: Math.round(wt * 10) / 10,
+        parentOfAggregation: null,
+        status: sourceBatch.status === 'SPLIT_INTO_SUBBATCHES' ? 'IN_STOCK' : (sourceBatch.status || 'IN_STOCK')
+      };
+    });
+
+    const updatedBatches = [
+      ...childBatches,
+      ...harvestBatches.map(b =>
+        b.id === sourceBatchId
+          ? { ...b, status: 'SPLIT_INTO_SUBBATCHES', splitChildIds: childBatches.map(c => c.id) }
+          : b
+      )
+    ];
+
+    setHarvestBatches(updatedBatches);
+    persistState({ harvestBatches: updatedBatches });
+    logAudit('SPLIT_HARVEST_BATCH', 'Harvest & Depot Lot Management', `Split Harvest Batch ${sourceBatchId} (${totalSourceKg} kg) into ${childBatches.map(c => `${c.id} (${c.netWeightKg} kg)`).join(', ')}`, sourceBatchId);
+    addToast(`Harvest Batch ${sourceBatchId} split into ${childBatches.map(c => c.id).join(' & ')}`);
+    return childBatches;
+  };
+
   // 8. Processing & Distillation
   const createDistillationRun = (runData) => {
     const pType = runData.processingType || 'AGARWOOD_OIL';
@@ -1832,6 +1872,7 @@ export function EnterpriseProvider({ children }) {
         receiveMovement,
         createAggregation,
         splitAggregationLot,
+        splitHarvestBatch,
         createDistillationRun,
         submitLabSampleAndTest,
         approveQualityRelease,
