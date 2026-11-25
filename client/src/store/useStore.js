@@ -25,7 +25,7 @@ import {
   ROLE_CREDENTIALS
 } from '../data/mockEnterpriseData';
 
-export const STORAGE_KEY = 'NERAMAC_ASCTS_DATA_V7';
+export const STORAGE_KEY = 'NERAMAC_ASCTS_DATA_V8';
 
 const PERSISTED_COLLECTIONS = [
   'farmers',
@@ -51,25 +51,25 @@ const PERSISTED_COLLECTIONS = [
 
 function getInitialCollections() {
   return {
-    farmers: MOCK_FARMERS,
-    farmerApplications: MOCK_FARMER_APPLICATIONS,
-    plantations: MOCK_PLANTATIONS,
-    pologens: MOCK_POLOGENS,
-    trees: MOCK_TREES,
-    inoculations: MOCK_INOCULATIONS,
-    harvests: MOCK_HARVESTS,
-    harvestBatches: MOCK_HARVEST_BATCHES,
-    permits: MOCK_PERMITS,
-    movements: MOCK_MOVEMENTS,
-    aggregations: MOCK_AGGREGATIONS,
-    distillations: MOCK_DISTILLATIONS,
-    labTests: MOCK_LAB_TESTS,
-    finishedProducts: MOCK_FINISHED_PRODUCTS,
-    exportBatches: MOCK_EXPORT_BATCHES,
-    shipmentLots: MOCK_SHIPMENT_LOTS,
-    domesticSales: MOCK_DOMESTIC_SALES,
-    inventory: MOCK_INVENTORY,
-    auditLogs: MOCK_AUDIT_LOGS
+    farmers: [...MOCK_FARMERS],
+    farmerApplications: [...MOCK_FARMER_APPLICATIONS],
+    plantations: [...MOCK_PLANTATIONS],
+    pologens: [...MOCK_POLOGENS],
+    trees: [...MOCK_TREES],
+    inoculations: [...MOCK_INOCULATIONS],
+    harvests: [...MOCK_HARVESTS],
+    harvestBatches: [...MOCK_HARVEST_BATCHES],
+    permits: [...MOCK_PERMITS],
+    movements: [...MOCK_MOVEMENTS],
+    aggregations: [...MOCK_AGGREGATIONS],
+    distillations: [...MOCK_DISTILLATIONS],
+    labTests: [...MOCK_LAB_TESTS],
+    finishedProducts: [...MOCK_FINISHED_PRODUCTS],
+    exportBatches: [...MOCK_EXPORT_BATCHES],
+    shipmentLots: [...MOCK_SHIPMENT_LOTS],
+    domesticSales: [...MOCK_DOMESTIC_SALES],
+    inventory: [...MOCK_INVENTORY],
+    auditLogs: [...MOCK_AUDIT_LOGS]
   };
 }
 
