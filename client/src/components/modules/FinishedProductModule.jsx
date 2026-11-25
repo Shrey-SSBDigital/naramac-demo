@@ -12,15 +12,20 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
   const [isBottleModalOpen, setIsBottleModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const releasedRuns = distillations.filter(d => d.labReleaseStatus === 'RELEASED');
   const [bottleForm, setBottleForm] = useState({
-    distillationRunId: 'DST-AS-2026-01',
+    distillationRunId: releasedRuns[0]?.id || 'DST-AS-2026-01',
     flaconCount: 4,
-    volumeMl: 12.0
+    volumeMl: 12.0,
+    packUnit: 'ml'
   });
+
+  const selectedSourceRun = distillations.find(d => d.id === bottleForm.distillationRunId) || releasedRuns[0];
+  const selectedRunType = selectedSourceRun?.processingType || 'AGARWOOD_OIL';
 
   const handleBottleSubmit = (e) => {
     e.preventDefault();
-    packageFinishedProducts(bottleForm.distillationRunId, bottleForm.flaconCount, bottleForm.volumeMl);
+    packageFinishedProducts(bottleForm.distillationRunId, bottleForm.flaconCount, bottleForm.volumeMl, bottleForm.packUnit);
     setIsBottleModalOpen(false);
   };
 
@@ -120,13 +125,13 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
         <div>
           <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Finished Products & Tamper-Evident QR Packaging</span>
+            <span>CPC Packaging &amp; Tamper-Evident QR Serialization</span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-              Module 12
+              Module 12 • Post-Lab Release
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Serialized 12ml / 25ml bottles (flacons) with laser-etched QR codes linking to the complete 15-identity origin graph.
+            Executed at CPC after NABL Laboratory Quality Release: serialize Agarwood Oil, Chips, Raw Wood, and By-Products with QR codes.
           </p>
         </div>
 
@@ -135,7 +140,7 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
           className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition"
         >
           <PackageCheck className="w-4 h-4" />
-          <span>Bottle Oil & Packaging (Generate QR)</span>
+          <span>CPC Packaging &amp; Generate QR</span>
         </button>
       </div>
 
@@ -251,30 +256,49 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
         </Modal>
       )}
 
-      {/* Bottle Flacons Modal */}
+      {/* CPC Post-Lab Packaging Modal */}
       <Modal
         isOpen={isBottleModalOpen}
         onClose={() => setIsBottleModalOpen(false)}
-        title="Bottle & Serialize Finished Oud Packs"
-        subtitle="Generates unique serial numbers and cryptographic QR tags for retail packs"
+        title="CPC Post-Lab Packaging & QR Serialization"
+        subtitle="Package NABL Lab-Released Oil, Chips, Raw Wood, or By-Products at CPC"
       >
         <form onSubmit={handleBottleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">Source Distillation Run (NABL Released) *</label>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Source Processing Run (NABL Lab Released) *</label>
             <select
               value={bottleForm.distillationRunId}
-              onChange={(e) => setBottleForm({ ...bottleForm, distillationRunId: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg font-mono font-bold"
+              onChange={(e) => {
+                const run = distillations.find(d => d.id === e.target.value);
+                const rType = run?.processingType || 'AGARWOOD_OIL';
+                setBottleForm({
+                  ...bottleForm,
+                  distillationRunId: e.target.value,
+                  volumeMl: rType === 'AGARWOOD_OIL' ? 12 : 500,
+                  packUnit: rType === 'AGARWOOD_OIL' ? 'ml' : 'g'
+                });
+              }}
+              className="w-full px-3 py-2 border rounded-lg font-mono font-bold bg-white"
             >
-              {distillations.filter(d => d.labReleaseStatus === 'RELEASED').map(d => (
-                <option key={d.id} value={d.id}>{d.id} ({d.outputPureOudOilMl}ml pure oud oil)</option>
-              ))}
+              {releasedRuns.map(d => {
+                const pType = d.processingType || 'AGARWOOD_OIL';
+                const label = pType === 'AGARWOOD_CHIPS'
+                  ? `${d.outputChipsKg}kg graded chips`
+                  : pType === 'RAW_WOOD'
+                  ? `${d.outputRawWoodKg}kg cleaned raw wood`
+                  : pType === 'BY_PRODUCTS'
+                  ? `${(d.byProducts || []).length} by-product(s)`
+                  : `${d.outputPureOudOilMl}ml pure oud oil`;
+                return (
+                  <option key={d.id} value={d.id}>{d.id} ({label})</option>
+                );
+              })}
             </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Number of Bottles to Fill *</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Number of Packs / Bottles *</label>
               <input
                 type="number"
                 min="1"
@@ -282,19 +306,33 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
                 required
                 value={bottleForm.flaconCount}
                 onChange={(e) => setBottleForm({ ...bottleForm, flaconCount: parseInt(e.target.value) || 1 })}
-                className="w-full px-3 py-2 border rounded-lg font-bold"
+                className="w-full px-3 py-2 border rounded-lg font-bold bg-white"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Bottle Volume (ml)</label>
-              <select
-                value={bottleForm.volumeMl}
-                onChange={(e) => setBottleForm({ ...bottleForm, volumeMl: parseFloat(e.target.value) || 12 })}
-                className="w-full px-3 py-2 border rounded-lg font-semibold"
-              >
-                <option value="12">12 ml (Standard Bottle / Flacon)</option>
-                <option value="25">25 ml (Collector Edition Bottle)</option>
-              </select>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                {selectedRunType === 'AGARWOOD_OIL' ? 'Bottle Volume (ml)' : 'Pack Net Weight (g / kg)'}
+              </label>
+              {selectedRunType === 'AGARWOOD_OIL' ? (
+                <select
+                  value={bottleForm.volumeMl}
+                  onChange={(e) => setBottleForm({ ...bottleForm, volumeMl: parseFloat(e.target.value) || 12, packUnit: 'ml' })}
+                  className="w-full px-3 py-2 border rounded-lg font-semibold bg-white"
+                >
+                  <option value="12">12 ml (Standard Bottle / Flacon)</option>
+                  <option value="25">25 ml (Collector Edition Bottle)</option>
+                </select>
+              ) : (
+                <select
+                  value={bottleForm.volumeMl}
+                  onChange={(e) => setBottleForm({ ...bottleForm, volumeMl: parseFloat(e.target.value) || 500, packUnit: 'g' })}
+                  className="w-full px-3 py-2 border rounded-lg font-semibold bg-white"
+                >
+                  <option value="250">250 g Sealed Pack</option>
+                  <option value="500">500 g Sealed Pack</option>
+                  <option value="1000">1000 g (1 kg) Export/Bulk Pack</option>
+                </select>
+              )}
             </div>
           </div>
 

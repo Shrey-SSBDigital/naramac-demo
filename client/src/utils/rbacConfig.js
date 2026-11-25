@@ -134,14 +134,15 @@ export const ROLE_PERMISSIONS = {
       'HOME',
       'MOVEMENT_CPC_GATE_CHECK',
       'PROCESSING',
+      'FINISHED_PRODUCTS',
       'INVENTORY',
       'TRACEABILITY'
     ],
     responsibilities: [
       'Grading, chipping, and mechanical pulverization of aggregated agarwood logs',
       'Loading calibrated hydro-distillation stills (Boilers ST-01 to ST-08) for 72-96 hr runs',
-      'Yield recording of Grade-1 Dehn Al Oudh, Grade-2, hydrosol water, and exhausted residue',
-      'Strict mass balance computation ensuring raw wood to essential oil conservation'
+      'Yield recording of Agarwood Oil, Chips, Raw Wood, and custom By-Products',
+      'Post-lab packaging & tamper-evident QR serialization of released batches at CPC'
     ]
   },
 
@@ -155,7 +156,6 @@ export const ROLE_PERMISSIONS = {
     allowedModules: [
       'HOME',
       'LABORATORY',
-      'FINISHED_PRODUCTS',
       'MASS_BALANCE',
       'TRACEABILITY'
     ],

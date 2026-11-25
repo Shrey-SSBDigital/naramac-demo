@@ -1509,8 +1509,9 @@ export function EnterpriseProvider({ children }) {
   };
 
   // 10. Finished Product Packaging
-  const packageFinishedProducts = (distillationRunId, flaconCount = 10, volumeMl = 12.0) => {
+  const packageFinishedProducts = (distillationRunId, flaconCount = 10, volumeMl = 12.0, packUnit = 'ml') => {
     const distill = distillations.find(d => d.id === distillationRunId);
+    const pType = distill?.processingType || 'AGARWOOD_OIL';
     const agg = aggregations.find(a => a.id === distill?.sourceBatchId);
     const contributingFarmers = agg?.parentDetails?.length
       ? [...new Set(agg.parentDetails.map(p => p.farmer))]
@@ -1532,13 +1533,20 @@ export function EnterpriseProvider({ children }) {
 
     for (let i = 0; i < flaconCount; i++) {
       const sNo = `PCK-NER-2026-${String(startIdx + i).padStart(3, '0')}`;
+      const productName = pType === 'AGARWOOD_CHIPS'
+        ? `NERAMAC Graded Agarwood Chips Pack (${volumeMl}${packUnit})`
+        : pType === 'RAW_WOOD'
+        ? `NERAMAC Cleaned Raw Agarwood Pack (${volumeMl}${packUnit})`
+        : pType === 'BY_PRODUCTS'
+        ? `NERAMAC Agarwood By-Product Pack (${volumeMl}${packUnit})`
+        : `NERAMAC Imperial Assam Pure Oud Flacon (${volumeMl}ml)`;
       newPacks.push({
         serialNumber: sNo,
-        productName: `NERAMAC Imperial Assam Pure Oud Flacon (${volumeMl}ml)`,
+        productName,
         distillationRunId,
         labCoaNumber: distill?.labSampleId ? `COA/NER/2026/${distill.labSampleId}` : 'COA/NER/2026/0144',
         volumeMl,
-        grade: 'Royal Grade Assam Oud',
+        grade: pType === 'AGARWOOD_CHIPS' ? (distill?.chipsGrade || 'Grade A Chips') : pType === 'RAW_WOOD' ? (distill?.rawWoodGrade || 'Cleaned Heartwood') : 'Royal Grade Assam Oud',
         packagingDate: new Date().toISOString().split('T')[0],
         expiryDate: new Date(Date.now() + 10 * 365 * 86400000).toISOString().split('T')[0],
         originCluster: 'Golaghat Cluster (Assam)',
