@@ -72,7 +72,6 @@ export default function Sidebar({
 
           <div className="pt-2 border-t border-emerald-600/40 flex items-center justify-between text-[10px] text-emerald-200">
             <span className="font-semibold text-white">Assam & Tripura Clusters</span>
-            <span className="font-mono bg-emerald-900/40 px-1.5 py-0.5 rounded border border-emerald-400/30">RFP 06/31</span>
           </div>
         </div>
       </div>

@@ -8,11 +8,7 @@ export default function Header({ language, setLanguage, isOffline, setIsOffline,
       <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border-b border-emerald-800/40 px-4 py-1.5 text-xs text-slate-300 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span className="font-semibold text-emerald-300">GOVERNMENT OF INDIA ENTERPRISE</span>
-          <span className="text-slate-600">|</span>
-          <span>Ministry of Development of North Eastern Region (MDoNER)</span>
-          <span className="text-slate-600">|</span>
-          <span className="text-slate-300 font-mono text-[11px]">RFP: NER/PROJECT/AGAR/R&D/06/31</span>
+          <span className="font-semibold text-emerald-300">NERAMAC AGARWOOD TRACEABILITY</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="bg-emerald-900/60 text-emerald-300 px-2 py-0.5 rounded border border-emerald-700/50 flex items-center gap-1 font-medium text-[11px]">

@@ -430,10 +430,6 @@ export default function EnterpriseSidebar({
           <LogOut className="w-3.5 h-3.5 text-rose-600" />
           <span>Sign Out / Switch Role</span>
         </button>
-        <div className="flex items-center justify-between text-[10px] text-slate-500">
-          <span className="font-semibold text-slate-700">Govt. of India (MDoNER)</span>
-          <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">v2.1.0</span>
-        </div>
       </div>
     </aside>
     </>

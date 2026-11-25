@@ -16,9 +16,6 @@ export default function Navbar({ activeRoleName }) {
               <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-700 text-white shadow-xs">
                 NERAMAC
               </span>
-              <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                Govt of India (MDoNER)
-              </span>
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
               Assam (Golaghat Cluster) & Tripura (Kadamtala Cluster) • Section 3.2 Authoritative Traceability

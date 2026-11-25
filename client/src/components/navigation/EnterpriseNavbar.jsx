@@ -87,7 +87,7 @@ export default function EnterpriseNavbar({ activeModule, onSelectModule, onOpenT
               </span>
             </div>
             <p className="text-[11px] text-slate-500 hidden md:block truncate">
-              Agarwood Traceability & Supply Chain Management System • RFP 06/31
+              Agarwood Traceability & Supply Chain Management System
             </p>
           </div>
         </div>
