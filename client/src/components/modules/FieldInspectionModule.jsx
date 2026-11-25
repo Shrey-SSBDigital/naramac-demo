@@ -144,7 +144,8 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
     ageYears: 10.5,
     gbhCm: 62.0,
     heightM: 11.0,
-    treeStatus: 'VERIFIED_HEALTHY'
+    treeStatus: 'VERIFIED_HEALTHY',
+    sourcePologenId: ''
   });
 
   // Camera
@@ -866,6 +867,7 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
         overlapConflict: conflictPayload
       });
     } else {
+      const sourcePlg = farmerPologens.find(p => p.id === treeForm.sourcePologenId);
       enterpriseAddTree({
         farmerId: selectedFarmer.id,
         farmerName: selectedFarmer.name,
@@ -875,6 +877,8 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
         ageYears: Number(treeForm.ageYears),
         girthCm: Number(treeForm.gbhCm),
         heightMeters: Number(treeForm.heightM),
+        sourcePologenId: sourcePlg?.id || null,
+        sourcePologenName: sourcePlg?.name || null,
         gpsLatitude: gpsCoords.lat,
         gpsLongitude: gpsCoords.lng,
         photoHash: `sha256:${photoHash}`,
@@ -1122,57 +1126,6 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
             )}
 
             {/* Farmer-Added POLOGEN & Mature Trees Detail Box for the Selected Plantation */}
-            {selectedPlantation && (() => {
-              const pltPologens = pologens.filter(p => p.plantationId === selectedPlantation.id);
-              const pltTrees = trees.filter(t => t.plantationId === selectedPlantation.id);
-              return (
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-emerald-200 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
-                    <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800">
-                        Farmer-Added Data for {selectedPlantation.name} ({selectedPlantation.id})
-                      </span>
-                      <div className="text-[11px] text-slate-600">
-                        {selectedPlantation.dagNumber} • {selectedPlantation.district}
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-700 font-bold">
-                      Total Declared: {selectedPlantation.youngTrees || 0} Saplings + {selectedPlantation.matureTrees || 0} Mature
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    {/* Farmer-Declared Saplings (< 7 yrs) */}
-                    <div className="bg-white p-3 rounded-lg border border-teal-200 flex items-center justify-between gap-3">
-                      <div>
-                        <div className="font-extrabold text-teal-900 flex items-center gap-1.5">
-                          <Sprout className="w-3.5 h-3.5 text-teal-600" />
-                          <span>Young Saplings (&lt; 7 yrs)</span>
-                        </div>
-                        <div className="text-xl font-black text-teal-950 font-mono mt-1">
-                          {selectedPlantation.youngTrees ?? pltPologens.reduce((s, p) => s + (p.saplingCount || 0), 0)}
-                        </div>
-                      </div>
-                      
-                    </div>
-
-                    {/* Farmer-Declared Mature Trees (>= 7 yrs) */}
-                    <div className="bg-white p-3 rounded-lg border border-emerald-200 flex items-center justify-between gap-3">
-                      <div>
-                        <div className="font-extrabold text-emerald-900 flex items-center gap-1.5">
-                          <TreePine className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Mature Trees (≥ 7 yrs)</span>
-                        </div>
-                        <div className="text-xl font-black text-emerald-950 font-mono mt-1">
-                          {selectedPlantation.matureTrees ?? pltTrees.length}
-                        </div>
-                      </div>
-                      
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
           </div>
 
           <div>
@@ -1323,6 +1276,23 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
                     className="w-full text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono bg-white"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Source POLOGEN Block <span className="text-slate-400 font-normal">(Optional — select if matured early from a POLOGEN)</span>
+                </label>
+                <select
+                  value={treeForm.sourcePologenId}
+                  onChange={e => setTreeForm(p => ({ ...p, sourcePologenId: e.target.value }))}
+                  className="w-full text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-medium text-slate-800"
+                >
+                  <option value="">None (Independent Mature Tree)</option>
+                  {farmerPologens.map(plg => (
+                    <option key={plg.id} value={plg.id}>
+                      {plg.id} — {plg.name || 'Sapling Block'} ({plg.saplingCount || 0} saplings)
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           )}
@@ -1905,6 +1875,14 @@ export default function FieldInspectionModule({ onNavigateToGisStudio }) {
                 <div className="flex justify-between"><span className="text-slate-500">Tree QR Tag:</span><span className="font-bold text-amber-800">{treeForm.rfidTag}</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">Age:</span><span className="font-bold text-amber-800">{treeForm.ageYears} yrs (Mature ≥7y Rule)</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">GBH / Height:</span><span className="font-bold text-amber-800">{treeForm.gbhCm} cm / {treeForm.heightM} m</span></div>
+                {treeForm.sourcePologenId && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">From POLOGEN:</span>
+                    <span className="font-bold text-teal-800">
+                      {treeForm.sourcePologenId} ({farmerPologens.find(p => p.id === treeForm.sourcePologenId)?.name || 'Sapling Block'})
+                    </span>
+                  </div>
+                )}
               </>
             )}
             <div className="flex justify-between"><span className="text-slate-500">GPS Location:</span><span className="font-bold text-slate-900">{gpsCoords?.lat.toFixed(5)}°N, {gpsCoords?.lng.toFixed(5)}°E</span></div>

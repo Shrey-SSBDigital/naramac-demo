@@ -998,7 +998,7 @@ export default function HarvestModule({ mode = null }) {
               </span>
             </div>
             <h1 className="text-xl font-black text-slate-900 mt-1">
-              {mode === 'FARMER_MY_APPS' && 'My Harvest Applications & Status Tracker'}
+              {mode === 'FARMER_MY_APPS' && (isAdminRole ? 'Harvest Applications & Status Tracker' : 'My Harvest Applications & Status Tracker')}
               {mode === 'NEW_APP' && 'Apply for Tree Harvest Permission'}
               {mode === 'FA_PRE_HARVEST' && 'Pre-Harvest Field Verification Queue'}
               {mode === 'DFO_PENDING_SANCTIONS' && 'DFO Statutory Felling Sanctions Queue'}

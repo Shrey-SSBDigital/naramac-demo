@@ -384,6 +384,11 @@ export default function PlantationModule({ onOpenGeoStudio }) {
         <div>
           <span className="font-extrabold text-emerald-950 font-mono text-xs">{t.id}</span>
           <div className="text-[10px] font-mono text-slate-500">{t.qrTagCode || `TAG-${t.id}`}</div>
+          {t.sourcePologenId && (
+            <div className="text-[10px] font-semibold text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.2 rounded mt-0.5 inline-block">
+              From POLOGEN: {t.sourcePologenId}
+            </div>
+          )}
         </div>
       )
     },
@@ -744,7 +749,14 @@ export default function PlantationModule({ onOpenGeoStudio }) {
                                   <div className="mt-1 space-y-1">
                                     {plotTrees.map(t => (
                                       <div key={t.id} className="text-[11px] flex items-center justify-between font-mono bg-emerald-50/60 p-1.5 rounded">
-                                        <span className="font-bold text-emerald-950">{t.id}</span>
+                                        <div>
+                                          <span className="font-bold text-emerald-950">{t.id}</span>
+                                          {t.sourcePologenId && (
+                                            <span className="ml-1.5 text-[10px] font-sans font-semibold text-teal-800 bg-teal-100 px-1.5 py-0.2 rounded">
+                                              From {t.sourcePologenId}
+                                            </span>
+                                          )}
+                                        </div>
                                         <span>{t.ageYears}y • Girth: {t.girthCm}cm • {t.status}</span>
                                       </div>
                                     ))}

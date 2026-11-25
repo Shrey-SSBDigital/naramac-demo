@@ -23,6 +23,7 @@ import FarmerRegistrationModule from '../components/modules/FarmerRegistrationMo
 import FarmerApprovalModule from '../components/modules/FarmerApprovalModule';
 import DashboardModule from '../components/modules/DashboardModule';
 import FarmerModule from '../components/modules/FarmerModule';
+import FarmerHarvestHistoryModule from '../components/modules/FarmerHarvestHistoryModule';
 import PlantationModule from '../components/modules/PlantationModule';
 import FieldInspectionModule from '../components/modules/FieldInspectionModule';
 import FieldGeoTaggingStudio from '../components/FieldGeoTaggingStudio';
@@ -226,6 +227,14 @@ function FarmerRoute() {
   );
 }
 
+function FarmerHarvestHistoryRoute() {
+  return (
+    <RoleGuardedRoute moduleId="FARMER_HARVEST_HISTORY">
+      <FarmerHarvestHistoryModule />
+    </RoleGuardedRoute>
+  );
+}
+
 function FarmerRegisterRoute() {
   const { appNavigate } = useFlowDemonstrator();
   return (
@@ -364,6 +373,7 @@ const farmerRegisterRoute = createRoute({ getParentRoute: () => rootRoute, path:
 const farmersRegisterRoute = createRoute({ getParentRoute: () => rootRoute, path: '/farmers/register', component: FarmerRegisterRoute });
 const farmerApprovalsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/farmer/approvals', component: FarmerApprovalsRoute });
 const farmersApprovalsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/farmers/approvals', component: FarmerApprovalsRoute });
+const farmerHarvestHistoryRoute = createRoute({ getParentRoute: () => rootRoute, path: '/farmer/harvest-history', component: FarmerHarvestHistoryRoute });
 
 // Plantation & GIS
 const plantationRoute = createRoute({ getParentRoute: () => rootRoute, path: '/plantation', component: PlantationRoute });
@@ -705,6 +715,7 @@ const routeTree = rootRoute.addChildren([
   farmersRegisterRoute,
   farmerApprovalsRoute,
   farmersApprovalsRoute,
+  farmerHarvestHistoryRoute,
   plantationRoute,
   plantationsRoute,
   plotRoute,

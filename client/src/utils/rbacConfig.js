@@ -17,6 +17,7 @@ export const ROLE_PERMISSIONS = {
       'FARMERS',
       'FARMER_REGISTER',
       'FARMER_APPROVALS',
+      'FARMER_HARVEST_HISTORY',
       'PLANTATIONS',
       'FIELD_INSPECTION',
       'GEO_STUDIO',
@@ -234,6 +235,7 @@ export function isModuleAllowedForRole(roleId, moduleId) {
   if (!roleId || !moduleId) return false;
   if (moduleId === 'HARVEST_PRE_INSPECT') return false;
   if (moduleId === 'HARVEST_APPLY' && roleId === 'NERAMAC_ADMIN') return false;
+  if (moduleId === 'FARMER_HARVEST_HISTORY' && roleId !== 'NERAMAC_ADMIN') return false;
   if (roleId === 'NERAMAC_ADMIN') return true;
   if (moduleId === 'HOME') return true;
   const config = ROLE_PERMISSIONS[roleId];

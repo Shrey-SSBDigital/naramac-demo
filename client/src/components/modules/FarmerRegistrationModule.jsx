@@ -563,78 +563,12 @@ export default function FarmerRegistrationModule({ onNavigate }) {
           </div>
         </div>
 
-        {/* Section 3: Agarwood Tree Inventory Estimation */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <Trees className="w-4 h-4 text-emerald-700" />
-            <h2 className="text-sm font-black text-slate-900">
-              Section 3: Agarwood Inventory Declaration (POLOGEN & Mature Trees)
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Plantation Parcel Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Habigaon Homestead Parcel"
-                value={formData.plantationName}
-                onChange={e => setFormData({ ...formData, plantationName: e.target.value })}
-                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Young Saplings (&lt; 7 yrs)
-              </label>
-              <input
-                type="number"
-                placeholder="Saplings (POLOGEN walk)"
-                value={formData.saplingsCount}
-                onChange={e => setFormData({ ...formData, saplingsCount: e.target.value })}
-                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-mono"
-              />
-              <span className="text-[10px] text-teal-700">Mappable via POLOGEN block walk</span>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Mature Trees (≥ 7 yrs)
-              </label>
-              <input
-                type="number"
-                placeholder="Mature trees (QR tagging)"
-                value={formData.matureTreesCount}
-                onChange={e => setFormData({ ...formData, matureTreesCount: e.target.value })}
-                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-mono"
-              />
-              <span className="text-[10px] text-emerald-700">Mappable via Point Geo-pin</span>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Primary Planting Year
-              </label>
-              <input
-                type="number"
-                placeholder="e.g. 2019"
-                value={formData.plantingYear}
-                onChange={e => setFormData({ ...formData, plantingYear: e.target.value })}
-                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-mono"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Section 4: Bank Account & DBT Details */}
+        {/* Section 3: Bank Account & DBT Details */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <Landmark className="w-4 h-4 text-emerald-700" />
             <h2 className="text-sm font-black text-slate-900">
-              Section 4: Direct Benefit Transfer (DBT) Bank Account
+              Section 3: Direct Benefit Transfer (DBT) Bank Account
             </h2>
           </div>
 

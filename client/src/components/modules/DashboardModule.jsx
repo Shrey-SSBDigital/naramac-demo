@@ -1027,28 +1027,56 @@ export default function DashboardModule({ onNavigateModule }) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // 9. NERAMAC ADMIN EXECUTIVE COMMAND DASHBOARD (Default)
+  // 9. NERAMAC ADMIN DASHBOARD (Overall & Cluster-Wise)
   // ─────────────────────────────────────────────────────────────────────────────
+  const farmerClusterMap = {};
+  farmers.forEach(f => {
+    farmerClusterMap[f.id] = f.cluster || (f.district ? `${f.district} Cluster` : 'Other Cluster');
+  });
+
+  const resolveCluster = (item) => {
+    if (item?.cluster) return item.cluster;
+    if (item?.farmerId && farmerClusterMap[item.farmerId]) return farmerClusterMap[item.farmerId];
+    if (item?.district) return `${item.district} Cluster`;
+    return 'Golaghat Cluster';
+  };
+
+  const clusterSet = new Set([
+    ...farmers.map(resolveCluster),
+    ...(pologens || []).map(resolveCluster),
+    ...trees.map(resolveCluster),
+    ...harvestBatches.map(resolveCluster)
+  ]);
+
+  const clusterStats = Array.from(clusterSet).map(clusterName => {
+    const cFarmers = farmers.filter(f => resolveCluster(f) === clusterName);
+    const cPologens = (pologens || []).filter(p => resolveCluster(p) === clusterName);
+    const cSaplings = cPologens.reduce((sum, p) => sum + (p.saplingCount || 0), 0);
+    const cTrees = trees.filter(t => resolveCluster(t) === clusterName);
+    const cBatches = harvestBatches.filter(b => resolveCluster(b) === clusterName);
+    const cHarvestKg = cBatches.reduce((sum, b) => sum + (b.netWeightKg || 0), 0);
+    return {
+      clusterName,
+      farmersCount: cFarmers.length,
+      pologensCount: cPologens.length,
+      saplingsCount: cSaplings,
+      treesCount: cTrees.length,
+      batchesCount: cBatches.length,
+      harvestKg: cHarvestKg
+    };
+  });
+
   return (
     <div className="space-y-6">
-
-      {/* Primary KPI Grid (8 Cards) */}
+      {/* Overall KPI Grid (4 Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Registered Farmers"
           value={farmers.length}
-          subvalue="Assam & Tripura Clusters"
+          subvalue={`${clusterStats.length} Active Clusters`}
           icon={Users}
           color="emerald"
-          badge="100% Geo-Verified"
-        />
-        <MetricCard
-          title="Matured Trees (≥7 yrs)"
-          value={trees.length}
-          subvalue="QR Tagged & Geo-Pinned"
-          icon={Trees}
-          color="teal"
-          trend="Farmer Attached"
+          badge="Overall Total"
         />
         <MetricCard
           title="POLOGENs (<7 yrs)"
@@ -1059,6 +1087,14 @@ export default function DashboardModule({ onNavigateModule }) {
           badge="Polygon Mapped"
         />
         <MetricCard
+          title="Matured Trees (≥7 yrs)"
+          value={trees.length}
+          subvalue="QR Tagged & Geo-Pinned"
+          icon={Trees}
+          color="teal"
+          trend="Farmer Attached"
+        />
+        <MetricCard
           title="Harvested Wood"
           value={`${totalWoodHarvestedKg.toFixed(1)} kg`}
           subvalue={`${harvestBatches.length} Official Harvest Batches`}
@@ -1066,46 +1102,72 @@ export default function DashboardModule({ onNavigateModule }) {
           color="amber"
           badge="DFO Sanctioned"
         />
-        <MetricCard
-          title="Pure Oud Distilled"
-          value={`${totalOudOilDistilledMl.toFixed(1)} ml`}
-          subvalue="Hydro & Steam Distillation"
-          icon={Factory}
-          color="purple"
-          badge="NABL Released"
-        />
-        <MetricCard
-          title="Serialized Flacons"
-          value={finishedProducts.length}
-          subvalue={`${inStockBottles} In Vault Reserve`}
-          icon={PackageCheck}
-          color="blue"
-          badge="Laser QR Tagged"
-        />
-        <MetricCard
-          title="Export Shipments"
-          value={`${totalExportBottles} Packs`}
-          subvalue={`${exportBatches.length} CITES Batches (Dubai & Paris)`}
-          icon={PlaneTakeoff}
-          color="emerald"
-          trend="USD $126,000"
-        />
-        <MetricCard
-          title="Domestic Sales"
-          value={`${totalDomesticBottles} Packs`}
-          subvalue="Kannauj & Mumbai Perfumeries"
-          icon={TrendingUp}
-          color="amber"
-          trend="₹ 113,280"
-        />
-        <MetricCard
-          title="Depot Stock Ledger"
-          value={`${inventory.length} SKUs`}
-          subvalue="3 Depots & 2 CPC Facilities"
-          icon={Warehouse}
-          color="teal"
-          badge="≤ 1.5% Variance"
-        />
+      </div>
+
+      {/* Cluster-Wise Breakdown Table */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div>
+            <h3 className="text-sm font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-emerald-700" />
+              <span>Cluster-Wise Overview (Farmers, POLOGENs, Trees &amp; Harvested Wood)</span>
+            </h3>
+            <p className="text-xs text-slate-500">
+              Live cluster distribution across all registered Assam &amp; Tripura agarwood clusters.
+            </p>
+          </div>
+          <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
+            {clusterStats.length} Clusters
+          </span>
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-slate-600 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th className="px-4 py-3">Cluster</th>
+                <th className="px-4 py-3 text-right">Farmers</th>
+                <th className="px-4 py-3 text-right">POLOGENs (&lt;7 yrs)</th>
+                <th className="px-4 py-3 text-right">Matured Trees (≥7 yrs)</th>
+                <th className="px-4 py-3 text-right">Harvested Wood (kg)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {clusterStats.map(c => (
+                <tr key={c.clusterName} className="hover:bg-emerald-50/40 transition">
+                  <td className="px-4 py-3 font-extrabold text-slate-900">{c.clusterName}</td>
+                  <td className="px-4 py-3 text-right font-mono font-bold text-emerald-800">
+                    {c.farmersCount}
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono">
+                    <span className="font-bold text-cyan-800">{c.pologensCount}</span>
+                    <span className="text-[10px] text-slate-400 ml-1">({c.saplingsCount} saplings)</span>
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono font-bold text-teal-800">
+                    {c.treesCount}
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono">
+                    <span className="font-bold text-amber-800">{c.harvestKg.toFixed(1)} kg</span>
+                    <span className="text-[10px] text-slate-400 ml-1">({c.batchesCount} batches)</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="bg-emerald-50/70 border-t border-emerald-200 font-extrabold text-slate-900">
+              <tr>
+                <td className="px-4 py-3">Overall Total</td>
+                <td className="px-4 py-3 text-right font-mono">{farmers.length}</td>
+                <td className="px-4 py-3 text-right font-mono">
+                  {pologens?.length || 0} <span className="text-[10px] font-semibold text-slate-500">({totalSaplings} saplings)</span>
+                </td>
+                <td className="px-4 py-3 text-right font-mono">{trees.length}</td>
+                <td className="px-4 py-3 text-right font-mono">
+                  {totalWoodHarvestedKg.toFixed(1)} kg <span className="text-[10px] font-semibold text-slate-500">({harvestBatches.length} batches)</span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
   );

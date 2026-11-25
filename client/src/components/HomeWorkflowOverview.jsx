@@ -78,7 +78,6 @@ export default function HomeWorkflowOverview({ onNavigate }) {
       summary: 'Strict regulatory check ensuring timber is grown on private homestead land, preventing wild reserve felling.',
       nodes: [
         { name: 'Harvest Application', detail: 'Farmer submits requisition with tree QR ID & quota', icon: Axe, path: '/harvest' },
-        { name: 'NERAMAC Verification', detail: 'Field Agent on-site homestead origin confirmation', icon: ShieldCheck, path: '/harvest' },
         { name: 'DFO Approval', detail: 'Divisional Forest Officer statutory scrutiny', icon: FileCheck, path: '/harvest' },
         { name: 'Decision: Approved?', detail: 'No → loops back to Application | Yes → Harvest Authorisation ID', icon: HelpCircle, path: '/harvest', isDecision: true }
       ],

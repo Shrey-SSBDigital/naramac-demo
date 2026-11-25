@@ -1,59 +1,78 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
 import {
   USER_ROLES,
-  MOCK_FARMERS,
-  MOCK_PLANTATIONS,
-  MOCK_POLOGENS,
-  MOCK_TREES,
-  MOCK_INOCULATIONS,
-  MOCK_HARVESTS,
-  MOCK_HARVEST_BATCHES,
-  MOCK_PERMITS,
-  MOCK_MOVEMENTS,
-  MOCK_AGGREGATIONS,
-  MOCK_DISTILLATIONS,
-  MOCK_LAB_TESTS,
-  MOCK_FINISHED_PRODUCTS,
-  MOCK_EXPORT_BATCHES,
-  MOCK_SHIPMENT_LOTS,
-  MOCK_DOMESTIC_SALES,
-  MOCK_INVENTORY,
-  MOCK_AUDIT_LOGS,
   MOCK_COLLECTION_CENTRES,
   MOCK_PROCESSING_CENTRES,
   MOCK_FACILITIES,
-  MOCK_FARMER_APPLICATIONS,
   ROLE_CREDENTIALS
 } from '../data/mockEnterpriseData';
+import { useStore } from '../store/useStore';
 
 const EnterpriseContext = createContext(null);
 
-const STORAGE_KEY = 'NERAMAC_ASCTS_DATA_V7';
-
 export function EnterpriseProvider({ children }) {
-  // Current Active User Role (starts as NERAMAC_ADMIN for rich overview)
-  const [activeRole, setActiveRole] = useState(() => {
-    return localStorage.getItem('NERAMAC_ACTIVE_ROLE') || 'NERAMAC_ADMIN';
-  });
+  // Single source of truth: all reads, writes, updates, and deletes go through useStore
+  const store = useStore();
+  const {
+    activeRole,
+    currentUser,
+    searchQuery,
+    dispatchIntent,
+    toasts,
+    farmers,
+    farmerApplications,
+    plantations,
+    pologens,
+    trees,
+    inoculations,
+    harvests,
+    harvestBatches,
+    permits,
+    movements,
+    aggregations,
+    distillations,
+    labTests,
+    finishedProducts,
+    exportBatches,
+    shipmentLots,
+    domesticSales,
+    inventory,
+    auditLogs
+  } = store;
 
-  // Current Authenticated User (synced with 10 Enterprise Roles)
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem('NERAMAC_CURRENT_USER');
-      if (savedUser) return JSON.parse(savedUser);
-    } catch (e) {}
-    const defaultCred = ROLE_CREDENTIALS.find(r => r.role === 'NERAMAC_ADMIN') || ROLE_CREDENTIALS[0];
-    return {
-      role: defaultCred.role,
-      username: defaultCred.username,
-      name: defaultCred.roleName,
-      badge: defaultCred.badge,
-      defaultRoute: defaultCred.defaultRoute,
-      farmerId: defaultCred.farmerId || null,
-      farmerName: defaultCred.farmerName || null,
-      isAuthenticated: true
-    };
-  });
+  const setActiveRole = (val) => store.setCollection('activeRole', val);
+  const setCurrentUser = (val) => store.setCollection('currentUser', val);
+  const setSearchQuery = (val) => store.setCollection('searchQuery', val);
+  const setDispatchIntent = (val) => store.setCollection('dispatchIntent', val);
+  const setToasts = (val) => store.setCollection('toasts', val);
+
+  const setFarmers = (val) => store.setCollection('farmers', val);
+  const setFarmerApplications = (val) => store.setCollection('farmerApplications', val);
+  const setPlantations = (val) => store.setCollection('plantations', val);
+  const setPologens = (val) => store.setCollection('pologens', val);
+  const setTrees = (val) => store.setCollection('trees', val);
+  const setInoculations = (val) => store.setCollection('inoculations', val);
+  const setHarvests = (val) => store.setCollection('harvests', val);
+  const setHarvestBatches = (val) => store.setCollection('harvestBatches', val);
+  const setPermits = (val) => store.setCollection('permits', val);
+  const setMovements = (val) => store.setCollection('movements', val);
+  const setAggregations = (val) => store.setCollection('aggregations', val);
+  const setDistillations = (val) => store.setCollection('distillations', val);
+  const setLabTests = (val) => store.setCollection('labTests', val);
+  const setFinishedProducts = (val) => store.setCollection('finishedProducts', val);
+  const setExportBatches = (val) => store.setCollection('exportBatches', val);
+  const setShipmentLots = (val) => store.setCollection('shipmentLots', val);
+  const setDomesticSales = (val) => store.setCollection('domesticSales', val);
+  const setInventory = (val) => store.setCollection('inventory', val);
+  const setAuditLogs = (val) => store.setCollection('auditLogs', val);
+
+  const addToast = (message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  };
 
   const login = (roleId, customCreds = {}) => {
     const cred = ROLE_CREDENTIALS.find(r => r.role === roleId) || ROLE_CREDENTIALS[0];
@@ -90,226 +109,24 @@ export function EnterpriseProvider({ children }) {
     addToast('Signed out of session', 'info');
   };
 
-  // Global search query
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Cross-module dispatch intent (e.g. from HarvestModule batch -> Leg 1, or from AggregationModule lot -> Leg 2)
-  const [dispatchIntent, setDispatchIntent] = useState(null);
-
-  // Toast notifications
-  const [toasts, setToasts] = useState([]);
-
-  const addToast = (message, type = 'success') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
-  };
-
-  // Main state with localStorage hydration
-  const [farmers, setFarmers] = useState(MOCK_FARMERS);
-  const [farmerApplications, setFarmerApplications] = useState(MOCK_FARMER_APPLICATIONS);
-  const [plantations, setPlantations] = useState(MOCK_PLANTATIONS);
-  const [pologens, setPologens] = useState(MOCK_POLOGENS);
-  const [trees, setTrees] = useState(MOCK_TREES);
-  const [inoculations, setInoculations] = useState(MOCK_INOCULATIONS);
-  const [harvests, setHarvests] = useState(MOCK_HARVESTS);
-  const [harvestBatches, setHarvestBatches] = useState(MOCK_HARVEST_BATCHES);
-  const [permits, setPermits] = useState(MOCK_PERMITS);
-  const [movements, setMovements] = useState(MOCK_MOVEMENTS);
-  const [aggregations, setAggregations] = useState(MOCK_AGGREGATIONS);
-  const [distillations, setDistillations] = useState(MOCK_DISTILLATIONS);
-  const [labTests, setLabTests] = useState(MOCK_LAB_TESTS);
-  const [finishedProducts, setFinishedProducts] = useState(MOCK_FINISHED_PRODUCTS);
-  const [exportBatches, setExportBatches] = useState(MOCK_EXPORT_BATCHES);
-  const [shipmentLots, setShipmentLots] = useState(MOCK_SHIPMENT_LOTS);
-  const [domesticSales, setDomesticSales] = useState(MOCK_DOMESTIC_SALES);
-  const [inventory, setInventory] = useState(MOCK_INVENTORY);
-  const [auditLogs, setAuditLogs] = useState(MOCK_AUDIT_LOGS);
-
-
-  // Load state from localStorage on mount if available
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.farmers) {
-          const existingIds = new Set(parsed.farmers.map(f => f.id));
-          const missingBaselines = MOCK_FARMERS.filter(bf => !existingIds.has(bf.id));
-          setFarmers([...parsed.farmers, ...missingBaselines]);
-        }
-        if (parsed.farmerApplications) setFarmerApplications(parsed.farmerApplications);
-        if (parsed.plantations) {
-          const existingPltIds = new Set(parsed.plantations.map(p => p.id));
-          const missingPlts = MOCK_PLANTATIONS.filter(bp => !existingPltIds.has(bp.id));
-          setPlantations([...parsed.plantations, ...missingPlts]);
-        }
-        if (parsed.pologens) setPologens(parsed.pologens);
-        if (parsed.trees) {
-          const existingTreeIds = new Set(parsed.trees.map(t => t.id));
-          const missingTrees = MOCK_TREES.filter(bt => !existingTreeIds.has(bt.id));
-          setTrees([...parsed.trees, ...missingTrees]);
-        }
-        if (parsed.inoculations) setInoculations(parsed.inoculations);
-        if (parsed.harvests) {
-          const updatedHarvests = parsed.harvests.map(h => {
-            if (h.id === 'HAU-2026-002') {
-              return {
-                ...h,
-                farmerId: 'FRM-AS-02',
-                farmerName: 'Tarun Chandra Das',
-                treeId: 'TRE-AS-007',
-                plantationId: 'PLT-AS-02',
-                dfoSanctionNumber: 'DFO/GLT/2026/HARV-215'
-              };
-            }
-            return h;
-          });
-          setHarvests(updatedHarvests);
-        }
-        if (parsed.harvestBatches) {
-          const updatedBatches = parsed.harvestBatches.map(b => {
-            if (b.id === 'HBT-AS-2026-002') {
-              return {
-                ...b,
-                farmerId: 'FRM-AS-02',
-                farmerName: 'Tarun Chandra Das',
-                treeId: 'TRE-AS-007',
-                plantationId: 'PLT-AS-02',
-                fellingOrderNumber: 'DFO/GLT/2026/HARV-215'
-              };
-            }
-            return b;
-          });
-          setHarvestBatches(updatedBatches);
-        }
-        if (parsed.permits) {
-          const normalizedPermits = parsed.permits.map(p => ({
-            ...p,
-            permitType: p.permitType || (p.type === 'FELLING' ? 'DFO Tree Felling Sanction Order' : p.type || 'DFO Tree Felling Sanction Order'),
-            issuingAuthority: p.issuingAuthority || p.issuedBy || 'Divisional Forest Officer, Golaghat Forest Division, Assam',
-            officerName: p.officerName || 'S. K. Bordoloi, IFS (DFO Golaghat)',
-            beneficiaryName: p.beneficiaryName || p.holderName || 'Bhaben Saikia',
-            beneficiaryFarmerId: p.beneficiaryFarmerId || p.holderId || 'FRM-AS-01',
-            approvedSpecies: p.approvedSpecies || 'Aquilaria malaccensis',
-            verificationHash: p.verificationHash || p.documentHash || 'sha256:f12a8849102eacb920198421b8c09182374'
-          }));
-          setPermits(normalizedPermits);
-        }
-        if (parsed.movements) setMovements(parsed.movements);
-        if (parsed.aggregations) {
-          const updatedAggs = parsed.aggregations.map(a => {
-            if (a.id === 'AGG-AS-2026-01' && a.parentDetails) {
-              return {
-                ...a,
-                parentDetails: a.parentDetails.map(pd =>
-                  pd.batchId === 'HBT-AS-2026-002' ? { ...pd, farmer: 'Tarun Chandra Das' } : pd
-                )
-              };
-            }
-            return a;
-          });
-          setAggregations(updatedAggs);
-        }
-        if (parsed.distillations) {
-          const updatedDistills = parsed.distillations.map(d => {
-            if (d.id === 'DST-AS-2026-01') {
-              return {
-                ...d,
-                parentFarmers: ['Bhaben Saikia', 'Tarun Chandra Das']
-              };
-            }
-            return d;
-          });
-          setDistillations(updatedDistills);
-        }
-        if (parsed.labTests) setLabTests(parsed.labTests);
-        if (parsed.finishedProducts) {
-          const updatedPacks = parsed.finishedProducts.map(p => {
-            if (p.serialNumber === 'PCK-NER-2026-001' || p.serialNumber === 'PCK-NER-2026-013') {
-              return {
-                ...p,
-                originFarmerMasked: 'B***n S***a (51.3%) + T***n C***a D*s (48.7%) [Pooled Homesteads]',
-                originFarmerFull: 'Bhaben Saikia (Homestead Plot 182, Patta 44) + Tarun Chandra Das (Homestead Plot 245, Patta 61)',
-                isPooledConsignment: true
-              };
-            }
-            return p;
-          });
-          setFinishedProducts(updatedPacks);
-        }
-        if (parsed.exportBatches) setExportBatches(parsed.exportBatches);
-        if (parsed.shipmentLots) setShipmentLots(parsed.shipmentLots);
-        if (parsed.domesticSales) setDomesticSales(parsed.domesticSales);
-        if (parsed.inventory) setInventory(parsed.inventory);
-        if (parsed.auditLogs) setAuditLogs(parsed.auditLogs);
-      }
-    } catch (e) {
-      console.warn('Failed to parse saved state:', e);
-    }
-  }, []);
-
-  // Save to localStorage when state updates
+  // Persist partial updates directly into useStore + localStorage
   const persistState = (partialUpdate = {}) => {
-    try {
-      const current = {
-        farmers,
-        farmerApplications,
-        plantations,
-        pologens,
-        trees,
-        inoculations,
-        harvests,
-        harvestBatches,
-        permits,
-        movements,
-        aggregations,
-        distillations,
-        labTests,
-        finishedProducts,
-        exportBatches,
-        shipmentLots,
-        domesticSales,
-        inventory,
-        auditLogs,
-        ...partialUpdate
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-    } catch (e) {
-      console.warn('LocalStorage save error:', e);
+    if (partialUpdate && Object.keys(partialUpdate).length > 0) {
+      store.patchState(partialUpdate);
     }
   };
 
   const handleSetRole = (roleId) => {
     setActiveRole(roleId);
-    localStorage.setItem('NERAMAC_ACTIVE_ROLE', roleId);
+    try {
+      localStorage.setItem('NERAMAC_ACTIVE_ROLE', roleId);
+    } catch (e) {}
     addToast(`Switched perspective to: ${USER_ROLES.find(r => r.id === roleId)?.name || roleId}`, 'info');
   };
 
-  // Reset to original seed data
+  // Reset to original seed data via useStore
   const resetToInitialData = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setFarmers(MOCK_FARMERS);
-    setFarmerApplications(MOCK_FARMER_APPLICATIONS);
-    setPlantations(MOCK_PLANTATIONS);
-    setPologens(MOCK_POLOGENS);
-    setTrees(MOCK_TREES);
-    setInoculations(MOCK_INOCULATIONS);
-    setHarvests(MOCK_HARVESTS);
-    setHarvestBatches(MOCK_HARVEST_BATCHES);
-    setPermits(MOCK_PERMITS);
-    setMovements(MOCK_MOVEMENTS);
-    setAggregations(MOCK_AGGREGATIONS);
-    setDistillations(MOCK_DISTILLATIONS);
-    setLabTests(MOCK_LAB_TESTS);
-    setFinishedProducts(MOCK_FINISHED_PRODUCTS);
-    setExportBatches(MOCK_EXPORT_BATCHES);
-    setShipmentLots(MOCK_SHIPMENT_LOTS);
-    setDomesticSales(MOCK_DOMESTIC_SALES);
-    setInventory(MOCK_INVENTORY);
-    setAuditLogs(MOCK_AUDIT_LOGS);
+    store.resetStore();
     addToast('Demo database restored to default initial state', 'info');
   };
 
@@ -1983,6 +1800,15 @@ export function EnterpriseProvider({ children }) {
         isOfflineMode: false,
         isAirplaneMode: false,
         offlineQueue: [],
+
+        // Store CRUD primitives
+        store,
+        readAll: store.readAll,
+        readById: store.readById,
+        query: store.query,
+        createItem: store.create,
+        updateItem: store.update,
+        deleteItem: store.remove,
 
         // Actions
         submitFarmerApplication,

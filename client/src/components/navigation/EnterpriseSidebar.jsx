@@ -111,7 +111,8 @@ export default function EnterpriseSidebar({
       items: [
         { id: 'FARMERS', name: 'Farmer Registry', icon: Users, badge: farmers.length, path: '/farmer' },
         { id: 'FARMER_REGISTER', name: 'Farmer Registration Form', icon: UserPlus, badge: 'New', highlight: true, path: '/farmer/register' },
-        { id: 'FARMER_APPROVALS', name: 'Farmer Approvals', icon: ShieldCheck, badge: farmerApplications.filter(a => a.status !== 'APPROVED').length || null, highlight: true, path: '/farmer/approvals' }
+        { id: 'FARMER_APPROVALS', name: 'Farmer Approvals', icon: ShieldCheck, badge: farmerApplications.filter(a => a.status !== 'APPROVED').length || null, highlight: true, path: '/farmer/approvals' },
+        { id: 'FARMER_HARVEST_HISTORY', name: 'Farmer Harvest History', icon: FileSpreadsheet, badge: 'Admin', path: '/farmer/harvest-history' }
       ]
     },
     {
@@ -141,7 +142,7 @@ export default function EnterpriseSidebar({
     {
       group: 'Harvest & Statutory',
       items: [
-        { id: 'HARVEST_MY_APPS', name: 'My Harvest Applications', icon: Trees, badge: harvests.length, path: '/harvest/my-applications' },
+        { id: 'HARVEST_MY_APPS', name: activeRole === 'NERAMAC_ADMIN' ? 'Harvest Applications' : 'My Harvest Applications', icon: Trees, badge: harvests.length, path: '/harvest/my-applications' },
         { id: 'HARVEST_APPLY', name: 'Apply for Tree Harvest', icon: UserPlus, badge: 'New', path: '/harvest/apply' },
         { id: 'HARVEST_DFO_SANCTIONS', name: 'DFO Felling Sanctions Queue', icon: FileBadge2, badge: harvests.filter(h => h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'PENDING_DFO_SANCTION' || h.status === 'SUBMITTED_AWAITING_NERAMAC').length || null, highlight: harvests.some(h => h.status === 'NERAMAC_VERIFIED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_DFO' || h.status === 'SUBMITTED_AWAITING_NERAMAC'), path: '/harvest/dfo-sanctions' },
         { id: 'HARVEST_DFO_APPROVED', name: 'Sanctioned Felling Orders', icon: ShieldCheck, badge: null, path: '/harvest/dfo-approved' },
