@@ -965,7 +965,6 @@ export function EnterpriseProvider({ children }) {
       farmerName: harvest.farmerName,
       plantationId: harvest.plantationId,
       netWeightKg: cleanedKg,
-      chipsWeightKg: chipsKg,
       resinGrade: fellingData.resinGrade || 'GRADE_A_DARK_RESIN',
       chippedStatus: 'RAW_LOGS',
       currentLocation: 'Harvest Site / Farm Gate',

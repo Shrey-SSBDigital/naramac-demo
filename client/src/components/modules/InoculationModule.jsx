@@ -516,24 +516,24 @@ export default function InoculationModule() {
   return (
     <div className="space-y-5">
       {/* Role-Specific Separation of Concerns Banner */}
-      <div className="p-3.5 bg-slate-900 text-white rounded-xl shadow-xs border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="p-3.5 bg-white text-slate-900 rounded-xl shadow-xs border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold">
             <Syringe className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-white text-sm">
+              <span className="font-extrabold text-slate-900 text-sm">
                 {activeRole === 'FIELD_AGENT' && 'NERAMAC Field Agent • Inoculation Supervision'}
                 {activeRole === 'FARMER' && 'Registered Farmer • Homestead Tree Inoculation Record'}
                 {activeRole === 'FOREST_DEPT' && 'DFO Forest Authority • Fungal Induction Scrutiny'}
                 {activeRole !== 'FIELD_AGENT' && activeRole !== 'FARMER' && activeRole !== 'FOREST_DEPT' && 'Biological Inoculation Oversight'}
               </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                 Role: {activeRole}
               </span>
             </div>
-            <p className="text-[11px] text-slate-300 mt-0.5">
+            <p className="text-[11px] text-slate-600 mt-0.5">
               {activeRole === 'FIELD_AGENT' && 'Accredited field agents supervise biological induction (*Fusarium solani* AS-44), capture forensic borehole photos with SHA-256 seal, and link records directly to specific trees.'}
               {activeRole === 'FARMER' && 'Track fungal induction progression and bio-strain dosage logged by NERAMAC field agents on your homestead agarwood trees.'}
               {activeRole !== 'FIELD_AGENT' && activeRole !== 'FARMER' && 'Statutory inoculation registry verifying biological induction compound, supplier accreditation (AAU Jorhat), and drill depth compliance.'}

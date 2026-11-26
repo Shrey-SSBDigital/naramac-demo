@@ -186,7 +186,7 @@ export default function FinishedProductModule({ onOpenTraceSearch }) {
       {/* Main Table */}
       <DataTable
         columns={columns}
-        data={finishedProducts}
+        data={[...finishedProducts].sort((a, b) => (a.serialNumber || '').localeCompare(b.serialNumber || ''))}
         searchKey="serialNumber"
         searchPlaceholder="Search product by Serial Number (e.g. PCK-NER-2026-001)..."
         onRowClick={(p) => setSelectedProduct(p)}
